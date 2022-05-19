@@ -33,9 +33,16 @@ def init_dates(today_d):
              'tomorrow': { 'string': morrow_s, 'date': morrow_d } 
            }
 
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
 @app.route('/show/<room>')
 @app.route('/show/<room>/<caldate>')
 def show(room, caldate=None):
+    
+    if room.upper() not in ['B112', 'B113', 'B114', 'B118', 'B123', 'B125']:
+        abort(404, description="Resource not found")
     
     if caldate == None:
         today_d = str(date.today())[2:]
