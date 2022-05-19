@@ -1,8 +1,48 @@
+import os
 from time import localtime, mktime
 from datetime import datetime , date
-from flask import Flask, render_template
+from flask import Flask, render_template, abort
+from flask_sqlalchemy import SQLAlchemy
+
+basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite')
+app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
+
+db = SQLAlchemy(app)
+
+class Rooms(db.Model):
+    __tablename__ = 'getapod_rooms'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(30), unique=True)
+    pods = db.Column(db.Integer)
+
+    def __init__(self, name, pods):
+        self.name = name
+        self.pods = pods
+
+class Bookings(db.Model):
+    __tablename__ = 'getapod_bookings'
+    id = db.Column(db.Integer, primary_key=True)
+    room = db.Column(db.Integer)
+    time = db.Column(db.Integer)
+    pod = db.Column(db.Integer)
+    duration = db.Column(db.Integer)
+    name1 = db.Column(db.String(64))
+    name2 = db.Column(db.String(64), nullable=True)
+    comment = db.Column(db.String(64), nullable=True)
+    flag = db.Column(db.String(64))
+
+    def __init__(self, room, time, pod, duration, name1, name2, comment, flag):
+        self.room = room
+        self.time = time
+        self.pod = pod
+        self.duration = duration
+        self.name1 = name1
+        self.name2 = name2
+        self.comment = comment
+        self.flag = flag
 
 def sec_to_date(sec):
     '''str_date returns in the format YY-M-D'''
@@ -41,7 +81,7 @@ def page_not_found(e):
 @app.route('/show/<room>/<caldate>')
 def show(room, caldate=None):
     
-    if room.upper() not in ['B112', 'B113', 'B114', 'B118', 'B123', 'B125']:
+    if room.upper() not in 'B112 B113 B114 B118 B123 B125':
         abort(404, description="Resource not found")
     
     if caldate == None:
@@ -55,6 +95,8 @@ def show(room, caldate=None):
     show['room'] = room.upper()
     show['dates'] = dates
     show['clocks'] = [8,10,13,15,17,19,21]
+    show['query'] = Bookings.query.filter(Bookings.time > dates['today']['string'])\
+                                  .filter(Bookings.time < dates['tomorrow']['string'] ).all()
 
     return render_template('show.html', show=show)
 
