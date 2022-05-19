@@ -1,0 +1,24 @@
+<html>
+    <head>
+        <title>Show room</title> 
+    </head>
+    <body>
+        {% for hour in show['clocks'] %}
+        <td>{{ hour }}-{{ hour+2 }}</td><br>
+        {% endfor %}
+        <table width="900"></table>
+        <tr valign="top">
+            <td>
+                <span class="rubrik">Booking of {{ show['room'] }}</span><br>
+                <span class="brodtext"><font color=red size=+1>RULES:
+                    <br>&nbsp;- Book only two slots (4 hours) in advance'
+                    <br>&nbsp;- PODs are free to use 20 minutes after NoShow'
+                    </font></span>
+                    <a href="http://localhost:5000/show/{{ show['room'] }}/{{show['dates']['yesterday']['date']}}">Igår</a>
+                    <a href="http://localhost:5000/show/{{ show['room'] }}/{{show['dates']['tomorrow']['date']}}">Imorgon</a>
+            </td>
+
+        </tr>
+
+    </body>
+</html>
