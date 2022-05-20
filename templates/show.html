@@ -11,18 +11,19 @@
         <table width="900"></table>
         <tr valign="top">
             <td>
-                <span class="rubrik">Booking of {{ show['room'] }}</span><br>
+                <span class="rubrik">Booking of {{ show['room'].name }}</span><br>
                 <span class="brodtext"><font color=red size=+1>RULES:
                     <br>&nbsp;- Book only two slots (4 hours) in advance'
                     <br>&nbsp;- PODs are free to use 20 minutes after NoShow'
                     </font></span>
                     {{ show['dates']['today']['string'] }}
                     <hr>
-                    <a href="http://localhost:5000/show/{{ show['room'] }}/{{show['dates']['yesterday']['date']}}">Igår</a>
-                    <a href="http://localhost:5000/show/{{ show['room'] }}/{{show['dates']['tomorrow']['date']}}">Imorgon</a>
+                    <a href="http://localhost:5000/show/{{ show['room'][0].name }}/{{show['dates']['yesterday']['date']}}">Igår</a>
+                    <a href="http://localhost:5000/show/{{ show['room'][0].name }}/{{show['dates']['tomorrow']['date']}}">Imorgon</a>
                     {% for item in show['query'] %}
                     {{ item.room, item.time, item.pod, item.duration, item.name1, item.name2, item.comment }}
                     {% endfor %}
+                    
             </td>
         </tr>
     </body>

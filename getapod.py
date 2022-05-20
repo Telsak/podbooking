@@ -71,7 +71,20 @@ def init_dates(today_d):
     return { 'today': { 'string': today_s, 'date': today_d },
              'yesterday': { 'string': yday_s, 'date': yday_d },
              'tomorrow': { 'string': morrow_s, 'date': morrow_d } 
-           }
+           }, today_s, morrow_s
+
+def get_bookings(room_data, ):
+
+    booking_data = {
+        8: {},
+        10: {},
+        13: {},
+        15: {},
+        17: {},
+        19: {},
+        21: {},
+    }
+    return booking_data
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -89,14 +102,14 @@ def show(room, caldate=None):
     else:
         today_d = caldate
     
-    dates = init_dates(today_d)
+    dates, today, tomorrow = init_dates(today_d)
     
     show = {}
-    show['room'] = room.upper()
+    #show['room'] = room.upper()
+    show['room'] = Rooms.query.filter(Rooms.name==room.upper()).all()
     show['dates'] = dates
     show['clocks'] = [8,10,13,15,17,19,21]
-    show['query'] = Bookings.query.filter(Bookings.time > dates['today']['string'])\
-                                  .filter(Bookings.time < dates['tomorrow']['string'] ).all()
+    show['query'] = Bookings.query.filter(Bookings.time > today).filter(Bookings.time < tomorrow).all()
 
     return render_template('show.html', show=show)
 
