@@ -73,17 +73,18 @@ def init_dates(today_d):
              'tomorrow': { 'string': morrow_s, 'date': morrow_d } 
            }, today_s, morrow_s
 
-def get_bookings(room_data, ):
+def get_bookings(roomdata, epoch):
+    booking_data = []
+    hours = [8,10,13,15,17,19,21]
+    for hour in hours:
+        for pod in range(1, roomdata.pods+1):
+            data = Bookings.query.filter(Bookings.time==(epoch+(hour*3600))).filter(Bookings.room==roomdata.id).filter(Bookings.pod==pod).all()
+            podd, name = '', ''
+            if len(data) >= 1:
+                podd = data[0].pod
+                name = data[0].name1
 
-    booking_data = {
-        8: {},
-        10: {},
-        13: {},
-        15: {},
-        17: {},
-        19: {},
-        21: {},
-    }
+            booking_data.append([f'Room: {roomdata.name}', f'Kl: {hour}', f'Pod: {pod}', len(data), podd, name])
     return booking_data
 
 @app.errorhandler(404)
@@ -105,13 +106,14 @@ def show(room, caldate=None):
     dates, today, tomorrow = init_dates(today_d)
     
     show = {}
-    #show['room'] = room.upper()
-    show['room'] = Rooms.query.filter(Rooms.name==room.upper()).all()
+    roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
+    show['room'] = {'name': roomdata.name.upper(), 'pods': [chr(x+65) for x in range(roomdata.pods)]}
     show['dates'] = dates
     show['clocks'] = [8,10,13,15,17,19,21]
-    show['query'] = Bookings.query.filter(Bookings.time > today).filter(Bookings.time < tomorrow).all()
+    bookingdata = Bookings.query.filter(Bookings.time > today).filter(Bookings.time < tomorrow).all()
+    show['query'] = get_bookings(roomdata, dates['today']['string'])
 
-    return render_template('show.html', show=show)
+    return render_template('show.html', show=show, test='<hr>')
 
 if __name__ == "__main__":
     app.run(debug=True)
