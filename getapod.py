@@ -1,7 +1,7 @@
 import os
 from time import localtime, mktime
 from datetime import datetime , date
-from flask import Flask, render_template, abort
+from flask import Flask, render_template, abort, redirect
 from flask_sqlalchemy import SQLAlchemy
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -74,17 +74,17 @@ def init_dates(today_d):
            }, today_s, morrow_s
 
 def get_bookings(roomdata, epoch):
-    booking_data = []
+    booking_data = {}
     hours = [8,10,13,15,17,19,21]
     for hour in hours:
+        booking_data[hour] = {}
         for pod in range(1, roomdata.pods+1):
             data = Bookings.query.filter(Bookings.time==(epoch+(hour*3600))).filter(Bookings.room==roomdata.id).filter(Bookings.pod==pod).all()
-            podd, name = '', ''
             if len(data) >= 1:
-                podd = data[0].pod
-                name = data[0].name1
-
-            booking_data.append([f'Room: {roomdata.name}', f'Kl: {hour}', f'Pod: {pod}', len(data), podd, name])
+                booking_data[hour][pod] = f'<a href="/delete/{roomdata.name}/{sec_to_date(data[0].time)}/{hour}/{chr(pod+64)}"> \
+                    {data[0].name1}</a><br>{data[0].name2}<br>{data[0].comment}'
+            else:
+                booking_data[hour][pod] = f'<a href="/book/{roomdata.name}/{str(date.today())[2:]}/{hour}/{chr(pod+64)}">Get POD!</a>'
     return booking_data
 
 @app.errorhandler(404)
@@ -114,6 +114,17 @@ def show(room, caldate=None):
     show['query'] = get_bookings(roomdata, dates['today']['string'])
 
     return render_template('show.html', show=show, test='<hr>')
+
+@app.route('/book')
+@app.route('/book/<room>')
+@app.route('/book/<room>/<caldate>')
+@app.route('/book/<room>/<caldate>/<hr>/<pod>')
+def book(room='Null', caldate='Null', hr='Null', pod='Null'):
+ 
+    if 'Null' in locals().values():
+        return redirect("/show/B112", code=302)
+    else:
+        return render_template('book.html', stuff=locals())
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -5,9 +5,6 @@
         <link rel="icon" href="{{ url_for('static', filename = 'favicon.ico') }}" type="image/x-icon">
     </head>
     <body>
-        {% for hour in show['clocks'] %}
-        <td>{{ hour }}-{{ hour+2 }}</td><br>
-        {% endfor %}
         <table width="900">
         <tr valign="top">
             <td>
@@ -28,13 +25,14 @@
                             {% endfor %}
                         </tr>
                         <tr>
-                            {% for hour in clocks %}
+                        {% for hour in show['clocks'] %}
                             <td>{{ hour }}-{{ hour+2 }}</td>
-                            {% endfor %}
-
+                            {% for pod in show['query'][hour] %}
+                                <td style="height:50px;width:200px;vertical-align:top;padding:5px">{{ show['query'][hour][pod]|safe }}</td>
+                                {% endfor %}
                         </tr>
+                        {% endfor %}
                     </table>
-                    {{ show['query']|safe }}
             </td>
         </tr>
     </table>
