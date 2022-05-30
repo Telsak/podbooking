@@ -6,6 +6,14 @@
     </head>
     <body>
         <p>This is a booking test!</p>
-        {{ stuff }}
+        <form method="post">
+            <label for="title">Title</label>
+            <br>
+            <input type="text" name="namn1"
+                   placeholder="Namn 1"
+                   value="{{ request.form['namn'] }}"></input>
+            <br>
+
+        </form>
     </body>
 </html>

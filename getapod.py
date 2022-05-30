@@ -110,7 +110,7 @@ def show(room, caldate=None):
     show['room'] = {'name': roomdata.name.upper(), 'pods': [chr(x+65) for x in range(roomdata.pods)]}
     show['dates'] = dates
     show['clocks'] = [8,10,13,15,17,19,21]
-    bookingdata = Bookings.query.filter(Bookings.time > today).filter(Bookings.time < tomorrow).all()
+    #bookingdata = Bookings.query.filter(Bookings.time > today).filter(Bookings.time < tomorrow).all()
     show['query'] = get_bookings(roomdata, dates['today']['string'])
 
     return render_template('show.html', show=show, test='<hr>')
@@ -124,7 +124,11 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
     if 'Null' in locals().values():
         return redirect("/show/B112", code=302)
     else:
-        return render_template('book.html', stuff=locals())
+        roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
+        if int(hr) in [8,10,13,15,17,19,21]:
+            return render_template('book.html', data=locals())
+        else:
+            return redirect(f"/show/{roomdata.name.upper()}", code=302)
 
 if __name__ == "__main__":
     app.run(debug=True)
