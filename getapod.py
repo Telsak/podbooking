@@ -1,7 +1,7 @@
 import os
 from time import localtime, mktime
 from datetime import datetime , date
-from flask import Flask, render_template, abort, redirect
+from flask import Flask, render_template, abort, redirect, request, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -9,6 +9,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite')
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
+app.config['SECRET_KEY'] = 'thisisasecretkeyoncethisgoeslivenoreallyipromise'
 
 db = SQLAlchemy(app)
 
@@ -71,7 +72,7 @@ def init_dates(today_d):
     return { 'today': { 'string': today_s, 'date': today_d },
              'yesterday': { 'string': yday_s, 'date': yday_d },
              'tomorrow': { 'string': morrow_s, 'date': morrow_d } 
-           }, today_s, morrow_s
+           }
 
 def get_bookings(roomdata, epoch):
     booking_data = {}
@@ -81,10 +82,10 @@ def get_bookings(roomdata, epoch):
         for pod in range(1, roomdata.pods+1):
             data = Bookings.query.filter(Bookings.time==(epoch+(hour*3600))).filter(Bookings.room==roomdata.id).filter(Bookings.pod==pod).all()
             if len(data) >= 1:
-                booking_data[hour][pod] = f'<a href="/delete/{roomdata.name}/{sec_to_date(data[0].time)}/{hour}/{chr(pod+64)}"> \
+                booking_data[hour][pod] = f'<a href="/delete/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}"> \
                     {data[0].name1}</a><br>{data[0].name2}<br>{data[0].comment}'
             else:
-                booking_data[hour][pod] = f'<a href="/book/{roomdata.name}/{str(date.today())[2:]}/{hour}/{chr(pod+64)}">Get POD!</a>'
+                booking_data[hour][pod] = f'<a href="/book/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}">Get POD!</a>'
     return booking_data
 
 @app.errorhandler(404)
@@ -93,17 +94,17 @@ def page_not_found(e):
 
 @app.route('/show/<room>')
 @app.route('/show/<room>/<caldate>')
-def show(room, caldate=None):
+def show(room, caldate='Null'):
     
     if room.upper() not in 'B112 B113 B114 B118 B123 B125':
         abort(404, description="Resource not found")
     
-    if caldate == None:
+    if caldate == 'Null':
         today_d = str(date.today())[2:]
     else:
         today_d = caldate
     
-    dates, today, tomorrow = init_dates(today_d)
+    dates = init_dates(today_d)
     
     show = {}
     roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
@@ -118,9 +119,26 @@ def show(room, caldate=None):
 @app.route('/book')
 @app.route('/book/<room>')
 @app.route('/book/<room>/<caldate>')
-@app.route('/book/<room>/<caldate>/<hr>/<pod>')
+@app.route('/book/<room>/<caldate>/<hr>/<pod>', methods=('GET', 'POST'))
 def book(room='Null', caldate='Null', hr='Null', pod='Null'):
- 
+    if request.method == 'POST':
+        namn1 = request.form['namn1']
+        roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
+        book_time = date_to_sec(caldate) + (3600 * int(hr))
+        bi = Bookings(
+                room=roomdata.id,
+                time=book_time,
+                pod=ord(pod.upper())-64,
+                duration=2,
+                name1=namn1,
+                name2='',
+                comment='',
+                flag='AVAILABLE'
+                )
+        db.session.add(bi)
+        db.session.commit()
+        return redirect(f"/show/{roomdata.name.upper()}/{caldate}", code=302)
+
     if 'Null' in locals().values():
         return redirect("/show/B112", code=302)
     else:
@@ -129,6 +147,11 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
             return render_template('book.html', data=locals())
         else:
             return redirect(f"/show/{roomdata.name.upper()}", code=302)
+
+@app.route('/delete/<hash>')
+def delete(hash):
+    return True
+
 
 if __name__ == "__main__":
     app.run(debug=True)

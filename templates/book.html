@@ -5,15 +5,22 @@
         <link rel="icon" href="{{ url_for('static', filename = 'favicon.ico') }}" type="image/x-icon">
     </head>
     <body>
-        <p>This is a booking test!</p>
+        <p>Booking of {{ data.room }} - Pod {{ data.pod }}, {{ data.caldate }} {{ data.hr }}:00</p>
         <form method="post">
-            <label for="title">Title</label>
+            <label for="title">Användare 1</label>
             <br>
             <input type="text" name="namn1"
                    placeholder="Namn 1"
-                   value="{{ request.form['namn'] }}"></input>
+                   value="{{ request.form['namn1'] }}"></input>
             <br>
 
+            <label for="title">Användare 2</label>
+            <br>
+            <input type="text" name="namn2"
+                   placeholder="Namn 2"
+                   value="{{ request.form['namn2'] }}"></input>
+            <br>
+            <button type="submit">Submit</button>
         </form>
     </body>
 </html>
