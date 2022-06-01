@@ -1,11 +1,15 @@
 import os
 from time import localtime, mktime
-from datetime import datetime , date
+from datetime import datetime, date
 from flask import Flask, render_template, abort, redirect, request
 from flask_sqlalchemy import SQLAlchemy
+from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField
+from wtforms import StringField, SubmitField, PasswordField
 from wtforms.validators import DataRequired
+from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
+
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
@@ -13,7 +17,21 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'da
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SECRET_KEY'] = 'thisisasecretkeyoncethisgoeslivenoreallyipromise'
 
+login_manager = LoginManager()
+login_manager.session_protection = "strong"
+login_manager.login_view = "login"
+login_manager.login_message_category = "info"
+
 db = SQLAlchemy(app)
+bcrypt = Bcrypt()
+
+login_manager.init_app(app)
+bcrypt.init_app(app)
+
+class LoginForm(FlaskForm):
+    name = StringField("Username", validators=[DataRequired()])
+    password = PasswordField("Password", validators=[DataRequired()])
+    submit = SubmitField("Submit")
 
 class Rooms(db.Model):
     __tablename__ = 'getapod_rooms'
@@ -46,6 +64,28 @@ class Bookings(db.Model):
         self.name2 = name2
         self.comment = comment
         self.flag = flag
+
+class Role(db.Model):
+    __tablename__ = 'roles'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(64), unique=True)
+    users = db.relationship('User', backref='role')
+
+    def __repr__(self):
+        return '<Role %r>' % self.name
+
+class User(db.Model):
+    __tablename__ = 'users'
+
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), nullable=False, unique=True, index=True)
+    role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
+    password = db.Column(db.String(300), nullable=False, unique=True)
+    flag = db.Column(db.String(64), nullable=False)
+    last_login = db.Column(db.Integer, nullable=False)
+
+    def __repr__(self):
+        return '<User %r>' % self.username
 
 def sec_to_date(sec):
     '''str_date returns in the format YY-M-D'''
@@ -159,9 +199,18 @@ def delete(room, caldate, hr, pod):
     db.session.commit()
     return redirect(f'/show/{roomdata.name.upper()}/{caldate}', code=302)
 
-@app.route('/login')
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    return render_template('login.html')
+    name = None
+    form = LoginForm()
+    # validating form
+    if form.validate_on_submit():
+        name = form.name.data
+        password = form.password.data
+        form.name.data = ''
+        form.password.data = ''
+
+    return render_template('login.html', name=name, form=form)
 
 @app.route('/')
 def index():
@@ -169,3 +218,5 @@ def index():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+#https://www.freecodecamp.org/news/how-to-authenticate-users-in-flask/
