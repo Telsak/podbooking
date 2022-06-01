@@ -1,40 +1,35 @@
-<html>
-    <head>
-        <title>Show room</title>
-        <link rel="shortcut icon" href="{{ url_for('static', filename = 'favicon.ico') }}" type="image/x-icon">
-        <link rel="icon" href="{{ url_for('static', filename = 'favicon.ico') }}" type="image/x-icon">
-    </head>
-    <body>
-        <table width="900">
-        <tr valign="top">
-            <td>
-                <span class="rubrik">Booking of {{ show['room']['name'] }}</span><br>
-                <span class="brodtext"><font color=red size=+1>RULES:
-                    <br>&nbsp;- Book only two slots (4 hours) in advance'
-                    <br>&nbsp;- PODs are free to use 20 minutes after NoShow'
-                    </font></span>
-                    {{ show['dates']['today']['string'] }}
-                    <hr>
-                    <a href="http://localhost:5000/show/{{ show['room']['name'] }}/{{show['dates']['yesterday']['date']}}">Igår</a>
-                    <a href="http://localhost:5000/show/{{ show['room']['name'] }}/{{show['dates']['tomorrow']['date']}}">Imorgon</a>
-                    <table width="800">
-                        <tr>
-                            <th>Time</th>
-                            {% for pod in show['room']['pods'] %}
-                            <th>Pod {{ pod }}</th>
-                            {% endfor %}
-                        </tr>
-                        <tr>
-                        {% for hour in show['clocks'] %}
-                            <td>{{ hour }}-{{ hour+2 }}</td>
-                            {% for pod in show['query'][hour] %}
-                                <td style="height:50px;width:200px;vertical-align:top;padding:5px">{{ show['query'][hour][pod]|safe }}</td>
-                                {% endfor %}
-                        </tr>
+{% extends 'base.html' %}
+{% block content %}
+
+    <table class="table">
+    <tr valign="top">
+        <td>
+            <span class="rubrik">Booking of {{ show['room']['name'] }}</span><br>
+            <span class="brodtext"><font color=red size=+1>RULES:
+                <br>&nbsp;- Book only two slots (4 hours) in advance'
+                <br>&nbsp;- PODs are free to use 20 minutes after NoShow'
+                </font></span>
+                {{ show['dates']['today']['string'] }}
+                <hr>
+                <a href="http://localhost:5000/show/{{ show['room']['name'] }}/{{show['dates']['yesterday']['date']}}">Igår</a>
+                <a href="http://localhost:5000/show/{{ show['room']['name'] }}/{{show['dates']['tomorrow']['date']}}">Imorgon</a>
+                <table class="table table-striped">
+                    <tr>
+                        <th class="table-primary">Time</th>
+                        {% for pod in show['room']['pods'] %}
+                        <th class="table-primary">Pod {{ pod }}</th>
                         {% endfor %}
-                    </table>
-            </td>
-        </tr>
+                    </tr>
+                    <tr>
+                    {% for hour in show['clocks'] %}
+                        <td>{{ hour }}-{{ hour+2 }}</td>
+                        {% for pod in show['query'][hour] %}
+                            <td class="align-middle">{{ show['query'][hour][pod]|safe }}</td>
+                            {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </table>
+        </td>
+    </tr>
     </table>
-    </body>
-</html>
+{% endblock %}

@@ -1,9 +1,11 @@
 import os
 from time import localtime, mktime
 from datetime import datetime , date
-from flask import Flask, render_template, abort, redirect, request, url_for, flash
+from flask import Flask, render_template, abort, redirect, request
 from flask_sqlalchemy import SQLAlchemy
-
+from flask_wtf import FlaskForm
+from wtforms import StringField, SubmitField
+from wtforms.validators import DataRequired
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
@@ -148,10 +150,22 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
         else:
             return redirect(f"/show/{roomdata.name.upper()}", code=302)
 
-@app.route('/delete/<hash>')
-def delete(hash):
-    return True
+@app.route('/delete/<room>/<caldate>/<hr>/<pod>')
+def delete(room, caldate, hr, pod):
+    epoch = date_to_sec(caldate)
+    roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
 
+    Bookings.query.filter(Bookings.time==(epoch+(int(hr)*3600))).filter(Bookings.room==roomdata.id).filter(Bookings.pod==ord(pod)-64).delete()
+    db.session.commit()
+    return redirect(f'/show/{roomdata.name.upper()}/{caldate}', code=302)
+
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
+@app.route('/')
+def index():
+    return redirect("/show/B112", code=302)
 
 if __name__ == "__main__":
     app.run(debug=True)
