@@ -3,17 +3,33 @@
 
         <h1>Login page</h1>
         <p>This is a login page.</p>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+        {% endwith %}
 
         {% if name %}
-            <h1>Hello {{ name }} {{ password }}</h1>
+            <h1>Hello {{ name }}</h1>
         {% else %}
             <h1>What's your name?</h1>
             <form method="POST">
-                {{ form.hidden_tag() }}
+                {{ form.csrf_token }}
+                
                 {{ form.name.label(class="form-label") }}
                 {{ form.name(class="form-control") }}
+                
                 {{ form.password.label(class="form-label")}}
                 {{ form.password(class="form-control")}}
+                
+                {{ form.create.label(class="form-label")}}
+                {{ form.create()}}
+
                 <br/>
                 {{ form.submit(class="btn btn-primary") }}
             </form>

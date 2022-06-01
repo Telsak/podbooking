@@ -1,11 +1,12 @@
 import os
 from time import localtime, mktime
 from datetime import datetime, date
-from flask import Flask, render_template, abort, redirect, request
+from wsgiref.validate import validator
+from flask import Flask, render_template, abort, redirect, request, flash, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField
+from wtforms import StringField, SubmitField, PasswordField, BooleanField
 from wtforms.validators import DataRequired
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
 
@@ -31,6 +32,7 @@ bcrypt.init_app(app)
 class LoginForm(FlaskForm):
     name = StringField("Username", validators=[DataRequired()])
     password = PasswordField("Password", validators=[DataRequired()])
+    create = BooleanField("Create user?")
     submit = SubmitField("Submit")
 
 class Rooms(db.Model):
@@ -74,7 +76,7 @@ class Role(db.Model):
     def __repr__(self):
         return '<Role %r>' % self.name
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
@@ -133,6 +135,10 @@ def get_bookings(roomdata, epoch):
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 @app.route('/show/<room>')
 @app.route('/show/<room>/<caldate>')
@@ -209,12 +215,44 @@ def login():
         password = form.password.data
         form.name.data = ''
         form.password.data = ''
+        if form.create.data == True:
+            new_user = User(
+                username=name,
+                role_id = 1,
+                password=bcrypt.generate_password_hash(password),
+                flag='CAN_BOOK',
+                last_login=0
+            )
+            db.session.add(new_user)
+            db.session.commit()
+            flash(f'Account successfully created', 'success')
+        else:
+            try:
+                user = User.query.filter_by(username=name).first()
+                if bcrypt.check_password_hash(user.password, password):
+                    login_user(user)
+                    return redirect(url_for('index'))
+                else:
+                    flash("Invalid Username or password!", "danger")
+            except Exception as e:
+                flash(e, "danger")
 
     return render_template('login.html', name=name, form=form)
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
 
 @app.route('/')
 def index():
     return redirect("/show/B112", code=302)
+
+@app.route("/debug")
+@login_required
+def debug():
+    return render_template('debug.html')
 
 if __name__ == "__main__":
     app.run(debug=True)
