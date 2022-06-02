@@ -3,7 +3,9 @@ Written in Python using Flask as a framework to deliver a web application for a 
 
 A number of tables in a database using SQLITE and Flask/SQLAlchemy use the rough layout as follows:
 (Rooms)
-|--------------------------|
+
+|    |  name     |   |
+|------|:---------:|------:|
 | id   |  name     |  pods |
 |------|:---------:|------:|
 | 1    |   b112    |   8   |
