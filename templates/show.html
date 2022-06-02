@@ -21,9 +21,9 @@
                     </tr>
                     <tr>
                     {% for hour in show['clocks'] %}
-                        <td>{{ hour }}-{{ hour+2 }}</td>
+                        <td class="table-primary">{{ hour }}-{{ hour+2 }}</td>
                         {% for pod in show['query'][hour] %}
-                            <td class="align-middle">{{ show['query'][hour][pod]|safe }}</td>
+                            {{ show['query'][hour][pod]|safe }}
                             {% endfor %}
                     </tr>
                     {% endfor %}

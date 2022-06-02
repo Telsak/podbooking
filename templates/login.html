@@ -14,26 +14,21 @@
         {% endif %}
         {% endwith %}
 
-        {% if name %}
-            <h1>Hello {{ name }}</h1>
-        {% else %}
-            <h1>What's your name?</h1>
-            <form method="POST">
-                {{ form.csrf_token }}
+        <h2>Login details</h2>
+           <form method="POST">
+            {{ form.csrf_token }}
                 
-                {{ form.name.label(class="form-label") }}
-                {{ form.name(class="form-control") }}
+            {{ form.name.label(class="form-label") }}
+            {{ form.name(class="form-control") }}
                 
-                {{ form.password.label(class="form-label")}}
-                {{ form.password(class="form-control")}}
+            {{ form.password.label(class="form-label")}}
+            {{ form.password(class="form-control")}}
                 
-                {{ form.create.label(class="form-label")}}
-                {{ form.create()}}
+            {{ form.create.label(class="form-label")}}
+            {{ form.create()}}
 
-                <br/>
-                {{ form.submit(class="btn btn-primary") }}
+            <br/>
+            {{ form.submit(class="btn btn-primary") }}
             </form>
-
-        {% endif %}
 
 {% endblock %}

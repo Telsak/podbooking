@@ -106,7 +106,7 @@ def date_to_sec(str_date):
     return sec
 
 def init_dates(today_d):
-    '''Returns a dictionary with todays date +/- returned as string and epoch_s'''
+    '''Returns a dictionary with todays date +/- 1 returned as string and epoch_s'''
     today_s = date_to_sec(today_d)
     yday_s = today_s-86400
     yday_d = sec_to_date(yday_s)
@@ -126,10 +126,22 @@ def get_bookings(roomdata, epoch):
         for pod in range(1, roomdata.pods+1):
             data = Bookings.query.filter(Bookings.time==(epoch+(hour*3600))).filter(Bookings.room==roomdata.id).filter(Bookings.pod==pod).all()
             if len(data) >= 1:
-                booking_data[hour][pod] = f'<a href="/delete/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}"> \
-                    {data[0].name1}</a><br>{data[0].name2}<br>{data[0].comment}'
+                showstring = f'{data[0].name1}</a><br>'
+                if len(data[0].comment) < 1:
+                    showstring += f'&nbsp;'
+                else:
+                    showstring += f'{data[0].comment}'
+                if data[0].flag != 'AVAILABLE':
+                    if current_user.is_authenticated:
+                        booking_data[hour][pod] = f'<td class="align-middle table-danger"><a href="/delete/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}"> \
+                            {showstring}</td>'
+                    else:
+                        booking_data[hour][pod] = f'<td class="align-middle table-danger">Reserved<br>&nbsp;</td>'
+                else:
+                    booking_data[hour][pod] = f'<td class="align-middle table-warning"><a href="/delete/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}"> \
+                            {showstring}</td>'
             else:
-                booking_data[hour][pod] = f'<a href="/book/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}">Get POD!</a>'
+                booking_data[hour][pod] = f'<td class="align-middle table-success"><a href="/book/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}">Get POD!</a><br>&nbsp;</td>'
     return booking_data
 
 @app.errorhandler(404)
@@ -159,10 +171,9 @@ def show(room, caldate='Null'):
     show['room'] = {'name': roomdata.name.upper(), 'pods': [chr(x+65) for x in range(roomdata.pods)]}
     show['dates'] = dates
     show['clocks'] = [8,10,13,15,17,19,21]
-    #bookingdata = Bookings.query.filter(Bookings.time > today).filter(Bookings.time < tomorrow).all()
     show['query'] = get_bookings(roomdata, dates['today']['string'])
 
-    return render_template('show.html', show=show, test='<hr>')
+    return render_template('show.html', show=show)
 
 @app.route('/book')
 @app.route('/book/<room>')
@@ -173,6 +184,15 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
         namn1 = request.form['namn1']
         roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
         book_time = date_to_sec(caldate) + (3600 * int(hr))
+        
+        try:
+            if request.form['reserved'] == 'True':
+                roomflag='UNAVAILABLE'
+            else:
+                roomflag='AVAILABLE'
+        except:
+            roomflag='AVAILABLE'
+ 
         bi = Bookings(
                 room=roomdata.id,
                 time=book_time,
@@ -181,7 +201,7 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
                 name1=namn1,
                 name2='',
                 comment='',
-                flag='AVAILABLE'
+                flag=roomflag
                 )
         db.session.add(bi)
         db.session.commit()
@@ -200,7 +220,6 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
 def delete(room, caldate, hr, pod):
     epoch = date_to_sec(caldate)
     roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
-
     Bookings.query.filter(Bookings.time==(epoch+(int(hr)*3600))).filter(Bookings.room==roomdata.id).filter(Bookings.pod==ord(pod)-64).delete()
     db.session.commit()
     return redirect(f'/show/{roomdata.name.upper()}/{caldate}', code=302)
@@ -235,15 +254,24 @@ def login():
                 else:
                     flash("Invalid Username or password!", "danger")
             except Exception as e:
-                flash(e, "danger")
+                if 'has no attribute' in str(e):
+                    flash("No such user!", "danger")
+                else:
+                    flash(e, "danger")
 
-    return render_template('login.html', name=name, form=form)
+    return render_template('login.html', form=form)
 
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('index'))
+
+@app.route("/admin")
+@login_required
+def admin():
+    if current_user.role.name == "Admin":
+        return render_template("admin.html")
 
 @app.route('/')
 def index():
@@ -257,4 +285,4 @@ def debug():
 if __name__ == "__main__":
     app.run(debug=True)
 
-#https://www.freecodecamp.org/news/how-to-authenticate-users-in-flask/
+# TODO: #3 Split application into smaller modules - easy peasy
