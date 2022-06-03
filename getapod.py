@@ -1,7 +1,7 @@
 import os
 from time import localtime, mktime
 from datetime import datetime, date
-from wsgiref.validate import validator
+#from wsgiref.validate import validator
 from flask import Flask, render_template, abort, redirect, request, flash, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
@@ -9,6 +9,8 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField, BooleanField
 from wtforms.validators import DataRequired
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -24,10 +26,12 @@ login_manager.login_view = "login"
 login_manager.login_message_category = "info"
 
 db = SQLAlchemy(app)
+
 bcrypt = Bcrypt()
 
 login_manager.init_app(app)
 bcrypt.init_app(app)
+
 
 class LoginForm(FlaskForm):
     name = StringField("Username", validators=[DataRequired()])
@@ -88,6 +92,17 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return '<User %r>' % self.username
+
+class MyModelView(ModelView):
+    def is_accessible(self):
+        if current_user.is_authenticated:
+            return current_user.role.name == "Admin"
+        else:
+            return False
+
+admin = Admin(app)
+admin.add_view(MyModelView(User, db.session))
+admin.add_view(MyModelView(Rooms, db.session))
 
 def sec_to_date(sec):
     '''str_date returns in the format YY-M-D'''
@@ -150,7 +165,7 @@ def page_not_found(e):
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return User.query.get(user_id)
 
 @app.route('/show/<room>')
 @app.route('/show/<room>/<caldate>')
@@ -161,6 +176,7 @@ def show(room, caldate='Null'):
     
     if caldate == 'Null':
         today_d = str(date.today())[2:]
+        return redirect(f'/show/{room.upper()}/{today_d}')
     else:
         today_d = caldate
     
@@ -208,7 +224,7 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
         return redirect(f"/show/{roomdata.name.upper()}/{caldate}", code=302)
 
     if 'Null' in locals().values():
-        return redirect("/show/B112", code=302)
+        return redirect(f"/show/B112/{str(date.today())[2:]}", code=302)
     else:
         roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
         if int(hr) in [8,10,13,15,17,19,21]:
@@ -267,14 +283,15 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
-@app.route("/admin")
+'''@app.route("/admin")
 @login_required
 def admin():
     if current_user.role.name == "Admin":
-        return render_template("admin.html")
+        return render_template("admin.html")'''
 
 @app.route('/')
 def index():
+    # TODO: Set up a landing page for the booking system. Don't overdo it though.
     return redirect("/show/B112", code=302)
 
 @app.route("/debug")
