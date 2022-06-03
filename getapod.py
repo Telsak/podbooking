@@ -9,8 +9,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField, BooleanField
 from wtforms.validators import DataRequired
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
-from flask_admin import Admin
-from flask_admin.contrib.sqla import ModelView
+from sqlalchemy import event
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -93,17 +92,6 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
-class MyModelView(ModelView):
-    def is_accessible(self):
-        if current_user.is_authenticated:
-            return current_user.role.name == "Admin"
-        else:
-            return False
-
-admin = Admin(app)
-admin.add_view(MyModelView(User, db.session))
-admin.add_view(MyModelView(Rooms, db.session))
-
 def sec_to_date(sec):
     '''str_date returns in the format YY-M-D'''
     ds = localtime(sec)
@@ -153,10 +141,10 @@ def get_bookings(roomdata, epoch):
                     else:
                         booking_data[hour][pod] = f'<td class="align-middle table-danger">Reserved<br>&nbsp;</td>'
                 else:
-                    booking_data[hour][pod] = f'<td class="align-middle table-warning"><a href="/delete/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}"> \
+                    booking_data[hour][pod] = f'<td class="align-middle"><a href="/delete/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}"> \
                             {showstring}</td>'
             else:
-                booking_data[hour][pod] = f'<td class="align-middle table-success"><a href="/book/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}">Get POD!</a><br>&nbsp;</td>'
+                booking_data[hour][pod] = f'<td class="align-middle"><a href="/book/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}">Get POD!</a><br>&nbsp;</td>'
     return booking_data
 
 @app.errorhandler(404)
@@ -283,11 +271,13 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
-'''@app.route("/admin")
+@app.route("/admin/")
 @login_required
 def admin():
     if current_user.role.name == "Admin":
-        return render_template("admin.html")'''
+        return render_template("admin.html")
+    else:
+        return render_template("debug.html")
 
 @app.route('/')
 def index():
