@@ -15,7 +15,7 @@ from sqlalchemy import event
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite')
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite') 
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SECRET_KEY'] = 'thisisasecretkeyoncethisgoeslivenoreallyipromise'
 
@@ -136,15 +136,15 @@ def get_bookings(roomdata, epoch):
                     showstring += f'{data[0].comment}'
                 if data[0].flag != 'AVAILABLE':
                     if current_user.is_authenticated:
-                        booking_data[hour][pod] = f'<td class="align-middle table-danger"><a href="/delete/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}"> \
+                        booking_data[hour][pod] = f'<td style="border-radius:10px" class="align-middle table-danger"><a href="/delete/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}"> \
                             {showstring}</td>'
                     else:
-                        booking_data[hour][pod] = f'<td class="align-middle table-danger">Reserved<br>&nbsp;</td>'
+                        booking_data[hour][pod] = f'<td style="border-radius:10px" class="align-middle table-danger">Reserved<br>&nbsp;</td>'
                 else:
-                    booking_data[hour][pod] = f'<td class="align-middle"><a href="/delete/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}"> \
+                    booking_data[hour][pod] = f'<td style="border-radius:10px" class="align-middle"><a href="/delete/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}"> \
                             {showstring}</td>'
             else:
-                booking_data[hour][pod] = f'<td class="align-middle"><a href="/book/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}">Get POD!</a><br>&nbsp;</td>'
+                booking_data[hour][pod] = f'<td style="border-radius:10px" class="align-middle table-success"><a href="/book/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}">Get POD!</a><br>&nbsp;</td>'
     return booking_data
 
 @app.errorhandler(404)
