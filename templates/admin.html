@@ -14,7 +14,8 @@
                 <th scope="col">Role</th>
                 <th scope="col">Status</th>
                 <th scope="col"></th>
-              </tr>
+                <th scope="col"></th>
+            </tr>
             </thead>
             <tbody>
               {% for user in get_users() %}
@@ -24,9 +25,14 @@
                 <td class="align-middle">{{ user.role.name }}</td>
                 <td class="align-middle">{{ user.flag }}</td>
                 <td class="align-middle">
-                      <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#editUser">
+                      <button type="button" class="btn btn-link" data-bs-toggle="modal" data-userid=user.id data-bs-target="#editUser">
                         <i class="bi bi-pencil"></i>
                       </button>
+                </td>
+                <td class="align-middle">
+                    <button type="button" class="btn btn-link" data-bs-toggle="modal" data-userid=user.id data-bs-target="#deleteUser">
+                        <font color="red"><i class="bi bi-x-square-fill"></i></font>
+                    </button>
                 </td>
               </tr>
               {% endfor %}
@@ -35,7 +41,7 @@
           <button type="button" class="btn btn-link" data-bs-toggle="modal" data-bs-target="#createUser">
             Add user</i>
         </button>
-    {% endif %}
+    {% endif %}    
 {% endblock %}
 
 {% block createUserForm %}
@@ -43,7 +49,7 @@
     {{ form.csrf_token }}
 
     {{ form.next(value=request.args.get('next', '')) }}
-    {{ form.type(value='CREATE')}}
+    {{ form.type(value='CREATE') }}
 
     {{ form.username.label(class="form-label") }}
     {{ form.username(class="form-control") }}
