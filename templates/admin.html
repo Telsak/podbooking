@@ -37,3 +37,24 @@
         </button>
     {% endif %}
 {% endblock %}
+
+{% block createUserForm %}
+{% if form is defined %}
+    {{ form.csrf_token }}
+
+    {{ form.next(value=request.args.get('next', '')) }}
+    {{ form.type(value='CREATE')}}
+
+    {{ form.username.label(class="form-label") }}
+    {{ form.username(class="form-control") }}
+
+    {{ form.role.label(class="form-label") }}
+    {{ form.role(class="form-control") }}
+       
+    {{ form.password.label(class="form-label")}}
+    {{ form.password(class="form-control")}}
+
+    {{ form.password_confirm.label(class="form-label")}}
+    {{ form.password_confirm(class="form-control")}}
+{% endif %}
+{% endblock %}

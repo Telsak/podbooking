@@ -1,17 +1,15 @@
 from contextlib import redirect_stdout
 from encodings import CodecRegistryError
 import os
-from time import localtime, mktime
-from datetime import datetime, date
+from wsgiref.validate import validator
 #from wsgiref.validate import validator
 from flask import Flask, render_template, abort, redirect, request, flash, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField, BooleanField, HiddenField, SelectField
-from wtforms.validators import DataRequired
+from wtforms.validators import DataRequired, EqualTo, Length
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
-from sqlalchemy import event
 from datemagic import sec_to_date, date_to_sec, init_dates, date_to_str
 
 
@@ -52,10 +50,25 @@ class LoginForm(FlaskForm):
     submit = SubmitField("Submit")
 
 class CreateUserForm(FlaskForm):
-    username = StringField("Username", validators=[DataRequired()])
-    password = PasswordField("Password", validators=[DataRequired()])
-    role = SelectField("Role", choices=[('1', 'Admin'), ('2', 'Teacher'), ('3', 'Student')], coerce=int)
+    username = StringField("Username", validators=[
+        DataRequired(),
+        Length(min=3, max=64)
+        ])
+    password = PasswordField("Password", validators=[
+        DataRequired(), 
+        EqualTo('password_confirm', message='Passwords must match'),
+        Length(min=8, message="Password has to be least 8 characters")
+        ])
+    password_confirm = PasswordField("Confirm password", validators=[
+        Length(min=8)
+        ])
+    role = SelectField("Role", choices=[
+        ('1', 'Admin'), 
+        ('3', 'Teacher'), 
+        ('2', 'Student')], 
+        coerce=int)
     next = HiddenField("Hidden")
+    type = HiddenField("POST-type")
     submit = SubmitField("Submit")
 
 
@@ -113,35 +126,6 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
-"""def sec_to_date(sec):
-    '''str_date returns in the format YY-M-D'''
-    ds = localtime(sec)
-    str_date = f'{str(ds.tm_year)[2:]}-{ds.tm_mon}-{ds.tm_mday}'
-    return str_date
-
-def date_to_sec(str_date):
-    '''str_date should always be in the format YY-M-D
-       returns the current yy-m-d in unix epoch seconds since 1970'''
-
-    ld = [int(n) for n in str_date.split('-')]
-    '''adds 2000 to fix year-trimming in date-format to avoid mktime() crash'''
-    date = datetime(2000 + ld[0], ld[1], ld[2])
-    sec = int(mktime(date.timetuple()))
-    return sec
-
-def init_dates(today_d):
-    '''Returns a dictionary with todays date +/- 1 returned as string and epoch_s'''
-    today_s = date_to_sec(today_d)
-    yday_s = today_s-86400
-    yday_d = sec_to_date(yday_s)
-    morrow_s = today_s+86400
-    morrow_d = sec_to_date(morrow_s)
-    
-    return { 'today': { 'string': today_s, 'date': today_d },
-             'yesterday': { 'string': yday_s, 'date': yday_d },
-             'tomorrow': { 'string': morrow_s, 'date': morrow_d } 
-           }"""
-
 def get_bookings(roomdata, epoch):
     booking_data = {}
     hours = [8,10,13,15,17,19,21]
@@ -185,9 +169,7 @@ def show(room, caldate='Null'):
         abort(404, description="Resource not found")
     
     if caldate == 'Null':
-        #today_d = str(date.today())[2:]
-        today_d = date_to_str()
-        return redirect(f'/show/{room.upper()}/{today_d}')
+        return redirect(f'/show/{room.upper()}/{date_to_str()}')
     else:
         today_d = caldate
     
@@ -219,7 +201,7 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
                 roomflag='AVAILABLE'
         except:
             roomflag='AVAILABLE'
- 
+        # TODO: Add concurrency check to make sure the pod slot is still available before booking
         bi = Bookings(
                 room=roomdata.id,
                 time=book_time,
@@ -253,7 +235,7 @@ def delete(room, caldate, hr, pod):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    name = None
+    #name = None
     form = LoginForm()
     # validating form
     if form.validate_on_submit():
@@ -299,14 +281,37 @@ def logout():
     return redirect(url_for('index'))
 
 @app.route("/admin/")
-@app.route("/admin/<view>")
+@app.route("/admin/<view>", methods=['GET', 'POST'])
 @login_required
 def admin(view='Null'):
     if current_user.role.name == "Admin":
         if view == 'Null':
             return render_template("admin.html", view='base')
         else:
-            return render_template("admin.html", view=view, cForm=CreateUserForm())
+            if request.method == 'POST':
+                if request.form['type'] == 'CREATE':
+                    cform = CreateUserForm()
+                    if cform.validate_on_submit():
+                        new_user = User(
+                            username=cform.username.data,
+                            role_id = cform.role.data,
+                            password=bcrypt.generate_password_hash(cform.password.data),
+                            flag='CAN_BOOK',
+                            last_login=0
+                        )
+                        try:
+                            db.session.add(new_user)
+                            db.session.commit()
+                            flash(f'Account successfully created', 'success')
+                        except Exception as error:
+                            flash(error, "danger")
+                        return render_template("admin.html", view=view, form=cform)
+                elif request.form['type'] == 'MODIFY':
+                    pass
+
+            elif request.method == 'GET':
+                cform = CreateUserForm()
+                return render_template("admin.html", view=view, form=cform)
     else:
         flash("You are not authorized to view this resource.", "danger")
         return redirect(url_for("index"))
