@@ -49,6 +49,14 @@ class LoginForm(FlaskForm):
     next = HiddenField("Hidden")
     submit = SubmitField("Submit")
 
+class DeleteUserForm(FlaskForm):
+    username = StringField("Username", validators=[DataRequired()], render_kw={'readonly': True})
+    username_confirm = StringField("Confirm username for deletion", validators=[
+        DataRequired(),
+        EqualTo("username", message="Username must match") 
+    ])
+    delete_bool = BooleanField("Yes I want to delete this user")
+
 class CreateUserForm(FlaskForm):
     username = StringField("Username", validators=[
         DataRequired(),
@@ -70,7 +78,6 @@ class CreateUserForm(FlaskForm):
     next = HiddenField("Hidden")
     type = HiddenField("POST-type")
     submit = SubmitField("Submit")
-
 
 class Rooms(db.Model):
     __tablename__ = 'getapod_rooms'
@@ -287,7 +294,7 @@ def admin(view='Null'):
     if current_user.role.name == "Admin":
         if view == 'Null':
             return render_template("admin.html", view='base')
-        else:
+        elif view == 'user':
             if request.method == 'POST':
                 if request.form['type'] == 'CREATE':
                     cform = CreateUserForm()
