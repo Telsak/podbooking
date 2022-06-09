@@ -12,6 +12,7 @@ from wtforms import StringField, SubmitField, PasswordField, BooleanField, Hidde
 from wtforms.validators import DataRequired
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
 from sqlalchemy import event
+from datemagic import sec_to_date, date_to_sec, init_dates, date_to_str
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -50,12 +51,13 @@ class LoginForm(FlaskForm):
     next = HiddenField("Hidden")
     submit = SubmitField("Submit")
 
-class CreateUser(FlaskForm):
-    name = StringField("Username", validators=[DataRequired()])
+class CreateUserForm(FlaskForm):
+    username = StringField("Username", validators=[DataRequired()])
     password = PasswordField("Password", validators=[DataRequired()])
-    role = SelectField("Role", coerce=int)
+    role = SelectField("Role", choices=[('1', 'Admin'), ('2', 'Teacher'), ('3', 'Student')], coerce=int)
     next = HiddenField("Hidden")
     submit = SubmitField("Submit")
+
 
 class Rooms(db.Model):
     __tablename__ = 'getapod_rooms'
@@ -111,7 +113,7 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
-def sec_to_date(sec):
+"""def sec_to_date(sec):
     '''str_date returns in the format YY-M-D'''
     ds = localtime(sec)
     str_date = f'{str(ds.tm_year)[2:]}-{ds.tm_mon}-{ds.tm_mday}'
@@ -138,7 +140,7 @@ def init_dates(today_d):
     return { 'today': { 'string': today_s, 'date': today_d },
              'yesterday': { 'string': yday_s, 'date': yday_d },
              'tomorrow': { 'string': morrow_s, 'date': morrow_d } 
-           }
+           }"""
 
 def get_bookings(roomdata, epoch):
     booking_data = {}
@@ -183,7 +185,8 @@ def show(room, caldate='Null'):
         abort(404, description="Resource not found")
     
     if caldate == 'Null':
-        today_d = str(date.today())[2:]
+        #today_d = str(date.today())[2:]
+        today_d = date_to_str()
         return redirect(f'/show/{room.upper()}/{today_d}')
     else:
         today_d = caldate
@@ -232,7 +235,7 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
         return redirect(f"/show/{roomdata.name.upper()}/{caldate}", code=302)
 
     if 'Null' in locals().values():
-        return redirect(f"/show/B112/{str(date.today())[2:]}", code=302)
+        return redirect(f"/show/B112/{date_to_str()}", code=302)
     else:
         roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
         if int(hr) in [8,10,13,15,17,19,21]:
@@ -303,7 +306,7 @@ def admin(view='Null'):
         if view == 'Null':
             return render_template("admin.html", view='base')
         else:
-            return render_template("admin.html", view=view)
+            return render_template("admin.html", view=view, cForm=CreateUserForm())
     else:
         flash("You are not authorized to view this resource.", "danger")
         return redirect(url_for("index"))
