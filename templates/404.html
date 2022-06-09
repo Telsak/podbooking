@@ -1,18 +1,15 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>404 - Page not found</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/404.css') }}">
-  </head>
-  <body>
-    <header></header>
-    <div id="main">
-        <div class="fof">
-          <h1>Error 404</h1>
+{% extends 'base.html' %}
+{% block content %}
+  <br>
+  <h1>Error 404</h1>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
-    </div>
-  </body>
-</html>
-
-
-
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+{% endblock %}

@@ -1,3 +1,5 @@
+from contextlib import redirect_stdout
+from encodings import CodecRegistryError
 import os
 from time import localtime, mktime
 from datetime import datetime, date
@@ -6,7 +8,7 @@ from flask import Flask, render_template, abort, redirect, request, flash, url_f
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField, BooleanField
+from wtforms import StringField, SubmitField, PasswordField, BooleanField, HiddenField, SelectField
 from wtforms.validators import DataRequired
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
 from sqlalchemy import event
@@ -18,6 +20,15 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite') 
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SECRET_KEY'] = 'thisisasecretkeyoncethisgoeslivenoreallyipromise'
+
+def get_rooms():
+    return Rooms.query.all()
+
+def get_users():
+    return User.query.all()
+
+app.jinja_env.globals.update(get_rooms=get_rooms)
+app.jinja_env.globals.update(get_users=get_users)
 
 login_manager = LoginManager()
 login_manager.session_protection = "strong"
@@ -36,6 +47,14 @@ class LoginForm(FlaskForm):
     name = StringField("Username", validators=[DataRequired()])
     password = PasswordField("Password", validators=[DataRequired()])
     create = BooleanField("Create user?")
+    next = HiddenField("Hidden")
+    submit = SubmitField("Submit")
+
+class CreateUser(FlaskForm):
+    name = StringField("Username", validators=[DataRequired()])
+    password = PasswordField("Password", validators=[DataRequired()])
+    role = SelectField("Role", coerce=int)
+    next = HiddenField("Hidden")
     submit = SubmitField("Submit")
 
 class Rooms(db.Model):
@@ -159,7 +178,8 @@ def load_user(user_id):
 @app.route('/show/<room>/<caldate>')
 def show(room, caldate='Null'):
     
-    if room.upper() not in 'B112 B113 B114 B118 B123 B125':
+    if room.upper() not in [x.name for x in Rooms.query.all()]:
+        flash("No such resource, check room name!", "danger")
         abort(404, description="Resource not found")
     
     if caldate == 'Null':
@@ -238,6 +258,7 @@ def login():
         password = form.password.data
         form.name.data = ''
         form.password.data = ''
+        next = form.next.data
         if form.create.data == True:
             new_user = User(
                 username=name,
@@ -254,7 +275,10 @@ def login():
                 user = User.query.filter_by(username=name).first()
                 if bcrypt.check_password_hash(user.password, password):
                     login_user(user)
-                    return redirect(url_for('index'))
+                    if 'next' in locals() and len(locals()['next']) > 0:
+                        return redirect(next)
+                    else:
+                        return redirect(url_for('index'))
                 else:
                     flash("Invalid Username or password!", "danger")
             except Exception as e:
@@ -272,12 +296,17 @@ def logout():
     return redirect(url_for('index'))
 
 @app.route("/admin/")
+@app.route("/admin/<view>")
 @login_required
-def admin():
+def admin(view='Null'):
     if current_user.role.name == "Admin":
-        return render_template("admin.html")
+        if view == 'Null':
+            return render_template("admin.html", view='base')
+        else:
+            return render_template("admin.html", view=view)
     else:
-        return render_template("debug.html")
+        flash("You are not authorized to view this resource.", "danger")
+        return redirect(url_for("index"))
 
 @app.route('/')
 def index():

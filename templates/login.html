@@ -17,7 +17,9 @@
         <h2>Login details</h2>
            <form method="POST">
             {{ form.csrf_token }}
-                
+
+            {{ form.next(value=request.args.get('next', '')) }}
+
             {{ form.name.label(class="form-label") }}
             {{ form.name(class="form-control") }}
                 
