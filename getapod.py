@@ -2,8 +2,9 @@ from contextlib import redirect_stdout
 from encodings import CodecRegistryError
 import os
 from wsgiref.validate import validator
-#from wsgiref.validate import validator
 from flask import Flask, render_template, abort, redirect, request, flash, url_for
+from flask_admin import Admin
+from flask_admin.contrib.sqla import ModelView
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm
@@ -19,6 +20,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite') 
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SECRET_KEY'] = 'thisisasecretkeyoncethisgoeslivenoreallyipromise'
+app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
 
 def get_rooms():
     return Rooms.query.all()
@@ -35,12 +37,10 @@ login_manager.login_view = "login"
 login_manager.login_message_category = "info"
 
 db = SQLAlchemy(app)
-
 bcrypt = Bcrypt()
 
 login_manager.init_app(app)
 bcrypt.init_app(app)
-
 
 class LoginForm(FlaskForm):
     name = StringField("Username", validators=[DataRequired()])
@@ -132,6 +132,10 @@ class User(UserMixin, db.Model):
 
     def __repr__(self):
         return '<User %r>' % self.username
+
+admin = Admin(app, name='Podbokning', template_mode='bootstrap4')
+admin.add_view(ModelView(Rooms, db.session))
+admin.add_view(ModelView(User, db.session))
 
 def get_bookings(roomdata, epoch):
     booking_data = {}
@@ -287,6 +291,7 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+'''
 @app.route("/admin/")
 @app.route("/admin/<view>", methods=['GET', 'POST'])
 @login_required
@@ -322,6 +327,7 @@ def admin(view='Null'):
     else:
         flash("You are not authorized to view this resource.", "danger")
         return redirect(url_for("index"))
+'''
 
 @app.route('/')
 def index():
