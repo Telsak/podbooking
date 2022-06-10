@@ -1,11 +1,13 @@
 from contextlib import redirect_stdout
 from encodings import CodecRegistryError
+from multiprocessing.spawn import old_main_modules
 import os
 from wsgiref.validate import validator
 from flask import Flask, render_template, abort, redirect, request, flash, url_for
-from flask_admin import Admin
+from flask_admin import Admin, AdminIndexView, expose, menu
 from flask_admin.contrib.sqla import ModelView
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import event
 from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField, BooleanField, HiddenField, SelectField
@@ -20,7 +22,7 @@ app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite') 
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SECRET_KEY'] = 'thisisasecretkeyoncethisgoeslivenoreallyipromise'
-app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
+app.config['FLASK_ADMIN_SWATCH'] = 'lumen'
 
 def get_rooms():
     return Rooms.query.all()
@@ -133,9 +135,55 @@ class User(UserMixin, db.Model):
     def __repr__(self):
         return '<User %r>' % self.username
 
-admin = Admin(app, name='Podbokning', template_mode='bootstrap4')
-admin.add_view(ModelView(Rooms, db.session))
-admin.add_view(ModelView(User, db.session))
+class UserModelView(ModelView):
+    form_columns = ('username', 'password', 'flag', 'last_login', 'role')
+    column_exclude_list = ['password']
+
+    # necessary to stop flask-admin from saving passwords in cleartext :(
+    def on_model_change(self, form, model, is_created):
+        # If creating a new user, hash password
+        if is_created:
+            model.password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        else:
+            old_password = form.password.object_data
+            # If password has been changed, hash password
+            if not old_password == model.password:
+                model.password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+    
+    def is_accessible(self):
+        if current_user.is_active and current_user.is_authenticated:
+            return current_user.role.name == "Admin"
+    
+    def _handle_view(self, name):
+        if not self.is_accessible():
+            return redirect(url_for('login'))
+
+class RoomsModelView(ModelView):
+    def is_accessible(self):
+        if current_user.is_active and current_user.is_authenticated:
+            return current_user.role.name == "Admin"
+    
+    def _handle_view(self, name):
+        if not self.is_accessible():
+            return redirect(url_for('login'))
+
+class MyAdminIndexView(AdminIndexView):
+    def is_accessible(self):
+        return current_user.is_authenticated and current_user.role.name == "Admin"
+
+    def inaccessible_callback(self, name, **kwargs):
+        return redirect(url_for('login', next=request.url))
+
+    @expose('/')
+    def index(self):
+        if not current_user.is_authenticated and current_user.role.name == "Admin":
+            return redirect(url_for('login'))
+        return super(MyAdminIndexView, self).index()
+
+admin = Admin(app, name='Podbokning', template_mode='bootstrap4', index_view=MyAdminIndexView())
+admin.add_view(RoomsModelView(Rooms, db.session))
+admin.add_view(UserModelView(User, db.session))
+admin.add_link(menu.MenuLink(name='Logout', category='', url='/logout?next=/'))
 
 def get_bookings(roomdata, epoch):
     booking_data = {}
@@ -259,13 +307,23 @@ def login():
             new_user = User(
                 username=name,
                 role_id = 1,
-                password=bcrypt.generate_password_hash(password),
+                password=password,
                 flag='CAN_BOOK',
                 last_login=0
             )
             db.session.add(new_user)
-            db.session.commit()
-            flash(f'Account successfully created', 'success')
+            try:
+                db.session.commit()
+                flash(f'Account successfully created', 'success')
+            except Exception as e:
+                db.session.rollback()
+                if 'UNIQUE constraint failed' in str(e):
+                    message = f'Unable to create user: {new_user.username}. A user with that name already exists!'
+                    flash(message, 'warning')
+                else:
+                    flash(e, "danger")
+            finally:
+                db.session.close()
         else:
             try:
                 user = User.query.filter_by(username=name).first()
