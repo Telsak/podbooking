@@ -1,4 +1,4 @@
-from time import localtime, mktime
+from time import localtime, mktime, time
 from datetime import datetime, date
 
 def sec_to_date(sec):
@@ -29,6 +29,16 @@ def init_dates(today_d):
              'yesterday': { 'string': yday_s, 'date': yday_d },
              'tomorrow': { 'string': morrow_s, 'date': morrow_d } 
            }
+
+def check_book_epoch(epoch, minutes):
+    now_s = round(time())
+    # booking possible if within 40mins of pod start
+    if epoch > now_s:
+        return True
+    elif epoch < now_s and abs(epoch - now_s) < (minutes*60):
+        return True
+    else:
+        return False
 
 def date_to_str():
     return str(date.today())[2:]

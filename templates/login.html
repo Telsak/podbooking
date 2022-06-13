@@ -16,12 +16,9 @@
         <form class="row g-3" method="post">
             <div class="col-md-3">
             {{ form.csrf_token }}
-
             {{ form.next(value=request.args.get('next', '')) }}
-
             {{ form.name.label(class="form-label") }}
             {{ form.name(class="form-control") }}
-                
             {{ form.password.label(class="form-label") }}
             {{ form.password(class="form-control") }}
             <br/>

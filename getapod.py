@@ -3,7 +3,9 @@ from contextlib import redirect_stdout
 from encodings import CodecRegistryError
 from multiprocessing.spawn import old_main_modules
 import os
+from tabnanny import check
 from wsgiref.validate import validator
+from click import style
 from flask import Flask, render_template, abort, redirect, request, flash, url_for
 from flask_admin import Admin, AdminIndexView, expose, menu
 from flask_admin.contrib.sqla import ModelView
@@ -14,8 +16,9 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField, BooleanField, HiddenField, SelectField
 from wtforms.validators import DataRequired, EqualTo, Length
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
-from datemagic import sec_to_date, date_to_sec, init_dates, date_to_str
+from datemagic import sec_to_date, date_to_sec, init_dates, date_to_str, check_book_epoch
 
+GRACE_MINUTES = 120
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -57,36 +60,6 @@ class BookForm(FlaskForm):
     partner = StringField("Labbpartner")
     comment = StringField("Kommentar")
     next = HiddenField("Hidden")
-    submit = SubmitField("Submit")
-
-class DeleteUserForm(FlaskForm):
-    username = StringField("Username", validators=[DataRequired()], render_kw={'readonly': True})
-    username_confirm = StringField("Confirm username for deletion", validators=[
-        DataRequired(),
-        EqualTo("username", message="Username must match") 
-    ])
-    delete_bool = BooleanField("Yes I want to delete this user")
-
-class CreateUserForm(FlaskForm):
-    username = StringField("Username", validators=[
-        DataRequired(),
-        Length(min=3, max=64)
-        ])
-    password = PasswordField("Password", validators=[
-        DataRequired(), 
-        EqualTo('password_confirm', message='Passwords must match'),
-        Length(min=8, message="Password has to be least 8 characters")
-        ])
-    password_confirm = PasswordField("Confirm password", validators=[
-        Length(min=8)
-        ])
-    role = SelectField("Role", choices=[
-        ('1', 'Admin'), 
-        ('3', 'Teacher'), 
-        ('2', 'Student')], 
-        coerce=int)
-    next = HiddenField("Hidden")
-    type = HiddenField("POST-type")
     submit = SubmitField("Submit")
 
 class Rooms(db.Model):
@@ -175,6 +148,15 @@ class RoomsModelView(ModelView):
         if not self.is_accessible():
             return redirect(url_for('login'))
 
+class BookingModelView(ModelView):
+    def is_accessible(self):
+        if current_user.is_active and current_user.is_authenticated:
+            return current_user.role.name == "Admin"
+    
+    def _handle_view(self, name):
+        if not self.is_accessible():
+            return redirect(url_for('login'))
+
 class MyAdminIndexView(AdminIndexView):
     def is_accessible(self):
         return current_user.is_authenticated and current_user.role.name == "Admin"
@@ -191,58 +173,74 @@ class MyAdminIndexView(AdminIndexView):
 admin = Admin(app, name='Podbokning', template_mode='bootstrap4', index_view=MyAdminIndexView())
 admin.add_view(RoomsModelView(Rooms, db.session))
 admin.add_view(UserModelView(User, db.session))
+admin.add_view(BookingModelView(Bookings, db.session))
 admin.add_link(menu.MenuLink(name='Logout', category='', url='/logout?next=/'))
 
 def get_bookings(roomdata, epoch):
     booking_data = {}
     hours = [8,10,13,15,17,19,21]
+    tds = f'style="border-radius:10px"'
+    tdcl = f'class="align-middle'
     for hour in hours:
         booking_data[hour] = {}
         for pod in range(1, roomdata.pods+1):
             data = Bookings.query.filter(Bookings.time==(epoch+(hour*3600))).filter(Bookings.room==roomdata.id).filter(Bookings.pod==pod).all()
+            bookurl = f'{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}'
             if len(data) >= 1:
-                showstring = f'{data[0].name1}</a><br>'
+                showstring = f'{data[0].name1}</a>'
                 if len(data[0].name2) > 0:
-                    showstring += f'{data[0].name2}</a><br>'
+                    showstring += f'<br>{data[0].name2}</a>'
                 if len(data[0].comment) > 0:
-                    showstring += f'{data[0].comment}'                    
+                    showstring += f'<br>{data[0].comment}'
                 if data[0].flag != 'AVAILABLE':
                     if current_user.is_authenticated:
-                        booking_data[hour][pod] = f'<td style="border-radius:10px" class="align-middle table-danger"><a href="/delete/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}"> \
-                            {showstring}</td>'
+                        if current_user.role.name in ['Admin', 'Teacher']:
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-danger"><a href="/delete/{bookurl}">{showstring}</td>'
+                        else:
+                            if check_book_epoch(epoch+(hour*3600), GRACE_MINUTES):
+                                booking_data[hour][pod] = f'<td {tds} {tdcl} table-danger"><a href="/delete/{bookurl}{showstring}</td>'
+                            else:
+                                f'<td {tds} {tdcl} table-info">{showstring}</td>'
                     else:
-                        booking_data[hour][pod] = f'<td style="border-radius:10px" class="align-middle table-danger">Reserved<br>&nbsp;</td>'
+                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-danger">Reserved by<br>teacher&nbsp;</td>'
                 else:
-                    booking_data[hour][pod] = f'<td style="border-radius:10px" class="align-middle"><a href="/delete/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}"> \
-                            {showstring}</td>'
+                    booking_data[hour][pod] = f'<td {tds} {tdcl}"><a href="/delete/{bookurl}">{showstring}</td>'
             else:
-                booking_data[hour][pod] = f'<td style="border-radius:10px" class="align-middle table-success"><a href="/book/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}">Get POD!</a><br>&nbsp;</td>'
+                if current_user.is_authenticated and current_user.role.name in ['Admin', 'Teacher']:
+                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-success"><a href="/book/{bookurl}">Get POD!</a><br>&nbsp;</td>'
+                else:
+                    if check_book_epoch(epoch+(hour*3600), GRACE_MINUTES):
+                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-success"><a href="/book/{bookurl}">Get POD!</a><br>&nbsp;</td>'
+                    else:
+                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-success"><i class="bi bi-emoji-frown"></i><br>&nbsp;</td>'
     return booking_data
 
-def set_booking(roomdata, epoch, pod):
-    if current_user.role.name == "Admin" or current_user.role.name == "Teacher":
-        roomflag = 'UNAVAILABLE'
-        booking = Bookings(
-            room=roomdata.id,
-            time=epoch,
-            pod=ord(pod.upper())-64,
-            duration=2,
-            name1=current_user.username,
-            name2='',
-            comment='',
-            flag=roomflag
-        )
-    else:
-        roomflag = 'AVAILABLE'
-    db.session.add(booking)
-    try:
-        db.session.commit()
-        flash(f'Pod successfully booked!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(e, "danger")
-    finally:
-        db.session.close()
+def set_booking(roomdata, epoch, pod, form):
+    availability = {
+        'Admin': 'UNAVAILABLE',
+        'Teacher': 'UNAVAILABLE',
+        'Student': 'AVAILABLE'
+    }
+    roomflag = availability[current_user.role.name]
+    if current_user.role.name == "Student":
+        # do pass over limitations here
+        # disallow booking if booking in the past == True ()
+        if not check_book_epoch(epoch, GRACE_MINUTES):
+            flash(f'Not permitted to book pod at this time!', 'warning')
+            return False, f'/show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
+        else:
+            print('Continue checking conditions here!!')
+    booking = Bookings(
+        room=roomdata.id,
+        time=epoch,
+        pod=ord(pod.upper())-64,
+        duration=2,
+        name1=current_user.username,
+        name2=form['partner'],
+        comment=form['comment'],
+        flag=roomflag
+    )
+    return True, booking
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -277,28 +275,21 @@ def show(room, caldate='Null'):
 @app.route('/book/<room>/<caldate>/<hr>/<pod>', methods=('GET', 'POST'))
 @login_required
 def book(room='Null', caldate='Null', hr='Null', pod='Null'):
-    if request.method == 'POST':
-        namn1 = request.form['booker']
-        namn2 = request.form['partner']
-        comment = request.form['comment']
+    if request.method == 'POST' and int(hr) in [8,10,13,15,17,19,21]:
         roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
         book_time = date_to_sec(caldate) + (3600 * int(hr))
-        roomflag = request.form['status']
-
-        # TODO: Add concurrency check to make sure the pod slot is still available before booking
-        bi = Bookings(
-                room=roomdata.id,
-                time=book_time,
-                pod=ord(pod.upper())-64,
-                duration=2,
-                name1=namn1,
-                name2=namn2,
-                comment=comment,
-                flag=roomflag
-                )
-        db.session.add(bi)
-        db.session.commit()
-        return redirect(f"/show/{roomdata.name.upper()}/{caldate}", code=302)
+        state, booking = set_booking(roomdata, book_time, pod, request.form)
+        if state:
+            db.session.add(booking)
+            try:
+                db.session.commit()
+                flash(f'Pod successfully booked!', 'success')
+            except Exception as e:
+                db.session.rollback()
+                flash(e, "danger")
+            return redirect(f"/show/{roomdata.name.upper()}/{caldate}", code=302)
+        else:
+            return redirect(booking)
     else:
         if 'Null' in locals().values():
             return redirect(f"/show/B112/{date_to_str()}", code=302)
@@ -308,7 +299,6 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
             if int(hr) in [8,10,13,15,17,19,21]:
                 roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
                 book_time = date_to_sec(caldate) + (3600 * int(hr))
-                # result = get_bookings(roomdata, book_time, pod)
                 return render_template('book.html', data=locals())
             else:
                 return redirect(f"/show/{roomdata.name.upper()}", code=302)
@@ -331,28 +321,6 @@ def login():
         form.name.data = ''
         form.password.data = ''
         next = form.next.data
-        '''if form.create.data == True:
-            new_user = User(
-                username=name,
-                role_id = 1,
-                password=password,
-                flag='CAN_BOOK',
-                last_login=0
-            )
-            db.session.add(new_user)
-            try:
-                db.session.commit()
-                flash(f'Account successfully created', 'success')
-            except Exception as e:
-                db.session.rollback()
-                if 'UNIQUE constraint failed' in str(e):
-                    message = f'Unable to create user: {new_user.username}. A user with that name already exists!'
-                    flash(message, 'warning')
-                else:
-                    flash(e, "danger")
-            finally:
-                db.session.close()
-        else:'''
         try:
             user = User.query.filter_by(username=name).first()
             if bcrypt.check_password_hash(user.password, password):
@@ -376,44 +344,6 @@ def login():
 def logout():
     logout_user()
     return redirect(url_for('index'))
-
-'''
-@app.route("/admin/")
-@app.route("/admin/<view>", methods=['GET', 'POST'])
-@login_required
-def admin(view='Null'):
-    if current_user.role.name == "Admin":
-        if view == 'Null':
-            return render_template("admin.html", view='base')
-        elif view == 'user':
-            if request.method == 'POST':
-                if request.form['type'] == 'CREATE':
-                    cform = CreateUserForm()
-                    if cform.validate_on_submit():
-                        new_user = User(
-                            username=cform.username.data,
-                            role_id = cform.role.data,
-                            password=bcrypt.generate_password_hash(cform.password.data),
-                            flag='CAN_BOOK',
-                            last_login=0
-                        )
-                        try:
-                            db.session.add(new_user)
-                            db.session.commit()
-                            flash(f'Account successfully created', 'success')
-                        except Exception as error:
-                            flash(error, "danger")
-                        return render_template("admin.html", view=view, form=cform)
-                elif request.form['type'] == 'MODIFY':
-                    pass
-
-            elif request.method == 'GET':
-                cform = CreateUserForm()
-                return render_template("admin.html", view=view, form=cform)
-    else:
-        flash("You are not authorized to view this resource.", "danger")
-        return redirect(url_for("index"))
-'''
 
 @app.route('/')
 def index():
