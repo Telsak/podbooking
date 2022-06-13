@@ -1,8 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-
-        <h1>Login page</h1>
-        <p>This is a login page.</p>
+        <br/>
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
@@ -14,7 +12,7 @@
         {% endif %}
         {% endwith %}
 
-        <h2>Login details</h2>
+        <h4>Login details</h4>
            <form method="POST">
             {{ form.csrf_token }}
 

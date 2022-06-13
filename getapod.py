@@ -1,3 +1,4 @@
+from asyncio.format_helpers import _format_args_and_kwargs
 from contextlib import redirect_stdout
 from encodings import CodecRegistryError
 from multiprocessing.spawn import old_main_modules
@@ -211,6 +212,23 @@ def get_bookings(roomdata, epoch):
                 booking_data[hour][pod] = f'<td style="border-radius:10px" class="align-middle table-success"><a href="/book/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}">Get POD!</a><br>&nbsp;</td>'
     return booking_data
 
+def set_booking(roomdata, epoch, pod):
+    if current_user.role.name == "Admin" or current_user.role.name == "Teacher":
+        roomflag = 'UNAVAILABLE'
+        booking = Bookings(
+            room=roomdata.id,
+            time=epoch,
+            pod=ord(pod.upper())-64,
+            duration=2,
+            name1=current_user.username,
+            name2='',
+            comment='',
+            flag=roomflag
+        )
+    else:
+        roomflag = 'AVAILABLE'
+
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
@@ -247,6 +265,7 @@ def show(room, caldate='Null'):
 @app.route('/book/<room>')
 @app.route('/book/<room>/<caldate>')
 @app.route('/book/<room>/<caldate>/<hr>/<pod>', methods=('GET', 'POST'))
+@login_required
 def book(room='Null', caldate='Null', hr='Null', pod='Null'):
     if request.method == 'POST':
         namn1 = request.form['namn1']
@@ -279,7 +298,11 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
         return redirect(f"/show/B112/{date_to_str()}", code=302)
     else:
         roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
+        # if this is a valid book url...
         if int(hr) in [8,10,13,15,17,19,21]:
+            roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
+            book_time = date_to_sec(caldate) + (3600 * int(hr))
+            # result = get_bookings(roomdata, book_time, pod)
             return render_template('book.html', data=locals())
         else:
             return redirect(f"/show/{roomdata.name.upper()}", code=302)
