@@ -234,6 +234,15 @@ def set_booking(roomdata, epoch, pod):
         )
     else:
         roomflag = 'AVAILABLE'
+    db.session.add(booking)
+    try:
+        db.session.commit()
+        flash(f'Pod successfully booked!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(e, "danger")
+    finally:
+        db.session.close()
 
 @app.errorhandler(404)
 def page_not_found(e):
