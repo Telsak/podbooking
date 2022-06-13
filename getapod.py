@@ -48,7 +48,14 @@ bcrypt.init_app(app)
 class LoginForm(FlaskForm):
     name = StringField("Username", validators=[DataRequired()])
     password = PasswordField("Password", validators=[DataRequired()])
-    create = BooleanField("Create user?")
+#    create = BooleanField("Create user?")
+    next = HiddenField("Hidden")
+    submit = SubmitField("Submit")
+
+class BookForm(FlaskForm):
+    name = StringField("Användarnamn", validators=[DataRequired()], render_kw={'readonly': True})
+    partner = StringField("Labbpartner")
+    comment = StringField("Kommentar")
     next = HiddenField("Hidden")
     submit = SubmitField("Submit")
 
@@ -195,10 +202,10 @@ def get_bookings(roomdata, epoch):
             data = Bookings.query.filter(Bookings.time==(epoch+(hour*3600))).filter(Bookings.room==roomdata.id).filter(Bookings.pod==pod).all()
             if len(data) >= 1:
                 showstring = f'{data[0].name1}</a><br>'
-                if len(data[0].comment) < 1:
-                    showstring += f'&nbsp;'
-                else:
-                    showstring += f'{data[0].comment}'
+                if len(data[0].name2) > 0:
+                    showstring += f'{data[0].name2}</a><br>'
+                if len(data[0].comment) > 0:
+                    showstring += f'{data[0].comment}'                    
                 if data[0].flag != 'AVAILABLE':
                     if current_user.is_authenticated:
                         booking_data[hour][pod] = f'<td style="border-radius:10px" class="align-middle table-danger"><a href="/delete/{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}"> \
@@ -228,7 +235,6 @@ def set_booking(roomdata, epoch, pod):
     else:
         roomflag = 'AVAILABLE'
 
-
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
@@ -240,25 +246,20 @@ def load_user(user_id):
 @app.route('/show/<room>')
 @app.route('/show/<room>/<caldate>')
 def show(room, caldate='Null'):
-    
     if room.upper() not in [x.name for x in Rooms.query.all()]:
         flash("No such resource, check room name!", "danger")
         abort(404, description="Resource not found")
-    
     if caldate == 'Null':
         return redirect(f'/show/{room.upper()}/{date_to_str()}')
     else:
         today_d = caldate
-    
     dates = init_dates(today_d)
-    
     show = {}
     roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
     show['room'] = {'name': roomdata.name.upper(), 'pods': [chr(x+65) for x in range(roomdata.pods)]}
     show['dates'] = dates
     show['clocks'] = [8,10,13,15,17,19,21]
     show['query'] = get_bookings(roomdata, dates['today']['string'])
-
     return render_template('show.html', show=show)
 
 @app.route('/book')
@@ -268,17 +269,13 @@ def show(room, caldate='Null'):
 @login_required
 def book(room='Null', caldate='Null', hr='Null', pod='Null'):
     if request.method == 'POST':
-        namn1 = request.form['namn1']
+        namn1 = request.form['booker']
+        namn2 = request.form['partner']
+        comment = request.form['comment']
         roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
         book_time = date_to_sec(caldate) + (3600 * int(hr))
-        
-        try:
-            if request.form['reserved'] == 'True':
-                roomflag='UNAVAILABLE'
-            else:
-                roomflag='AVAILABLE'
-        except:
-            roomflag='AVAILABLE'
+        roomflag = request.form['status']
+
         # TODO: Add concurrency check to make sure the pod slot is still available before booking
         bi = Bookings(
                 room=roomdata.id,
@@ -286,26 +283,26 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
                 pod=ord(pod.upper())-64,
                 duration=2,
                 name1=namn1,
-                name2='',
-                comment='',
+                name2=namn2,
+                comment=comment,
                 flag=roomflag
                 )
         db.session.add(bi)
         db.session.commit()
         return redirect(f"/show/{roomdata.name.upper()}/{caldate}", code=302)
-
-    if 'Null' in locals().values():
-        return redirect(f"/show/B112/{date_to_str()}", code=302)
     else:
-        roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
-        # if this is a valid book url...
-        if int(hr) in [8,10,13,15,17,19,21]:
-            roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
-            book_time = date_to_sec(caldate) + (3600 * int(hr))
-            # result = get_bookings(roomdata, book_time, pod)
-            return render_template('book.html', data=locals())
+        if 'Null' in locals().values():
+            return redirect(f"/show/B112/{date_to_str()}", code=302)
         else:
-            return redirect(f"/show/{roomdata.name.upper()}", code=302)
+            roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
+            # if this is a valid book url...
+            if int(hr) in [8,10,13,15,17,19,21]:
+                roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
+                book_time = date_to_sec(caldate) + (3600 * int(hr))
+                # result = get_bookings(roomdata, book_time, pod)
+                return render_template('book.html', data=locals())
+            else:
+                return redirect(f"/show/{roomdata.name.upper()}", code=302)
 
 @app.route('/delete/<room>/<caldate>/<hr>/<pod>')
 def delete(room, caldate, hr, pod):
@@ -317,7 +314,6 @@ def delete(room, caldate, hr, pod):
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    #name = None
     form = LoginForm()
     # validating form
     if form.validate_on_submit():
@@ -326,7 +322,7 @@ def login():
         form.name.data = ''
         form.password.data = ''
         next = form.next.data
-        if form.create.data == True:
+        '''if form.create.data == True:
             new_user = User(
                 username=name,
                 role_id = 1,
@@ -347,22 +343,22 @@ def login():
                     flash(e, "danger")
             finally:
                 db.session.close()
-        else:
-            try:
-                user = User.query.filter_by(username=name).first()
-                if bcrypt.check_password_hash(user.password, password):
-                    login_user(user)
-                    if 'next' in locals() and len(locals()['next']) > 0:
-                        return redirect(next)
-                    else:
-                        return redirect(url_for('index'))
+        else:'''
+        try:
+            user = User.query.filter_by(username=name).first()
+            if bcrypt.check_password_hash(user.password, password):
+                login_user(user)
+                if 'next' in locals() and len(locals()['next']) > 0:
+                    return redirect(next)
                 else:
-                    flash("Invalid Username or password!", "danger")
-            except Exception as e:
-                if 'has no attribute' in str(e):
-                    flash("No such user!", "danger")
-                else:
-                    flash(e, "danger")
+                    return redirect(url_for('index'))
+            else:
+                flash("Invalid Username or password!", "danger")
+        except Exception as e:
+            if 'has no attribute' in str(e):
+                flash("No such user!", "danger")
+            else:
+                flash(e, "danger")
 
     return render_template('login.html', form=form)
 

@@ -13,7 +13,8 @@
         {% endwith %}
 
         <h4>Login details</h4>
-           <form method="POST">
+        <form class="row g-3" method="post">
+            <div class="col-md-3">
             {{ form.csrf_token }}
 
             {{ form.next(value=request.args.get('next', '')) }}
@@ -21,14 +22,11 @@
             {{ form.name.label(class="form-label") }}
             {{ form.name(class="form-control") }}
                 
-            {{ form.password.label(class="form-label")}}
-            {{ form.password(class="form-control")}}
-                
-            {{ form.create.label(class="form-label")}}
-            {{ form.create()}}
-
+            {{ form.password.label(class="form-label") }}
+            {{ form.password(class="form-control") }}
             <br/>
             {{ form.submit(class="btn btn-primary") }}
-            </form>
+            </div>
+       </form>
 
 {% endblock %}

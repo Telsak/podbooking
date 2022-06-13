@@ -11,7 +11,7 @@
   </head>
   <body>
     {% include 'navbar.html' %}
-    <div class="container">
+    <div class="container mt-3">
         {% block content %}
         {% endblock %}
     </div>
@@ -19,24 +19,3 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   </body>
 </html>
-
-<div class="modal fade" id="createUser" tabindex="-1" aria-labelledby="createUser" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <form method="POST">
-      <div class="modal-header">
-        <h5 class="modal-title" id="createUser">Create new user</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        {% block createUserForm %}
-        {% endblock %}
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        <button type="submit" class="btn btn-primary">Create User</button>
-      </div>
-      </form>
-    </div>
-  </div>
-</div>

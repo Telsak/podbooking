@@ -3,29 +3,23 @@
 
        <p>Booking of {{ data.room }} - Pod {{ data.pod }}, {{ data.caldate }} {{ data.hr }}:00</p>
 
-       <form method="post">
-              <label for="title">Användare 1</label>
-              <br>
-              <input type="text" name="namn1"
-                     placeholder="Namn 1"
-                     value="{{ request.form['namn1'] }}"></input>
-              <br>
-
-              <label for="title">Användare 2</label>
-              <br>
-              <input type="text" name="namn2"
-                     placeholder="Namn 2"
-                     value="{{ request.form['namn2'] }}"></input>
-              <br>
-              {% if current_user.is_authenticated %}
-              
-                     {% if current_user.role.name == "Admin" %}
-                            <input type="checkbox" id="reserved" name="reserved" value="True">
-                            <label for="reserved">Reserve as admin</label>
-                            <br>
+       <!-- TODO: #6 Convert to proper flask form-class -->
+       <form class="row g-3" method="post">
+              <div class="col-md-6">
+                     <label for="booker" class="form-label">Användare</label>
+                     <input type="text" class="form-control" id="booker" name="booker" value="{{ current_user.username }}" readonly>
+                     <label for="partner" class="form-label">Labbpartner</label>
+                     <input type="text" class="form-control" id="partner" name="partner">
+                     <br/>
+                     <label for="comment" class="form-label">Kommentar</label>
+                     <input type="text" class="form-control" id="comment" name="comment" required>
+                     {% if current_user.role.name == 'Admin' %}
+                            <input type="hidden" id="status" value="UNAVAILABLE" name="status">
+                     {% else %}
+                            <input type="hidden" id="status" value="AVAILABLE" name="status">
                      {% endif %}
-
-              {% endif %}
-              <button type="submit">Submit</button>
+                     <br>
+                     <button type="submit" class="btn btn-primary">Submit</button>
+              </div>
        </form>
 {% endblock %}
