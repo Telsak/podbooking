@@ -17,7 +17,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField, BooleanField, HiddenField, SelectField
 from wtforms.validators import DataRequired, EqualTo, Length
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
-from datemagic import sec_to_date, date_to_sec, init_dates, date_to_str, check_book_epoch, epoch_hr
+from datemagic import date_start_epoch, sec_to_date, date_to_sec, init_dates, date_to_str, check_book_epoch, epoch_hr
 
 GRACE_MINUTES = 60
 BOOK_HOURS = [8,10,13,15,17,19,21]
@@ -184,8 +184,9 @@ def get_bookings(roomdata, epoch):
     for hour in BOOK_HOURS:
         booking_data[hour] = {}
         for pod in range(1, roomdata.pods+1):
-            data = Bookings.query.filter(Bookings.time==(epoch+(hour*3600))).filter(Bookings.room==roomdata.id).filter(Bookings.pod==pod).all()
-            bookurl = f'{roomdata.name}/{sec_to_date(epoch+(hour*3600))}/{hour}/{chr(pod+64)}'
+            mod_epoch = epoch+(hour*3600)
+            data = Bookings.query.filter(Bookings.time==(mod_epoch)).filter(Bookings.room==roomdata.id).filter(Bookings.pod==pod).all()
+            bookurl = f'{roomdata.name}/{sec_to_date(mod_epoch)}/{hour}/{chr(pod+64)}'
             # is there matching bookings to the query?
             if len(data) >= 1:
                 showstring = f'{data[0].name1}</a>'
@@ -197,21 +198,28 @@ def get_bookings(roomdata, epoch):
                 if data[0].flag != 'AVAILABLE':
                     if current_user.is_authenticated:
                         if current_user.role.name in ['Admin', 'Teacher']:
-                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-danger"><a href="/delete/{bookurl}">{showstring}</a></td>'
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning"><a href="/delete/{bookurl}">{showstring}</a></td>'
                         else:
-                            if check_book_epoch(epoch+(hour*3600), GRACE_MINUTES):
-                                booking_data[hour][pod] = f'<td {tds} {tdcl} table-danger"><a href="/delete/{bookurl}">{showstring}</a></td>'
-                            else:
-                                booking_data[hour][pod] = f'<td {tds} {tdcl} table-info">{showstring}</td>'
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-info">{showstring}</td>'
                     else:
                         booking_data[hour][pod] = f'<td {tds} {tdcl} table-danger">Reserved by<br>teacher</td>'
                 else:
-                    booking_data[hour][pod] = f'<td {tds} {tdcl}"><a href="/delete/{bookurl}">{showstring}</a></td>'
+                    if current_user.is_authenticated:
+                        if check_book_epoch(mod_epoch, 45) and current_user.username == data[0].name1:
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning"><a href="/delete/{bookurl}">{showstring}</a></td>'
+                        elif current_user.role.name in ['Admin', 'Teacher']:
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning"><a href="/delete/{bookurl}">{showstring}</a></td>'                        
+                        elif current_user.username == data[0].name1:
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{showstring}</td>'
+                        else:
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{showstring}</td>'
+                    else:
+                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{showstring}</td>'
             else:
                 if current_user.is_authenticated and current_user.role.name in ['Admin', 'Teacher']:
                         booking_data[hour][pod] = f'<td {tds} {tdcl} table-success"><a href="/book/{bookurl}">Get POD!</a><br>&nbsp;</td>'
                 else:
-                    if check_book_epoch(epoch+(hour*3600), GRACE_MINUTES):
+                    if check_book_epoch(mod_epoch, GRACE_MINUTES):
                         booking_data[hour][pod] = f'<td {tds} {tdcl} table-success"><a href="/book/{bookurl}">Get POD!</a><br>&nbsp;</td>'
                     else:
                         booking_data[hour][pod] = f'<td {tds} {tdcl} table-success"><i class="bi bi-emoji-frown"></i><br>&nbsp;</td>'
@@ -235,15 +243,14 @@ def set_booking(roomdata, epoch, pod, form):
             user_time_start = now_hr
             for hour in BOOK_HOURS:
                 if now_hr in range(hour, hour+3):     
-                    # FIXA DETTA SENARE!!
-                    flash(f'{user_time_start}', 'warning')
-            #duration_data = Bookings.query.filter(Bookings.time>=user_time_start).all()
-            
-            #return False, f'/debug'
-            #if sum(duration_data) > 2:
-            #    flash(f'Not permitted to book pod at this time!', 'warning')
-            #    return False, f'/show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
-            print('Continue checking conditions here!!')
+                    user_time_start = date_start_epoch(epoch) + (3600*hour)
+            duration_data = [x.duration for x in Bookings.query.filter(Bookings.time>=user_time_start).filter(Bookings.name1==current_user.username).all()]
+            if sum(duration_data) > 2:
+                flash(f'Not permitted to book pod at this time!', 'warning')
+                return False, f'/show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
+    #if len(Bookings.query.filter(Bookings.time==epoch).filter(Bookings.room==roomdata.id).filter(Bookings.pod==pod).all()) >= 1:
+    #    flash('This timeslot is no longer available. Please pick another time or pod.', 'warning')
+    #    return False, f'/show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
     booking = Bookings(
         room=roomdata.id,
         time=epoch,
@@ -254,6 +261,7 @@ def set_booking(roomdata, epoch, pod, form):
         comment=form['comment'],
         flag=roomflag
     )
+    flash(f'{roomdata} {epoch} {pod} {form}', 'warning')
     return True, booking
 
 @app.errorhandler(404)

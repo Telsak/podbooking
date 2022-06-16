@@ -17,6 +17,10 @@ def date_to_sec(str_date):
     sec = int(mktime(date.timetuple()))
     return sec
 
+def date_start_epoch(epoch):
+    dt = datetime.date(datetime.fromtimestamp(epoch))
+    return mktime(dt.timetuple())
+
 def init_dates(today_d):
     '''Returns a dictionary with todays date +/- 1 returned as string and epoch_s'''
     today_s = date_to_sec(today_d)
@@ -36,6 +40,7 @@ def check_book_epoch(epoch, minutes):
     if epoch > now_s:
         return True
     elif epoch < now_s and abs(epoch - now_s) < (minutes*60):
+        
         return True
     else:
         return False
