@@ -1,12 +1,4 @@
-from asyncio.format_helpers import _format_args_and_kwargs
-from concurrent.futures.process import _ExceptionWithTraceback
-from contextlib import redirect_stdout
-from encodings import CodecRegistryError
-from multiprocessing.spawn import old_main_modules
 import os
-from tabnanny import check
-from wsgiref.validate import validator
-from click import style
 from flask import Flask, render_template, abort, redirect, request, flash, url_for
 from flask_admin import Admin, AdminIndexView, expose, menu
 from flask_admin.contrib.sqla import ModelView
@@ -14,8 +6,8 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import event
 from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField, BooleanField, HiddenField, SelectField
-from wtforms.validators import DataRequired, EqualTo, Length
+from wtforms import StringField, SubmitField, PasswordField, HiddenField
+from wtforms.validators import DataRequired
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
 from datemagic import date_start_epoch, sec_to_date, date_to_sec, init_dates, date_to_str, check_book_epoch, epoch_hr
 
@@ -413,6 +405,6 @@ def debug():
     return render_template('debug.html')
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
 
 # TODO: #3 Split application into smaller modules - easy peasy
