@@ -35,12 +35,11 @@ def init_dates(today_d):
            }
 
 def check_book_epoch(epoch, minutes):
+    '''Booking possible if within # minutes of pod timeslot start'''
     now_s = round(time())
-    # booking possible if within 40mins of pod start
     if epoch > now_s:
         return True
     elif epoch < now_s and abs(epoch - now_s) < (minutes*60):
-        
         return True
     else:
         return False

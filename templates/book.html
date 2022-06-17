@@ -12,7 +12,7 @@
                      <input type="text" class="form-control" id="partner" name="partner">
                      <br/>
                      <label for="comment" class="form-label">Kommentar</label>
-                     <input type="text" class="form-control" id="comment" name="comment" required>
+                     <input type="text" class="form-control" id="comment" name="comment">
                      {% if current_user.role.name == 'Admin' %}
                             <input type="hidden" id="status" value="UNAVAILABLE" name="status">
                      {% else %}

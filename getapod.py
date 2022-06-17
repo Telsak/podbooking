@@ -47,8 +47,16 @@ def get_rooms():
 def get_users():
     return User.query.all()
 
+def get_user(user):
+    return User.query.filter(User.username==user).first()
+
+def get_db_bookings():
+    return Bookings.query.all()
+
 app.jinja_env.globals.update(get_rooms=get_rooms)
 app.jinja_env.globals.update(get_users=get_users)
+app.jinja_env.globals.update(get_user=get_user)
+app.jinja_env.globals.update(get_db_bookings=get_db_bookings)
 
 class LoginForm(FlaskForm):
     name = StringField("Username", validators=[DataRequired()])
@@ -181,6 +189,8 @@ def get_bookings(roomdata, epoch):
     booking_data = {}
     tds = f'style="border-radius:10px"'
     tdcl = f'class="align-middle'
+    bookflag = 'STANDARD'
+    admins = [x.username for x in User.query.filter(User.role_id!=2).all()]
     for hour in BOOK_HOURS:
         booking_data[hour] = {}
         for pod in range(1, roomdata.pods+1):
@@ -195,12 +205,15 @@ def get_bookings(roomdata, epoch):
                 if len(data[0].comment) > 0:
                     showstring += f'<br>{data[0].comment}'
                 # if the pod isn't marked as available
+                if data[0].comment == 'DAYBOOKING' and data[0].name1 in admins:
+                    bookflag = 'DAYBOOKING'
                 if data[0].flag != 'AVAILABLE':
                     if current_user.is_authenticated:
                         if current_user.role.name in ['Admin', 'Teacher']:
                             booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning"><a href="/delete/{bookurl}">{showstring}</a></td>'
                         else:
-                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-info">{showstring}</td>'
+                            #booking_data[hour][pod] = f'<td {tds} {tdcl} table-info">{showstring}</td>'
+                            booking_data[hour][pod] = f'<td><button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#userInfo" data-bs-role={data[0].name1}>{showstring}</button></td>'
                     else:
                         booking_data[hour][pod] = f'<td {tds} {tdcl} table-danger">Reserved by<br>teacher</td>'
                 else:
@@ -223,7 +236,7 @@ def get_bookings(roomdata, epoch):
                         booking_data[hour][pod] = f'<td {tds} {tdcl} table-success"><a href="/book/{bookurl}">Get POD!</a><br>&nbsp;</td>'
                     else:
                         booking_data[hour][pod] = f'<td {tds} {tdcl} table-success"><i class="bi bi-emoji-frown"></i><br>&nbsp;</td>'
-    return booking_data
+    return booking_data, bookflag
 
 def set_booking(roomdata, epoch, pod, form):
     availability = {
@@ -248,21 +261,22 @@ def set_booking(roomdata, epoch, pod, form):
             if sum(duration_data) > 2:
                 flash(f'Not permitted to book pod at this time!', 'warning')
                 return False, f'/show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
-    #if len(Bookings.query.filter(Bookings.time==epoch).filter(Bookings.room==roomdata.id).filter(Bookings.pod==pod).all()) >= 1:
-    #    flash('This timeslot is no longer available. Please pick another time or pod.', 'warning')
-    #    return False, f'/show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
-    booking = Bookings(
-        room=roomdata.id,
-        time=epoch,
-        pod=ord(pod.upper())-64,
-        duration=2,
-        name1=current_user.username,
-        name2=form['partner'],
-        comment=form['comment'],
-        flag=roomflag
-    )
-    flash(f'{roomdata} {epoch} {pod} {form}', 'warning')
-    return True, booking
+    if len(Bookings.query.filter(Bookings.time==epoch).filter(Bookings.room==roomdata.id).filter(Bookings.pod==ord(pod.upper())-64).all()) >= 1:
+        flash('This timeslot is no longer available. Please pick another time or pod.', 'warning')
+        return False, f'/show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
+    else:
+
+        booking = Bookings(
+            room=roomdata.id,
+            time=epoch,
+            pod=ord(pod.upper())-64,
+            duration=2,
+            name1=current_user.username,
+            name2=form['partner'],
+            comment=form['comment'],
+            flag=roomflag
+        )
+        return True, booking
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -288,7 +302,7 @@ def show(room, caldate='Null'):
     show['room'] = {'name': roomdata.name.upper(), 'pods': [chr(x+65) for x in range(roomdata.pods)]}
     show['dates'] = dates
     show['clocks'] = BOOK_HOURS
-    show['query'] = get_bookings(roomdata, dates['today']['string'])
+    show['query'], show['flag'] = get_bookings(roomdata, dates['today']['string'])
     return render_template('show.html', show=show)
 
 @app.route('/book')
