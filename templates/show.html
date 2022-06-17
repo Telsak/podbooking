@@ -10,25 +10,6 @@
         {% endfor %}
     {% endif %}
 {% endwith %}
-
-<div class="modal fade" id="userInfo" tabindex="-1" aria-labelledby="userInfoLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="userInfoLabel">User Information</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          This is some information about
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-danger">DELETE USER</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
 <span class="rubrik">Booking of {{ show['room']['name'] }}</span><br>
 <span class="brodtext">
     <font color=red size=+1>RULES:
@@ -77,21 +58,41 @@
     </tr>
     </table>    
 </div>
+
+<div class="modal fade" id="userInfo" tabindex="-1" aria-labelledby="userInfoLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="userInfoLabel">User Information for </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          This is some information about
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <!--
+          <button type="submit" class="btn btn-danger">DELETE USER</button>
+        -->
+        </div>
+      </div>
+    </div>
+  </div>
+
 <script>
     var exampleModal = document.getElementById('userInfo')
     exampleModal.addEventListener('show.bs.modal', function (event) {
-    // Button that triggered the modal
-    var button = event.relatedTarget
-    // Extract info from data-bs-* attributes
-    var recipient = button.getAttribute('data-bs-role')
-    // If necessary, you could initiate an AJAX request here and then do the updating in a callback.
-    // Update the modal's content.
-    var modalTitle = exampleModal.querySelector('.modal-title')
-    var modalBodyInput = exampleModal.querySelector('.modal-body input')
+        // Button that triggered the modal
+        var button = event.relatedTarget
+        // Extract info from data-bs-* attributes
+        var username = button.getAttribute('data-bs-username')
+        // Update the modal's content.
+        var modalTitle = exampleModal.querySelector('.modal-title')
+        var modalBodyInput = exampleModal.querySelector('.modal-body')
 
-    modalTitle.textContent = 'New message to ' + recipient
-    modalBodyInput.value = recipient
-    }
+        modalTitle.textContent += username
+        modalBodyInput.textContent = 'This is set by the modal script'
+        }
     )
 
 </script>

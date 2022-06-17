@@ -196,6 +196,7 @@ def get_bookings(roomdata, epoch):
                     showstring += f'<br>{data[0].name2}</a>'
                 if len(data[0].comment) > 0:
                     showstring += f'<br>{data[0].comment}'
+                user_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#userInfo" data-bs-username="{data[0].name1}">{showstring}</a>'
                 # if the pod isn't marked as available
                 if data[0].comment == 'DAYBOOKING' and data[0].name1 in admins:
                     bookflag = 'DAYBOOKING'
@@ -205,7 +206,8 @@ def get_bookings(roomdata, epoch):
                             booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning"><a href="/delete/{bookurl}">{showstring}</a></td>'
                         else:
                             #booking_data[hour][pod] = f'<td {tds} {tdcl} table-info">{showstring}</td>'
-                            booking_data[hour][pod] = f'<td><button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#userInfo" data-bs-role={data[0].name1}>{showstring}</button></td>'
+                            #booking_data[hour][pod] = f'<td><button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#userInfo" data-bs-role={data[0].name1}>{showstring}</button></td>'
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{user_link}</td>'
                     else:
                         booking_data[hour][pod] = f'<td {tds} {tdcl} table-danger">Reserved by<br>teacher</td>'
                 else:
