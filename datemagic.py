@@ -47,8 +47,10 @@ def check_book_epoch(epoch, minutes):
 def epoch_hr(epoch):
     if isinstance(epoch, int) or isinstance(epoch, float):
         return datetime.fromtimestamp(epoch).hour
-    elif epoch == 'NOW':
+    elif epoch == 'HR':
         return datetime.fromtimestamp(time()).hour
+    elif epoch == 'NOW':
+        return time()
 
 def date_to_str():
     return str(date.today())[2:]

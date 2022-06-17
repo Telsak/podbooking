@@ -197,6 +197,7 @@ def get_bookings(roomdata, epoch):
                 if len(data[0].comment) > 0:
                     showstring += f'<br>{data[0].comment}'
                 user_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#userInfo" data-bs-username="{data[0].name1}">{showstring}</a>'
+                delete_icon = f'<font color="red"><i class="bi bi-calendar-x-fill"></i></font>'
                 # if the pod isn't marked as available
                 if data[0].comment == 'DAYBOOKING' and data[0].name1 in admins:
                     bookflag = 'DAYBOOKING'
@@ -215,11 +216,11 @@ def get_bookings(roomdata, epoch):
                         if check_book_epoch(mod_epoch, 45) and current_user.username == data[0].name1:
                             booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning"><a href="/delete/{bookurl}">{showstring}</a></td>'
                         elif current_user.role.name in ['Admin', 'Teacher']:
-                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning"><a href="/delete/{bookurl}">{showstring}</a></td>'                        
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{user_link}&nbsp;<a href="/delete/{bookurl}">{delete_icon}</a></td>'                        
                         elif current_user.username == data[0].name1:
                             booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{showstring}</td>'
                         else:
-                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{showstring}</td>'
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{user_link}</td>'
                     else:
                         booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{showstring}</td>'
             else:
@@ -242,24 +243,23 @@ def set_booking(roomdata, epoch, pod, form):
     if current_user.role.name == "Student":
         # disallow booking if booking in the past (but give a grace period)
         if not check_book_epoch(epoch, GRACE_MINUTES):
-            flash(f'Not permitted to book pod at this time!', 'warning')
+            flash(f'Not permitted to book pod at this time! Dont look to the past!', 'warning')
             return False, f'/show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
         else:
             # check how many bookings currently exist on the user, beginning on any current booking timeslot
-            now_hr = epoch_hr('NOW')
-            user_time_start = now_hr
+            now_hr = epoch_hr('HR')
+            user_time_start = epoch_hr('NOW')
             for hour in BOOK_HOURS:
                 if now_hr in range(hour, hour+3):     
                     user_time_start = date_start_epoch(epoch) + (3600*hour)
             duration_data = [x.duration for x in Bookings.query.filter(Bookings.time>=user_time_start).filter(Bookings.name1==current_user.username).all()]
             if sum(duration_data) > 2:
-                flash(f'Not permitted to book pod at this time!', 'warning')
+                flash(f'Not permitted to book pod at this time! You have too many booked slots!', 'warning')
                 return False, f'/show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
     if len(Bookings.query.filter(Bookings.time==epoch).filter(Bookings.room==roomdata.id).filter(Bookings.pod==ord(pod.upper())-64).all()) >= 1:
         flash('This timeslot is no longer available. Please pick another time or pod.', 'warning')
         return False, f'/show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
     else:
-
         booking = Bookings(
             room=roomdata.id,
             time=epoch,
@@ -319,7 +319,7 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
                 flash(e, "danger")
             return redirect(f"/show/{roomdata.name.upper()}/{caldate}", code=302)
         else:
-            return redirect(booking)
+            return render_template('debug.html', debugdata=booking)
     else:
         if 'Null' in locals().values():
             return redirect(f"/show/B112/{date_to_str()}", code=302)
