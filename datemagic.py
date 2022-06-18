@@ -18,6 +18,7 @@ def date_to_sec(str_date):
     return sec
 
 def date_start_epoch(epoch):
+    '''Returns the unixtime of the start of the day, for +hour manipulation'''
     dt = datetime.date(datetime.fromtimestamp(epoch))
     return mktime(dt.timetuple())
 
@@ -45,6 +46,7 @@ def check_book_epoch(epoch, minutes):
         return False
 
 def epoch_hr(epoch):
+    '''Checks if a timestamp is within a grace period of the booking-time'''
     if isinstance(epoch, int) or isinstance(epoch, float):
         return datetime.fromtimestamp(epoch).hour
     elif epoch == 'HR':
@@ -53,4 +55,5 @@ def epoch_hr(epoch):
         return time()
 
 def date_to_str():
+    '''Todays date but without the leading 2 digits in 2022'''
     return str(date.today())[2:]

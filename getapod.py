@@ -180,7 +180,8 @@ admin.add_link(menu.MenuLink(name='Logout', category='', url='/logout?next=/'))
 def get_bookings(roomdata, epoch):
     booking_data = {}
     tds = f'style="border-radius:10px"'
-    tdcl = f'class="align-middle'
+    tdsb = f'style="border-radius:10px;border-width:3px;border-color:DarkSlateGray;"'
+    tdcl = f'class="text-center align-middle'
     bookflag = 'STANDARD'
     admins = [x.username for x in User.query.filter(User.role_id!=2).all()]
     for hour in BOOK_HOURS:
@@ -189,48 +190,51 @@ def get_bookings(roomdata, epoch):
             mod_epoch = epoch+(hour*3600)
             data = Bookings.query.filter(Bookings.time==(mod_epoch)).filter(Bookings.room==roomdata.id).filter(Bookings.pod==pod).all()
             bookurl = f'{roomdata.name}/{sec_to_date(mod_epoch)}/{hour}/{chr(pod+64)}'
+            book_icon = f'<a href="/book/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
             # is there matching bookings to the query?
             if len(data) >= 1:
-                showstring = f'{data[0].name1}</a>'
+                showstring = f'XXX{data[0].name1}</a>'
                 if len(data[0].name2) > 0:
-                    showstring += f'<br>{data[0].name2}</a>'
+                    showstring += f'<br>{data[0].name2}'
                 if len(data[0].comment) > 0:
                     showstring += f'<br>{data[0].comment}'
-                user_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#userInfo" data-bs-username="{data[0].name1}">{showstring}</a>'
+                user_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#userInfo" data-bs-username="{data[0].name1}">{showstring.replace("XXX", "")}</a>'
+                book_icon = f'<a href="/book/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
                 delete_icon = f'<font color="red"><i class="bi bi-calendar-x-fill"></i></font>'
+                delete_div = f'<span style="float:right">{delete_icon}</span>'
+                admin_del = f'<a href="/delete/{bookurl}">{showstring.replace("XXX", delete_div)}</a>'
                 # if the pod isn't marked as available
                 if data[0].comment == 'DAYBOOKING' and data[0].name1 in admins:
                     bookflag = 'DAYBOOKING'
                 if data[0].flag != 'AVAILABLE':
                     if current_user.is_authenticated:
                         if current_user.role.name in ['Admin', 'Teacher']:
-                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning"><a href="/delete/{bookurl}">{showstring}</a></td>'
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{admin_del}</td>'
                         else:
-                            #booking_data[hour][pod] = f'<td {tds} {tdcl} table-info">{showstring}</td>'
                             #booking_data[hour][pod] = f'<td><button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#userInfo" data-bs-role={data[0].name1}>{showstring}</button></td>'
                             booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{user_link}</td>'
                     else:
-                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-danger">Reserved by<br>teacher</td>'
+                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-danger">Teacher<br>reserved</td>'
                 else:
                     if current_user.is_authenticated:
                         if check_book_epoch(mod_epoch, 45) and current_user.username == data[0].name1:
-                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning"><a href="/delete/{bookurl}">{showstring}</a></td>'
+                            booking_data[hour][pod] = f'<td {tdsb} {tdcl} table-warning"><a href="/delete/{bookurl}">{showstring.replace("XXX", "")}</td>'
                         elif current_user.role.name in ['Admin', 'Teacher']:
-                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{user_link}&nbsp;<a href="/delete/{bookurl}">{delete_icon}</a></td>'                        
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{admin_del}</td>'
                         elif current_user.username == data[0].name1:
-                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{showstring}</td>'
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{showstring.replace("XXX", "")}</td>'
                         else:
                             booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{user_link}</td>'
                     else:
-                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{showstring}</td>'
+                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{user_link}</td>'
             else:
                 if current_user.is_authenticated and current_user.role.name in ['Admin', 'Teacher']:
-                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-success"><a href="/book/{bookurl}">Get POD!</a><br>&nbsp;</td>'
+                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{book_icon}</td>'
                 else:
                     if check_book_epoch(mod_epoch, GRACE_MINUTES):
-                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-success"><a href="/book/{bookurl}">Get POD!</a><br>&nbsp;</td>'
+                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{book_icon}</td>'
                     else:
-                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-success"><i class="bi bi-emoji-frown"></i><br>&nbsp;</td>'
+                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">Unbooked</td>'
     return booking_data, bookflag
 
 def set_booking(roomdata, epoch, pod, form):
