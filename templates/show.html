@@ -28,7 +28,7 @@
     <table class="table">
     <tr valign="top">
         <td>
-            <table class="table table-striped table-bordered" style="border-collapse:separate;border-spacing:10px;">
+            <table class="table table-striped table-bordered" style="border-collapse:separate;border-spacing:5px;width:inherit !important;">
                 <tr>
                     <th class="table-primary">Time</th>
                     {% for pod in show['room']['pods'] %}
@@ -37,7 +37,7 @@
                 </tr>
                 <tr>
                 {% for hour in show['clocks'] %}
-                    <td class="table-primary">{{ hour }}-{{ hour+2 }}</td>
+                    <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">{{ hour }}-{{ hour+2 }}</td>
                     {% for pod in show['query'][hour] %}
                         {% if show['flag'] == 'STANDARD' %}
                             {{ show['query'][hour][pod]|safe }}

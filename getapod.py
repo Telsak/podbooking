@@ -211,7 +211,6 @@ def get_bookings(roomdata, epoch):
                         if current_user.role.name in ['Admin', 'Teacher']:
                             booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{admin_del}</td>'
                         else:
-                            #booking_data[hour][pod] = f'<td><button type="button" class="btn btn-info" data-bs-toggle="modal" data-bs-target="#userInfo" data-bs-role={data[0].name1}>{showstring}</button></td>'
                             booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{user_link}</td>'
                     else:
                         booking_data[hour][pod] = f'<td {tds} {tdcl} table-danger">Teacher<br>reserved</td>'
