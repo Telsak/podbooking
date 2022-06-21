@@ -92,9 +92,9 @@ def show_calendar(urldate, room):
         if 'table' not in line:
             if 'class="mon"' in line:
                 line = '<tr><th class="dh">M</th><th class="dh">T</th><th class="dh">W</th><th class="dh">T</th><th class="dh">F</th><th class="dh">S</th><th class="dh">S</th></tr>'
-            if 'class="today"' in line:
+            elif 'class="today"' in line:
                 line = line.replace('class="today"', 'class="today table-success"')
-            if 'class="month"' in line:
+            elif 'class="month"' in line:
                 if urldate[1] == 1:
                     prev_m = 12
                     urldate[0] -= 1
@@ -106,8 +106,8 @@ def show_calendar(urldate, room):
                 else:
                     next_m = urldate[1]+1
                     prev_m = urldate[1]-1
-                line = line.replace('</th>', f'</th><th><a href="/show/{room}/{urldate[0]}-{next_m}-1">next</a></th>')
-                line = line.replace('<th colspan="7" class="month">', f'<th><a href="/show/{room}/{urldate[0]}-{prev_m}-1">prev</a></th><th colspan="5" class="month">')
+                line = line.replace('</th>', f'</th><th><a href="/show/{room}/{urldate[0]}-{next_m}-1"><i class="bi bi-caret-right-fill" style="color:black"></i></a></th>')
+                line = line.replace('<th colspan="7" class="month">', f'<th><a href="/show/{room}/{urldate[0]}-{prev_m}-1"><i class="bi bi-caret-left-fill" style="color:black"></i></a></th><th colspan="5" class="month">')
             html_output += line
     html_output = html_output.replace('ROOM', room)
     return html_output
