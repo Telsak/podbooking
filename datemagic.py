@@ -64,20 +64,20 @@ def date_to_str():
 def show_calendar(urldate, room):
     
     class RoomCalendar(HTMLCalendar):
-        def __init__(self, url_day, today=[], *args, **kwargs):
+        def __init__(self, url=[], today=[], *args, **kwargs):
             super().__init__(*args, **kwargs)
             self._today = today
-            self._url_day = url_day
- 
+            self._url = url
+
         def formatday(self, day, weekday):
-            today = datetime.now()
-            daystr = f'{str(today.year)[2:]}-{today.month}-{day}'
+            _date = [int(x) for x in str(date.today())[2:].split('-')]
+            daystr = f'{self._url[0]}-{self._url[1]}-{day}'
             url = '/show/ROOM/'
-            if day == self._today and day == self._url_day:
+            if day == self._today and day == self._url[2] and _date[1] == self._url[1]:
                 return f'<td class="urltoday"><a href="{url}{daystr}" class="calurl">{day}</a></td>'
-            elif day == self._today:
+            elif day == self._today and _date[1] == self._url[1]:
                 return f'<td class="today"><a href="{url}{daystr}" class="calurl">{day}</a></td>'
-            elif day == self._url_day:
+            elif day == self._url[2]:
                 return f'<td class="urlday"><a href="{url}{daystr}" class="calurl">{day}</a></td>'
             elif day == 0:
                 return '<td class="noday">&nbsp;</td>'
@@ -86,7 +86,7 @@ def show_calendar(urldate, room):
 
     urldate = [int(x) for x in urldate.split('-')]
     today_date = datetime.now()
-    html_raw = RoomCalendar(url_day=urldate[2], today=today_date.day).formatmonth(2000+urldate[0], urldate[1], withyear=False)
+    html_raw = RoomCalendar(url=urldate, today=today_date.day).formatmonth(2000+urldate[0], urldate[1], withyear=False)
     html_output = ''
     for line in html_raw.split('\n'):
         if 'table' not in line:

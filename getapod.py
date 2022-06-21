@@ -192,6 +192,7 @@ def get_bookings(roomdata, epoch):
             data = Bookings.query.filter(Bookings.time==(mod_epoch)).filter(Bookings.room==roomdata.id).filter(Bookings.pod==pod).all()
             bookurl = f'{roomdata.name}/{sec_to_date(mod_epoch)}/{hour}/{chr(pod+64)}'
             book_icon = f'<a href="/book/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
+            expired_icon = f'<font size=+1><i class="bi bi-x-octagon"></i></font>'
             # is there matching bookings to the query?
             if len(data) >= 1:
                 showstring = f'XXX{data[0].name1}</a>'
@@ -201,6 +202,7 @@ def get_bookings(roomdata, epoch):
                     showstring += f'<br>{data[0].comment}'
                 user_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#userInfo" data-bs-username="{data[0].name1}">{showstring.replace("XXX", "")}</a>'
                 book_icon = f'<a href="/book/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
+                admin_icon = f'<font size=+1><i class="bi bi-shield-lock"></i></font>'
                 delete_icon = f'<font color="red"><i class="bi bi-calendar-x-fill"></i></font>'
                 delete_div = f'<span style="float:right">{delete_icon}</span>'
                 admin_del = f'<a href="/delete/{bookurl}">{showstring.replace("XXX", delete_div)}</a>'
@@ -214,7 +216,7 @@ def get_bookings(roomdata, epoch):
                         else:
                             booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{user_link}</td>'
                     else:
-                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-danger"><i class="bi bi-shield-lock"></i></td>'
+                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-danger">{admin_icon}</td>'
                 else:
                     if current_user.is_authenticated:
                         if check_book_epoch(mod_epoch, 45) and current_user.username == data[0].name1:
@@ -234,7 +236,7 @@ def get_bookings(roomdata, epoch):
                     if check_book_epoch(mod_epoch, GRACE_MINUTES):
                         booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{book_icon}</td>'
                     else:
-                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-success"><i class="bi bi-x-octagon"></i></td>'
+                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{expired_icon}</td>'
     return booking_data, bookflag
 
 def set_booking(roomdata, epoch, pod, form):

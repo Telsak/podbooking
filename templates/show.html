@@ -69,10 +69,10 @@
                             {% if current_user.role.name in ['Admin', 'Teacher'] %}
                                 {{ show['query'][hour][pod]|safe }}
                             {% else %}
-                                <td class="table-danger" style="text-align: center;"><i class="bi bi-shield-lock"></i></td>
+                                <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
                             {% endif %}
                         {% else %}
-                            <td class="table-danger" style="text-align: center;"><i class="bi bi-shield-lock"></i></td>
+                            <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
                         {% endif %}
                     {% endfor %}
                 </tr>
