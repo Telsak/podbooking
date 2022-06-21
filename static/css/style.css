@@ -1,19 +1,25 @@
-.wday {
-    padding: 5px;
-    border-spacing: 5px;
+.caltable td, th {
+    padding: 4px;
     text-align: center;
 }
 
-.dh {
-    text-align: center;
-    padding: 5px;
-    padding: 5px;
+.caltable .wday {
+    background-color:#d1e7dd;
 }
 
-.today {
-    padding: 5px;
-    border-spacing: 5px;
-    text-align: center;
+.caltable .today {
+    background-color: #cfe2ff;
+}
+
+.caltable .urlday {
+    outline: 2px solid black;
+    outline-offset: -2px;
+}
+
+.caltable .urltoday {
+    outline: 2px solid black;
+    outline-offset: -2px;
+    outline-style: double;
 }
 
 .calurl:link, .calurl:visited {

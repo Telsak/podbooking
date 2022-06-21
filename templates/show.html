@@ -11,24 +11,42 @@
     {% endif %}
 {% endwith %}
 
-<table class="table table-sm table-borderless" style="width:1%">
-    {{ show_calendar(show['dates']['today']['date'], show['room']['name'])|safe }}
-</table>
-
-<span class="rubrik">Booking of {{ show['room']['name'] }}</span><br>
-<span class="brodtext">
-    <font color=red size=+1>RULES:
-        <br>&nbsp;- Book only two slots (4 hours) in advance'
-        <br>&nbsp;- PODs are free to use 20 minutes after NoShow'
-    </font></span>
-    <hr>
-    <p style="text-align:center">
-        <font color="blue" size=+2>
-            <a class="btn btn-secondary" href="/show/{{ show['room']['name'] }}/{{show['dates']['yesterday']['date']}}" role="button"><< Prev</a>
-			<a class="btn btn-secondary" href="/show/{{ show['room']['name'] }}" role="button">Today</a>
-			<a class="btn btn-secondary" href="/show/{{ show['room']['name'] }}/{{show['dates']['tomorrow']['date']}}" role="button">Next >></a>
-        </font>
-    </p>
+<div class="container-fluid">
+    <div class="row justify-content-md-center flex-nowrap">
+        <div class="col-6 col-md-auto">
+            <table class="caltable" style="width:1%">
+                {{ show_calendar(show['dates']['today']['date'] , show['room']['name'])|safe }}
+            </table>
+        </div>
+        <div class="col-6">
+            <table>
+                <tr>
+                    <th style="text-align: left;">Bokningsregler</th>
+                </tr>
+                <tr>
+                <th style="text-align: left;">{{ show['room']['name'] }} - {{show['dates']['today']['date'] }}</th>
+                </tr>
+                <tr>
+                    <td>Icon legend:
+                    <ul class="list-inline">
+                        <li class="list-inline-item"><i class="bi bi-shield-lock-fill"> - Reserved by teacher</i></li><br>
+                        <li class="list-inline-item"><i class="bi bi-calendar-plus"> - Available for students</i></li>
+                    </ul></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="row">
+        <p style="text-align:center">
+            <br>
+            <font color="blue" size=+2>
+                <a class="btn btn-secondary" href="/show/{{ show['room']['name'] }}/{{show['dates']['yesterday']['date']}}" role="button"><< Prev</a>
+                <a class="btn btn-secondary" href="/show/{{ show['room']['name'] }}" role="button">Today</a>
+                <a class="btn btn-secondary" href="/show/{{ show['room']['name'] }}/{{show['dates']['tomorrow']['date']}}" role="button">Next >></a>
+            </font>
+        </p>
+    </div>
+</div>
 <div class="table-responsive">
     <table class="table">
     <tr valign="top">
@@ -50,10 +68,10 @@
                             {% if current_user.role.name in ['Admin', 'Teacher'] %}
                                 {{ show['query'][hour][pod]|safe }}
                             {% else %}
-                                <td class="table-danger">Reserved by Teachers</td>
+                                <td class="table-danger" style="text-align: center;"><i class="bi bi-shield-lock-fill"></i></td>
                             {% endif %}
                         {% else %}
-                            <td class="table-danger">Reserved by Teachers</td>
+                            <td class="table-danger" style="text-align: center;"><i class="bi bi-shield-lock-fill"></i></td>
                         {% endif %}
                     {% endfor %}
                 </tr>
