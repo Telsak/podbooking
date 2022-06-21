@@ -97,9 +97,11 @@ def show_calendar(urldate, room):
             if 'class="month"' in line:
                 if urldate[1] == 1:
                     prev_m = 12
+                    urldate[0] -= 1
                     next_m = 2
                 elif urldate[1] == 12:
                     next_m = 1
+                    urldate[0] += 1
                     prev_m = 11
                 else:
                     next_m = urldate[1]+1
