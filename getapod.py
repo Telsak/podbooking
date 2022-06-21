@@ -9,7 +9,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField, HiddenField
 from wtforms.validators import DataRequired
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
-from datemagic import date_start_epoch, sec_to_date, date_to_sec, init_dates, date_to_str, check_book_epoch, epoch_hr
+from datemagic import date_start_epoch, sec_to_date, date_to_sec, init_dates, date_to_str, check_book_epoch, epoch_hr, show_calendar
 
 GRACE_MINUTES = 60
 BOOK_HOURS = [8,10,13,15,17,19,21]
@@ -49,6 +49,7 @@ app.jinja_env.globals.update(get_rooms=get_rooms)
 app.jinja_env.globals.update(get_users=get_users)
 app.jinja_env.globals.update(get_user=get_user)
 app.jinja_env.globals.update(get_db_bookings=get_db_bookings)
+app.jinja_env.globals.update(show_calendar=show_calendar)
 
 class LoginForm(FlaskForm):
     name = StringField("Username", validators=[DataRequired()])

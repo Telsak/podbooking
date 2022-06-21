@@ -1,5 +1,8 @@
+from cgitb import html
 from time import localtime, mktime, time
 from datetime import datetime, date
+import calendar
+from calendar import HTMLCalendar
 
 def sec_to_date(sec):
     '''str_date returns in the format YY-M-D'''
@@ -57,3 +60,40 @@ def epoch_hr(epoch):
 def date_to_str():
     '''Todays date but without the leading 2 digits in 2022'''
     return str(date.today())[2:]
+
+def show_calendar(urldate, room):
+    
+    class RoomCalendar(HTMLCalendar):
+        def __init__(self, today=[], *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self._today = today
+ 
+        def formatday(self, day, weekday):
+            today = datetime.now()
+            daystr = f'{str(today.year)[2:]}-{today.month}-{day}'
+            url = 'http://localhost:5000/show/ROOM/'
+            if day == self._today:
+                return f'<td class="today"><a href="{url}{daystr}" class="calurl">{day}</a></td>'
+            elif day == 0:
+                return '<td class="noday">&nbsp;</td>'
+            else:
+                return f'<td class="wday"><a class="calurl" href="{url}{daystr}">{day}</a></td>'
+
+    urldate = [int(x) for x in urldate.split('-')]
+    today_date = datetime.now()
+    html_raw = RoomCalendar(today=today_date.day).formatmonth(2000+urldate[0], urldate[1], withyear=False)
+    html_output = ''
+    for line in html_raw.split('\n'):
+        if 'month' not in line and 'table' not in line:
+            if 'class="mon"' in line:
+                line = '<tr><th class="dh">M</th><th class="dh">T</th><th class="dh">W</th><th class="dh">T</th><th class="dh">F</th><th class="dh">S</th><th class="dh">S</th></tr>'
+            if 'class="today"' in line:
+                line = line.replace('class="today"', 'class="today table-success"')
+            html_output += line
+    html_output = html_output.replace('ROOM', room)
+    return html_output
+
+
+
+
+

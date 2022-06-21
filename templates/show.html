@@ -10,6 +10,11 @@
         {% endfor %}
     {% endif %}
 {% endwith %}
+
+<table class="table table-sm table-borderless" style="width:1%">
+    {{ show_calendar(show['dates']['today']['date'], show['room']['name'])|safe }}
+</table>
+
 <span class="rubrik">Booking of {{ show['room']['name'] }}</span><br>
 <span class="brodtext">
     <font color=red size=+1>RULES:
@@ -19,9 +24,9 @@
     <hr>
     <p style="text-align:center">
         <font color="blue" size=+2>
-            <a href="/show/{{ show['room']['name'] }}/{{show['dates']['yesterday']['date']}}"><i class="bi bi-arrow-left-circle-fill"></i></a>&nbsp;
-            <a href="/show/{{ show['room']['name'] }}"><i class="bi bi-arrow-up-circle-fill"></i></a>&nbsp;
-            <a href="/show/{{ show['room']['name'] }}/{{show['dates']['tomorrow']['date']}}"><i class="bi bi-arrow-right-circle-fill"></i></a>
+            <a class="btn btn-secondary" href="/show/{{ show['room']['name'] }}/{{show['dates']['yesterday']['date']}}" role="button"><< Prev</a>
+			<a class="btn btn-secondary" href="/show/{{ show['room']['name'] }}" role="button">Today</a>
+			<a class="btn btn-secondary" href="/show/{{ show['room']['name'] }}/{{show['dates']['tomorrow']['date']}}" role="button">Next >></a>
         </font>
     </p>
 <div class="table-responsive">
@@ -76,5 +81,5 @@
     </div>
   </div>
 
-<script src="{{ url_for('static', filename='jq_user_modal.js') }}" type="text/javascript"></script>
+<script src="{{ url_for('static', filename='/js/jq_user_modal.js') }}" type="text/javascript"></script>
 {% endblock %}

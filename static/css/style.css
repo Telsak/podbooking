@@ -1,0 +1,22 @@
+.wday {
+    padding: 5px;
+    border-spacing: 5px;
+    text-align: center;
+}
+
+.dh {
+    text-align: center;
+    padding: 5px;
+    padding: 5px;
+}
+
+.today {
+    padding: 5px;
+    border-spacing: 5px;
+    text-align: center;
+}
+
+.calurl:link, .calurl:visited {
+    color: black;
+    text-decoration: none;
+}
