@@ -214,7 +214,7 @@ def get_bookings(roomdata, epoch):
                         else:
                             booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{user_link}</td>'
                     else:
-                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-danger"><i class="bi bi-shield-lock-fill"></i></td>'
+                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-danger"><i class="bi bi-shield-lock"></i></td>'
                 else:
                     if current_user.is_authenticated:
                         if check_book_epoch(mod_epoch, 45) and current_user.username == data[0].name1:
@@ -234,7 +234,7 @@ def get_bookings(roomdata, epoch):
                     if check_book_epoch(mod_epoch, GRACE_MINUTES):
                         booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{book_icon}</td>'
                     else:
-                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-success"></td>'
+                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-success"><i class="bi bi-x-octagon"></i></td>'
     return booking_data, bookflag
 
 def set_booking(roomdata, epoch, pod, form):
