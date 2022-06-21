@@ -94,6 +94,18 @@ def show_calendar(urldate, room):
                 line = '<tr><th class="dh">M</th><th class="dh">T</th><th class="dh">W</th><th class="dh">T</th><th class="dh">F</th><th class="dh">S</th><th class="dh">S</th></tr>'
             if 'class="today"' in line:
                 line = line.replace('class="today"', 'class="today table-success"')
+            if 'class="month"' in line:
+                if urldate[1] == 1:
+                    prev_m = 12
+                    next_m = 2
+                elif urldate[1] == 12:
+                    next_m = 1
+                    prev_m = 11
+                else:
+                    next_m = urldate[1]+1
+                    prev_m = urldate[1]-1
+                line = line.replace('</th>', f'</th><th><a href="/show/{room}/{urldate[0]}-{next_m}-1">next</a></th>')
+                line = line.replace('<th colspan="7" class="month">', f'<th><a href="/show/{room}/{urldate[0]}-{prev_m}-1">prev</a></th><th colspan="5" class="month">')
             html_output += line
     html_output = html_output.replace('ROOM', room)
     return html_output
