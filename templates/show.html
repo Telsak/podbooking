@@ -12,13 +12,13 @@
 {% endwith %}
 
 <div class="container-fluid">
-    <div class="row justify-content-md-center flex-nowrap">
+    <div class="row justify-content-center flex-nowrap">
         <div class="col-6 col-md-auto">
             <table class="caltable" style="width:1%">
                 {{ show_calendar(show['dates']['today']['date'] , show['room']['name'])|safe }}
             </table>
         </div>
-        <div class="col-6">
+        <div class="col-6 col-md-auto">
             <table>
                 <tr>
                     <th style="text-align: left;">Bokningsregler</th>
