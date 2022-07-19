@@ -10,6 +10,7 @@ from wtforms import StringField, SubmitField, PasswordField, HiddenField
 from wtforms.validators import DataRequired
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
 from datemagic import date_start_epoch, sec_to_date, date_to_sec, init_dates, date_to_str, check_book_epoch, epoch_hr, show_calendar
+from flask_migrate import Migrate
 
 GRACE_MINUTES = 60
 BOOK_HOURS = [8,10,13,15,17,19,21]
@@ -29,6 +30,7 @@ login_manager.login_message_category = "info"
 
 db = SQLAlchemy(app)
 bcrypt = Bcrypt()
+migrate = Migrate(app, db, render_as_batch=True)
 
 login_manager.init_app(app)
 bcrypt.init_app(app)
@@ -85,8 +87,9 @@ class Bookings(db.Model):
     name2 = db.Column(db.String(64), nullable=True)
     comment = db.Column(db.String(64), nullable=True)
     flag = db.Column(db.String(64))
+    confirmation = db.Column(db.String(64))
 
-    def __init__(self, room, time, pod, duration, name1, name2, comment, flag):
+    def __init__(self, room, time, pod, duration, name1, name2, comment, flag, confirmation):
         self.room = room
         self.time = time
         self.pod = pod
@@ -95,6 +98,7 @@ class Bookings(db.Model):
         self.name2 = name2
         self.comment = comment
         self.flag = flag
+        self.confirmation = confirmation
 
 class Role(db.Model):
     __tablename__ = 'roles'
@@ -114,6 +118,10 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(300), nullable=False, unique=True)
     flag = db.Column(db.String(64), nullable=False)
     last_login = db.Column(db.Integer, nullable=False)
+    created = db.Column(db.Integer)
+    fullname = db.Column(db.String(128))
+    mail = db.Column(db.String(128))
+    profile = db.Column(db.String(64))
 
     def __repr__(self):
         return '<User %r>' % self.username
