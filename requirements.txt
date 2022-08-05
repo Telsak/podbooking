@@ -7,6 +7,7 @@ Flask==2.1.2
 Flask-Admin==1.6.0
 Flask-Bcrypt==1.0.1
 Flask-Ext==0.1
+flask-ldap3-login==0.9.18
 Flask-Login==0.6.1
 Flask-Migrate==3.1.0
 Flask-SQLAlchemy==2.5.1
@@ -20,6 +21,7 @@ Jinja2==3.1.2
 Mako==1.2.1
 MarkupSafe==2.1.1
 pycparser==2.21
+requests==2.28.1
 SQLAlchemy==1.4.36
 sqlalchemy-events==0.1.0
 waitress==2.1.2
