@@ -1,7 +1,6 @@
 from cgitb import html
 from time import localtime, mktime, time
 from datetime import datetime, date
-import calendar
 from calendar import HTMLCalendar
 
 def sec_to_date(sec):
@@ -37,6 +36,9 @@ def init_dates(today_d):
              'yesterday': { 'string': yday_s, 'date': yday_d },
              'tomorrow': { 'string': morrow_s, 'date': morrow_d } 
            }
+
+def unixtime():
+    return int(time())
 
 def check_book_epoch(epoch, minutes):
     '''Booking possible if within # minutes of pod timeslot start'''
@@ -111,8 +113,3 @@ def show_calendar(urldate, room):
             html_output += line
     html_output = html_output.replace('ROOM', room)
     return html_output
-
-
-
-
-

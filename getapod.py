@@ -9,13 +9,17 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField, HiddenField
 from wtforms.validators import DataRequired
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
-from datemagic import date_start_epoch, sec_to_date, date_to_sec, init_dates, date_to_str, check_book_epoch, epoch_hr, show_calendar
+from datemagic import date_start_epoch, sec_to_date, date_to_sec, init_dates, date_to_str, check_book_epoch, epoch_hr, show_calendar, unixtime
+from scrapeinfo import scrape_user_info, test_ldap_auth
 from flask_migrate import Migrate
+from time import sleep
 
 GRACE_MINUTES = 60
 BOOK_HOURS = [8,10,13,15,17,19,21]
+lock_commit = False
 
 basedir = os.path.abspath(os.path.dirname(__file__))
+userdetails = dict()
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite') 
@@ -117,6 +121,7 @@ class User(UserMixin, db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     password = db.Column(db.String(300), nullable=False, unique=True)
     flag = db.Column(db.String(64), nullable=False)
+    # TODO: #9 ta bort last_login!
     last_login = db.Column(db.Integer, nullable=False)
     created = db.Column(db.Integer)
     fullname = db.Column(db.String(128))
@@ -135,6 +140,8 @@ class UserModelView(ModelView):
         # If creating a new user, hash password
         if is_created:
             model.password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+            model.created = unixtime()
+            model.fullname, model.mail, model.profile = scrape_user_info(model.username, model.role.name)
         else:
             old_password = form.password.object_data
             # If password has been changed, hash password
@@ -186,6 +193,28 @@ admin.add_view(UserModelView(User, db.session))
 admin.add_view(BookingModelView(Bookings, db.session))
 admin.add_link(menu.MenuLink(name='Logout', category='', url='/logout?next=/'))
 
+def check_user_details(cname='EMPTY'):
+    global userdetails
+    if len(userdetails) == 0:
+        user_list = User.query.all()
+        for user in user_list:
+            userdetails[user.username] = dict()
+            userdetails[user.username]['fullname'] = user.fullname
+            userdetails[user.username]['mail'] = user.mail
+            userdetails[user.username]['profile'] = user.profile
+    
+    if cname in userdetails.keys():
+        return userdetails[cname]['fullname'], userdetails[cname]['mail'], userdetails[cname]['profile']
+    elif cname != 'EMPTY':
+        user_query = User.query.filter(User.username==cname)
+        userdetails[cname] = dict()
+        userdetails[cname]['fullname'] = user_query[0].fullname
+        userdetails[cname]['mail'] = user_query[0].mail
+        userdetails[cname]['profile'] = user_query[0].profile
+        return userdetails[cname]['fullname'], userdetails[cname]['mail'], userdetails[cname]['profile']
+    else:
+        return 'noname', 'nomail', 'noprofile'
+
 def get_bookings(roomdata, epoch):
     booking_data = {}
     tds = f'style="border-radius:10px"'
@@ -201,14 +230,16 @@ def get_bookings(roomdata, epoch):
             bookurl = f'{roomdata.name}/{sec_to_date(mod_epoch)}/{hour}/{chr(pod+64)}'
             book_icon = f'<a href="/book/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
             expired_icon = f'<font size=+1><i class="bi bi-x-octagon"></i></font>'
-            # is there matching bookings to the query?
+            # matching bookings to the query? YES!
             if len(data) >= 1:
                 showstring = f'XXX{data[0].name1}</a>'
                 if len(data[0].name2) > 0:
                     showstring += f'<br>{data[0].name2}'
                 if len(data[0].comment) > 0:
                     showstring += f'<br>{data[0].comment}'
-                user_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#userInfo" data-bs-username="{data[0].name1}">{showstring.replace("XXX", "")}</a>'
+                # data-bs-fullname="{fullname}" data-bs-mail="{mail}"
+                fullname, mail, profile = check_user_details(data[0].name1)
+                user_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#userInfo" data-bs-fullname="{fullname}" data-bs-mail="{mail}" data-bs-profile="{profile}" data-bs-username="{data[0].name1}">{showstring.replace("XXX", "")}</a>'
                 book_icon = f'<a href="/book/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
                 admin_icon = f'<font size=+1><i class="bi bi-shield-lock"></i></font>'
                 delete_icon = f'<font color="red"><i class="bi bi-calendar-x-fill"></i></font>'
@@ -237,6 +268,7 @@ def get_bookings(roomdata, epoch):
                             booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{user_link}</td>'
                     else:
                         booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{user_link}</td>'
+            # matching bookings to the query? NO!
             else:
                 if current_user.is_authenticated and current_user.role.name in ['Admin', 'Teacher']:
                         booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{book_icon}</td>'
@@ -257,7 +289,7 @@ def set_booking(roomdata, epoch, pod, form):
     if current_user.role.name == "Student":
         # disallow booking if booking in the past (but give a grace period)
         if not check_book_epoch(epoch, GRACE_MINUTES):
-            flash(f'Not permitted to book pod at this time! Dont look to the past!', 'warning')
+            flash(f'Not permitted to book pod at this time! You cant book expired timeslots!', 'warning')
             return False, f'/show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
         else:
             # check how many bookings currently exist on the user, beginning on any current booking timeslot
@@ -282,7 +314,8 @@ def set_booking(roomdata, epoch, pod, form):
             name1=current_user.username,
             name2=form['partner'],
             comment=form['comment'],
-            flag=roomflag
+            flag=roomflag,
+            confirmation='PENDING'
         )
         return True, booking
 
@@ -324,6 +357,11 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
         book_time = date_to_sec(caldate) + (3600 * int(hr))
         state, booking = set_booking(roomdata, book_time, pod, request.form)
         if state:
+            global lock_commit
+            while lock_commit == True:
+                sleep(0.025)
+            lock_commit = True
+
             db.session.add(booking)
             try:
                 db.session.commit()
@@ -331,6 +369,9 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
             except Exception as e:
                 db.session.rollback()
                 flash(e, "danger")
+
+            lock_commit = False
+            
             return redirect(f"/show/{roomdata.name.upper()}/{caldate}", code=302)
         else:
             return render_template('debug.html', debugdata=booking)
@@ -369,19 +410,27 @@ def delete(room='Null', caldate='Null', hr='Null', pod='Null'):
         roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
         delete_request = Bookings.query.filter(Bookings.time==(epoch+(int(hr)*3600))).filter(Bookings.room==roomdata.id).filter(Bookings.pod==ord(pod)-64)
         if current_user.username == delete_request[0].name1 or current_user.role.name in ['Teacher', 'Admin']:
+            global lock_commit
+            while lock_commit == True:
+                sleep(0.025)
+            lock_commit = True
+            
             delete_request.delete()
             db.session.commit()
+            
+            lock_commit = False            
             flash("Reservation slot deleted", "success")
         else:
             flash("Unauthorized deletion request!", "warning")
         return redirect(f'/show/{roomdata.name.upper()}/{caldate}', code=302)
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
     # validating form
     if form.validate_on_submit():
-        name = form.name.data
+        name = form.name.data.split('@')[0]
         password = form.password.data
         form.name.data = ''
         form.password.data = ''
@@ -404,7 +453,56 @@ def login():
 
     return render_template('login.html', form=form)
 
-@app.route("/logout")
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    form = LoginForm()
+    # validating form
+    if form.validate_on_submit():
+        name = form.name.data.split('@')[0]
+        password = form.password.data
+        form.name.data = ''
+        form.password.data = ''
+        
+        user = User.query.filter_by(username=name).first()
+        # if user doesnt exist
+        if user is None:
+            if test_ldap_auth(name.lower(), password):
+                created = unixtime()
+                fullname, mail, profile = scrape_user_info(name, 'Student')
+
+                user = User(
+                    username=name.lower(),
+                    role_id=2,
+                    password=bcrypt.generate_password_hash(password).decode('utf-8'),
+                    flag='CAN_BOOK',
+                    last_login=0,
+                    created=created,
+                    fullname=fullname,
+                    mail=mail,
+                    profile=profile
+                )
+                
+                global lock_commit
+                while lock_commit == True:
+                    sleep(0.025)
+                lock_commit = True
+                
+                db.session.add(user)
+                db.session.commit()
+
+                lock_commit = False
+
+                login_user(user)
+                return redirect(url_for('index'))
+            else:
+                flash('Invalid user or password!', 'danger')
+        else:
+            flash('User already exists! Try logging in instead.', 'danger')
+        return render_template('signup.html', form=form)
+
+    return render_template('signup.html', form=form)
+
+@app.route('/logout')
 @login_required
 def logout():
     logout_user()
@@ -413,14 +511,14 @@ def logout():
 @app.route('/')
 def index():
     # TODO: Set up a landing page for the booking system. Don't overdo it though.
-    return redirect("/show/B112", code=302)
+    return redirect('/show/B112', code=302)
 
-@app.route("/debug")
-@login_required
+@app.route('/debug')
+#@login_required
 def debug():
-    return render_template('debug.html')
+    return render_template('debug.html', debugdata=check_user_details('jls'))
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
 
 # TODO: #3 Split application into smaller modules - easy peasy
