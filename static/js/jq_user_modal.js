@@ -15,6 +15,6 @@ var exampleModal = document.getElementById('userInfo')
         const profilediv = document.getElementById("Profile");
         namediv.innerHTML = fullname;
         maildiv.innerHTML = '<a href="mailto:' + mail + '">' + mail + '</a>';
-        profilediv.innerHTML = '<img src="https://mittkonto.hv.se/public/bilder/' + profile + '" height="182" width="140">';
+        profilediv.innerHTML = '<img src="https://mittkonto.hv.se/public/bilder/' + profile + '" height="130" width="100">';
         }
     )
