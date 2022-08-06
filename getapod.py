@@ -523,7 +523,7 @@ def index():
 @app.route('/debug')
 #@login_required
 def debug():
-    return render_template('debug.html', debugdata=check_user_details('jls'))
+    return render_template('debug.html', debugdata=abs(unixtime()-scheduletimestamp))
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
