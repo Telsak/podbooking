@@ -266,7 +266,7 @@ def get_bookings(roomdata, epoch):
                         elif current_user.role.name in ['Admin', 'Teacher']:
                             booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{admin_del}</td>'
                         elif current_user.username == data[0].name1:
-                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{expire_link}</td>'
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-secondary">{expire_link}</td>'
                         else:
                             booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{user_link}</td>'
                     else:
@@ -279,7 +279,7 @@ def get_bookings(roomdata, epoch):
                     if check_book_epoch(mod_epoch, GRACE_MINUTES):
                         booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{book_icon}</td>'
                     else:
-                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{expired_icon}</td>'
+                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-secondary">{expired_icon}</td>'
     return booking_data, bookflag
 
 def set_booking(roomdata, epoch, pod, form):

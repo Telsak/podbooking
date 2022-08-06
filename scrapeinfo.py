@@ -88,6 +88,14 @@ def pull_ics_data():
             showsum = ics_date(event['DTSTART'], event['DTEND'])
             event['SHOWDATE'] = showsum
             showsum = event['SUMMARY'].split('Kurs.grp: ')[1].split(' Sign:')[0]
+
+            sumspl = showsum.split()
+            if len(sumspl) % 2 == 0:
+                sumlen = (len(sumspl)//2)
+                p1 = sumspl[0:sumlen]
+                p2 = sumspl[sumlen:]
+                if p1 == p2:
+                    showsum = ' '.join(p1)
             event['SHOWCOURSE'] = showsum
             showsum = event['SUMMARY'].split('Moment: ')[1].split(' Program:')[0]        
             event['SHOWSUMMARY'] = showsum
