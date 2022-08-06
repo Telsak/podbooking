@@ -10,7 +10,7 @@ from wtforms import StringField, SubmitField, PasswordField, HiddenField
 from wtforms.validators import DataRequired
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
 from datemagic import date_start_epoch, sec_to_date, date_to_sec, init_dates, date_to_str, check_book_epoch, epoch_hr, show_calendar, unixtime
-from scrapeinfo import scrape_user_info, test_ldap_auth
+from scrapeinfo import pull_ics_data, scrape_user_info, test_ldap_auth
 from flask_migrate import Migrate
 from time import sleep
 
@@ -20,6 +20,8 @@ lock_commit = False
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 userdetails = dict()
+scheduledetails = dict()
+scheduletimestamp = 0
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite') 
@@ -240,6 +242,7 @@ def get_bookings(roomdata, epoch):
                 # data-bs-fullname="{fullname}" data-bs-mail="{mail}"
                 fullname, mail, profile = check_user_details(data[0].name1)
                 user_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#userInfo" data-bs-fullname="{fullname}" data-bs-mail="{mail}" data-bs-profile="{profile}" data-bs-username="{data[0].name1}">{showstring.replace("XXX", "")}</a>'
+                expire_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#oldBooking">{showstring.replace("XXX", "")}</a>'
                 book_icon = f'<a href="/book/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
                 admin_icon = f'<font size=+1><i class="bi bi-shield-lock"></i></font>'
                 delete_icon = f'<font color="red"><i class="bi bi-calendar-x-fill"></i></font>'
@@ -263,7 +266,7 @@ def get_bookings(roomdata, epoch):
                         elif current_user.role.name in ['Admin', 'Teacher']:
                             booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{admin_del}</td>'
                         elif current_user.username == data[0].name1:
-                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{showstring.replace("XXX", "")}</td>'
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{expire_link}</td>'
                         else:
                             booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{user_link}</td>'
                     else:
@@ -330,6 +333,11 @@ def load_user(user_id):
 @app.route('/show/<room>')
 @app.route('/show/<room>/<caldate>')
 def show(room, caldate='Null'):
+    global scheduledetails
+    global scheduletimestamp
+    if len(scheduledetails) == 0 or abs(unixtime()-scheduletimestamp) > 21600:
+        scheduledetails = {}
+        scheduledetails, scheduletimestamp = pull_ics_data()
     if room.upper() not in [x.name for x in Rooms.query.all()]:
         flash("No such resource, check room name!", "danger")
         abort(404, description="Resource not found")
@@ -344,7 +352,7 @@ def show(room, caldate='Null'):
     show['dates'] = dates
     show['clocks'] = BOOK_HOURS
     show['query'], show['flag'] = get_bookings(roomdata, dates['today']['string'])
-    return render_template('show.html', show=show)
+    return render_template('show.html', show=show, cal=scheduledetails)
 
 @app.route('/book')
 @app.route('/book/<room>')
@@ -423,7 +431,6 @@ def delete(room='Null', caldate='Null', hr='Null', pod='Null'):
         else:
             flash("Unauthorized deletion request!", "warning")
         return redirect(f'/show/{roomdata.name.upper()}/{caldate}', code=302)
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():

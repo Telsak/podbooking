@@ -1,6 +1,9 @@
+from re import X
 from flask_ldap3_login import LDAP3LoginManager
 from requests import head, ConnectionError
 from time import sleep
+from datemagic import unixtime, date_to_str, ics_date
+from jicson import fromWeb
 
 def get_bind_creds():
     with open('bind.crd') as file:
@@ -65,3 +68,31 @@ def get_profile(cname):
         except ConnectionError:
             return 'no_image_portrait.jpg'
         sleep(0.02)
+
+def pull_ics_data():
+    domain = 'https://schema.hv.se/'
+    path = 'setup/jsp/SchemaICAL.ics?startDatum='
+    querydate = f'20{date_to_str()}'
+    intervall = '&intervallTyp=v&intervallAntal=6'
+    extra = '&sokMedAND=false&sprak=SV&'
+    resurser = 'resurser=l.B112%2Cl.B114%2Cl.B118%2Cl.B123%2Cl.B125%2C'
+    url = f'{domain}{path}{querydate}{intervall}{extra}{resurser}'
+    
+    result = fromWeb(url, 'Basic')
+    timestamp = unixtime()
+
+    if 'VEVENT' in result['VCALENDAR'][0]:   
+        x = 0
+        for event in result['VCALENDAR'][0]['VEVENT']:
+            x += 1
+            showsum = ics_date(event['DTSTART'], event['DTEND'])
+            event['SHOWDATE'] = showsum
+            showsum = event['SUMMARY'].split('Kurs.grp: ')[1].split(' Sign:')[0]
+            event['SHOWCOURSE'] = showsum
+            showsum = event['SUMMARY'].split('Moment: ')[1].split(' Program:')[0]        
+            event['SHOWSUMMARY'] = showsum
+            event['ACCNUM'] = str(x)
+        return result, timestamp
+    else:
+        result = {}
+        return result, timestamp

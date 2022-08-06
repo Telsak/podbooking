@@ -37,6 +37,27 @@ def init_dates(today_d):
              'tomorrow': { 'string': morrow_s, 'date': morrow_d } 
            }
 
+def ics_date(dtstart, dtend):
+    sd, _, st  = dtstart.partition("T")
+    dtst = datetime(
+            int(sd[:4]),
+            int(sd[4:6]),
+            int(sd[6:8]),
+            int(st[:2]),
+            int(st[2:4])
+            )
+    showsum = dtst.strftime('%y-%m-%d %H:%M')
+    ed, _, et = dtend.partition("T")
+    dten = datetime(
+            int(ed[:4]),
+            int(ed[4:6]),
+            int(ed[6:8]),
+            int(et[:2]),
+            int(et[2:4])
+            )
+    showsum += dten.strftime('-%H:%M')
+    return showsum
+
 def unixtime():
     return int(time())
 
