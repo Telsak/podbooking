@@ -515,6 +515,10 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+@app.route('/help')
+def help():
+    return render_template('help.html')
+
 @app.route('/')
 def index():
     # TODO: Set up a landing page for the booking system. Don't overdo it though.

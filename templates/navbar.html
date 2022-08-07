@@ -3,7 +3,7 @@
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <a class="navbar-brand" href="/">Podbooking</a>
+      <a class="navbar-brand" href="/"><img src="/static/images/house.svg" alt="" width="35" height="28" class="d-inline-block align-text-top">Podbooking</a>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">
@@ -20,6 +20,9 @@
         <ul class="navbar-nav me-2 mb-2 mb-lg-0">
           {% if not current_user.is_authenticated %}
             <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('help') }}"><span class="align-middle"><i class="bi bi-question-circle-fill"></i>&nbsp;Help</span></a>
+            </li>
+            <li class="nav-item">
               <a class="nav-link" href="/login"><span class="align-middle"><i class="bi bi-person-circle"></i>&nbsp;Login</span></a>
             </li>
           {% else %}
@@ -30,9 +33,9 @@
             <ul class="dropdown-menu" aria-labelledby="navbarAccountDropdown">
               <a class="dropdown-item d-flex align-items-center" href="#"> <span class="align-middle"><i class="bi bi-person"></i>&nbsp;Profile</span> </a></li>
               <li><hr class="dropdown-divider"></li>
-              <a class="dropdown-item d-flex align-items-center" href="#"> <span class="align-middle"><i class="bi bi-question-circle"></i>&nbsp;Help</span> </a></li>
+              <a class="dropdown-item d-flex align-items-center" href="{{ url_for('help') }}"> <span class="align-middle"><i class="bi bi-question-circle"></i>&nbsp;Help</span> </a></li>
               <li><hr class="dropdown-divider"></li>
-              <a class="dropdown-item d-flex align-items-center" href="{{url_for('logout')}}"> <span class="align-middle"><i class="bi bi-box-arrow-right"></i>&nbsp;Logout</span> </a></li>
+              <a class="dropdown-item d-flex align-items-center" href="{{ url_for('logout') }}"> <span class="align-middle"><i class="bi bi-box-arrow-right"></i>&nbsp;Logout</span> </a></li>
             </ul>
           {% endif %}
         </ul>
