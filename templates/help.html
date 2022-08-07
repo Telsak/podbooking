@@ -4,10 +4,12 @@
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for category, message in messages %}
-        <div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
-          {{ message }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      <div class="row justify-content-center">
+        <div class="alert alert-{{category}} alert-dismissible fade show col-sm-10 col-md-10 col-lg-8" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+    </div>
       {% endfor %}
     {% endif %}
   {% endwith %}
@@ -40,6 +42,18 @@
           <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionHelp">
             <div class="accordion-body">
               Om du har ändrat till HV-lösenord efter registreringen på podbokningen ändras det inte här också. Kontakta Simon för att ordna en ändring om du inte kommer ihåg ditt gamla HV lösenord.
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingFive">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+              "Varför kan jag inte skapa ett konto?"
+            </button>
+          </h2>
+          <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#accordionHelp">
+            <div class="accordion-body">
+              För att skapa ett konto måste du ha ett aktivt studentkonto på Högskolan Väst. Använd det korta aliaset enligt instruktioner på <a href="{{ url_for('signup') }}">registreringssidan.</a> Du behöver använda samma lösenord som du har satt för ditt HV-konto.<br>
             </div>
           </div>
         </div>

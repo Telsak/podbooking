@@ -4,10 +4,12 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
+            <div class="row justify-content-center">
+                <div class="alert alert-{{category}} alert-dismissible fade show col-sm-10 col-md-10 col-lg-8" role="alert">
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
+            </div>
             {% endfor %}
         {% endif %}
         {% endwith %}
@@ -30,6 +32,7 @@
                     {{ form.submit(class="btn btn-primary col-12", value="Sign up") }}
                 </div>
             </form>
+            <a href="{{ url_for('help') }}" class="float-end">Can't create account?</a>
         </div>
 
 {% endblock %}

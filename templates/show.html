@@ -3,10 +3,12 @@
 {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
         {% for category, message in messages %}
-            <div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
+        <div class="row justify-content-center">
+            <div class="alert alert-{{category}} alert-dismissible fade show col-sm-10 col-md-10 col-lg-8" role="alert">
             {{ message }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
+        </div>
         {% endfor %}
     {% endif %}
 {% endwith %}
@@ -111,22 +113,38 @@
 
 
 <div class="modal fade" id="userInfo" tabindex="-1" aria-labelledby="userInfoLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog" style="width:fit-content">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title" id="userInfoLabel">User Information</h5>
+          <h5 class="modal-title" id="userInfoLabel">Booking info</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-            <div id="Profile"></div>
-            <div id="Name"></div>
-            <div id="Mail"></div>
+            <div class="row">
+                <div class="col">
+                    <div id="Profile"></div>
+                </div>
+                <div class="col">
+                    <div id="Name"><h5 class="name">För Efternamn</h5></div>
+                    <div id="Mail"><p class="mail">mail@mail.com</p></div>
+                </div>
+            </div>
         </div>
-        <div class="modal-footer">
+        {% if current_user.is_authenticated %}
+            <div id="Username" style="display: none">{{ current_user.username }}</div>
+        {% else %}
+            <div id="Username" style="display: none">no</div>
+        {% endif %}
+    <div class="modal-footer justify-content-between">
+          {% if current_user.is_authenticated %}
+            <div id="Delete"></div>
+          {% else %}
+            <div id="Delete"></div>
+          {% endif %}
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-        </div>
-      </div>
     </div>
+</div>
+</div>
 </div>
 
 <div class="modal fade" id="oldBooking" tabindex="-1" aria-labelledby="oldBookingLabel" aria-hidden="true">

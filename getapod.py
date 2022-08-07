@@ -239,9 +239,8 @@ def get_bookings(roomdata, epoch):
                     showstring += f'<br>{data[0].name2}'
                 if len(data[0].comment) > 0:
                     showstring += f'<br>{data[0].comment}'
-                # data-bs-fullname="{fullname}" data-bs-mail="{mail}"
                 fullname, mail, profile = check_user_details(data[0].name1)
-                user_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#userInfo" data-bs-fullname="{fullname}" data-bs-mail="{mail}" data-bs-profile="{profile}" data-bs-username="{data[0].name1}">{showstring.replace("XXX", "")}</a>'
+                user_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#userInfo" data-bs-fullname="{fullname}" data-bs-mail="{mail}" data-bs-profile="{profile}" data-bs-username="{data[0].name1}" data-bs-bookurl="{bookurl}">{showstring.replace("XXX", "")}</a>'
                 expire_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#oldBooking">{showstring.replace("XXX", "")}</a>'
                 book_icon = f'<a href="/book/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
                 admin_icon = f'<font size=+1><i class="bi bi-shield-lock"></i></font>'
@@ -254,7 +253,7 @@ def get_bookings(roomdata, epoch):
                 if data[0].flag != 'AVAILABLE':
                     if current_user.is_authenticated:
                         if current_user.role.name in ['Admin', 'Teacher']:
-                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{admin_del}</td>'
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{user_link}</td>'
                         else:
                             booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{user_link}</td>'
                     else:
@@ -262,9 +261,10 @@ def get_bookings(roomdata, epoch):
                 else:
                     if current_user.is_authenticated:
                         if check_book_epoch(mod_epoch, 45) and current_user.username == data[0].name1:
-                            booking_data[hour][pod] = f'<td {tdsb} {tdcl} table-warning"><a href="/delete/{bookurl}">{showstring.replace("XXX", "")}</td>'
+                            #booking_data[hour][pod] = f'<td {tdsb} {tdcl} table-warning"><a href="/delete/{bookurl}">{showstring.replace("XXX", "")}</td>'
+                            booking_data[hour][pod] = f'<td {tdsb} {tdcl} table-warning">{user_link}</td>'
                         elif current_user.role.name in ['Admin', 'Teacher']:
-                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{admin_del}</td>'
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{user_link}</td>'
                         elif current_user.username == data[0].name1:
                             booking_data[hour][pod] = f'<td {tds} {tdcl} table-secondary">{expire_link}</td>'
                         else:

@@ -1,17 +1,30 @@
 {% extends 'base.html' %}
 {% block content %}
-
-       <p>Booking of {{ data.room }} - Pod {{ data.pod }}, {{ data.caldate }} {{ data.hr }}:00</p>
-
+<br>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+       <div class="row justify-content-center">
+              <div class="alert alert-{{category}} alert-dismissible fade show col-sm-10 col-md-10 col-lg-8" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+       </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+    
        <!-- TODO: #6 Convert to proper flask form-class -->
+       <div class="booking-form">
        <form class="row g-3" method="post">
-              <div class="col-md-6">
-                     <label for="booker" class="form-label">Användare</label>
+              <h5>Booking of {{ data.room }} - Pod {{ data.pod }}, {{ data.caldate }} {{ data.hr }}:00</h5>
+              <div>
+                     <label for="booker" class="form-label">User</label>
                      <input type="text" class="form-control" id="booker" name="booker" value="{{ current_user.username }}" readonly>
-                     <label for="partner" class="form-label">Labbpartner</label>
+                     <label for="partner" class="form-label">Labpartner</label>
                      <input type="text" class="form-control" id="partner" name="partner">
                      <br/>
-                     <label for="comment" class="form-label">Kommentar</label>
+                     <label for="comment" class="form-label">Comment</label>
                      <input type="text" class="form-control" id="comment" name="comment">
                      {% if current_user.role.name == 'Admin' %}
                             <input type="hidden" id="status" value="UNAVAILABLE" name="status">
@@ -22,4 +35,5 @@
                      <button type="submit" class="btn btn-primary">Submit</button>
               </div>
        </form>
+       </div>
 {% endblock %}
