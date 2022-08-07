@@ -1,45 +1,41 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar fixed-top navbar-expand-lg navbar-dark bg-dark" style="padding:3px">
     <div class="container-fluid">
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <a class="navbar-brand" href="/">Podbokning</a>
+      <a class="navbar-brand" href="/">Podbooking</a>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          {% if current_user.is_authenticated %}
-            <li class="nav-item">
-              <a class="nav-link" href="{{url_for('logout')}}">Logout {{ current_user.username }} </a>
-            </li>
-          {% else %}
-            <li class="nav-item">
-              <a class="nav-link" href="{{url_for('login')}}">Login</a>
-            </li>
-          {% endif %}
           <li class="nav-item">
             <a class="nav-link" href="{{url_for('debug')}}">Debug</a>
           </li>
-          <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-              Lab Rooms
-            </a>
-            <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
-              {% for room in get_rooms() %}
-              <li><a class="dropdown-item" href="/show/{{ room.name }}">{{ room.name }}</a></li>
-              {% endfor %}
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="https://wiki.cnap.hv.se">Skills</a></li>
-            </ul>
-          </li>
+          {% if current_user.is_authenticated %}
+            {% if current_user.role.name in ['Admin', 'Teacher'] %}
+              <li class="nav-item">
+                <a class="nav-link" href="/admin"><i class="bi bi-chevron-double-left"></i>Admin<i class="bi bi-chevron-double-right"></i></a>
+              </li>
+            {% endif %}
+          {% endif %}
         </ul>
         <ul class="navbar-nav me-2 mb-2 mb-lg-0">
-          <li class="nav-item">
-            <a class="nav-link" href="/admin"><i class="bi bi-gear"></i></a>
-          </li>
+          {% if not current_user.is_authenticated %}
+            <li class="nav-item">
+              <a class="nav-link" href="/login"><span class="align-middle"><i class="bi bi-person-circle"></i>&nbsp;Login</span></a>
+            </li>
+          {% else %}
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarAccountDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <img src="https://mittkonto.hv.se/public/bilder/{{ current_user.profile }}" style="border-radius: 50%; width: 32px; height: 32px; margin: -4px 0; float: left; margin-right: 10px; object-fit: cover">&nbsp;{{ current_user.fullname }}
+              </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarAccountDropdown">
+              <a class="dropdown-item d-flex align-items-center" href="#"> <span class="align-middle"><i class="bi bi-person"></i>&nbsp;Profile</span> </a></li>
+              <li><hr class="dropdown-divider"></li>
+              <a class="dropdown-item d-flex align-items-center" href="#"> <span class="align-middle"><i class="bi bi-question-circle"></i>&nbsp;Help</span> </a></li>
+              <li><hr class="dropdown-divider"></li>
+              <a class="dropdown-item d-flex align-items-center" href="{{url_for('logout')}}"> <span class="align-middle"><i class="bi bi-box-arrow-right"></i>&nbsp;Logout</span> </a></li>
+            </ul>
+          {% endif %}
         </ul>
-        <!-- <form class="d-flex" role="search">
-          <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-          <button class="btn btn-outline-success" type="submit">Search</button>
-        </form>-->
       </div>
     </div>
   </nav>

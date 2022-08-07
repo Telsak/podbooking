@@ -12,18 +12,21 @@
         {% endif %}
         {% endwith %}
 
-        <h4>Login details</h4>
-        <form class="row g-3" method="post">
-            <div class="col-md-3">
-            {{ form.csrf_token }}
-            {{ form.next(value=request.args.get('next', '')) }}
-            {{ form.name.label(class="form-label") }}
-            {{ form.name(class="form-control") }}
-            {{ form.password.label(class="form-label") }}
-            {{ form.password(class="form-control") }}
-            <br/>
-            {{ form.submit(class="btn btn-primary") }}
-            </div>
-       </form>
+        <div class="login-form">
+            <form class="row g-3" method="post">
+                <h2 class="text-center">Student Login</h2>
+                <div>
+                    {{ form.csrf_token }}
+                    {{ form.next(value=request.args.get('next', '')) }}
+                    {{ form.name.label(class="form-label") }}
+                    {{ form.name(class="form-control") }}
+                    {{ form.password.label(class="form-label") }}
+                    {{ form.password(class="form-control") }}
+                    <br/>
+                    {{ form.submit(class="btn btn-primary col-12", value="Log in") }}
+                </div>
+            </form>
+            <p class="text-center"><a href="{{ url_for('signup') }}">Create an Account</a></p>
+        </div>
 
 {% endblock %}
