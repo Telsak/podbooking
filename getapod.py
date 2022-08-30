@@ -523,7 +523,8 @@ def help():
     return render_template('help.html')
 
 @app.route('/')
-def index():
+@app.route('/<data>')
+def index(data='Null'):
     # TODO: Set up a landing page for the booking system. Don't overdo it though.
     return redirect(url_for("show", room='B112'), code=302)
 
