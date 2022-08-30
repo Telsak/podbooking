@@ -14,6 +14,7 @@
 {% endwith %}
 
 {% set date_path = request.path.split('/')[3] %}
+{% set baseurl = url_for("help").replace("help", "") %}
 <div class="container-fluid">
     <div class="row justify-content-center flex-nowrap">
         <div class="col-6 col-md-auto">
@@ -44,13 +45,13 @@
         <p style="text-align:center">
             <br>
             <font color="blue" size=+2>
-                <a class="btn btn-secondary" href="/show/{{ show['room']['name'] }}/{{show['dates']['yesterday']['date']}}" role="button"><< Prev</a>
-                <a class="btn btn-secondary" href="/show/{{ show['room']['name'] }}" role="button">Today</a>
-                <a class="btn btn-secondary" href="/show/{{ show['room']['name'] }}/{{show['dates']['tomorrow']['date']}}" role="button">Next >></a>
+                <a class="btn btn-secondary" href="{{baseurl}}show/{{ show['room']['name'] }}/{{show['dates']['yesterday']['date']}}" role="button"><< Prev</a>
+                <a class="btn btn-secondary" href="{{baseurl}}show/{{ show['room']['name'] }}" role="button">Today</a>
+                <a class="btn btn-secondary" href="{{baseurl}}show/{{ show['room']['name'] }}/{{show['dates']['tomorrow']['date']}}" role="button">Next >></a>
             </font>
             <br><br>
             {% for room in get_rooms() %}
-                <a class="btn btn-secondary" href="/show/{{ room.name }}/{{ date_path }}" role="button">{{ room.name }}</a>
+                <a class="btn btn-secondary" href="{{baseurl}}show/{{ room.name }}/{{ date_path }}" role="button">{{ room.name }}</a>
             {% endfor %}
         </p>
     </div>
