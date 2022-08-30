@@ -226,13 +226,14 @@ def get_bookings(roomdata, epoch):
     tdcl = f'class="text-center align-middle'
     bookflag = 'STANDARD'
     admins = [x.username for x in User.query.filter(User.role_id!=2).all()]
+    baseurl = url_for("help").replace("help", "")
     for hour in BOOK_HOURS:
         booking_data[hour] = {}
         for pod in range(1, roomdata.pods+1):
             mod_epoch = epoch+(hour*3600)
             data = Bookings.query.filter(Bookings.time==(mod_epoch)).filter(Bookings.room==roomdata.id).filter(Bookings.pod==pod).all()
             bookurl = f'{roomdata.name}/{sec_to_date(mod_epoch)}/{hour}/{chr(pod+64)}'
-            book_icon = f'<a href="{SITE_PREFIX}/book/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
+            book_icon = f'<a href="{baseurl}book/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
             expired_icon = f'<font size=+1><i class="bi bi-x-octagon"></i></font>'
             # matching bookings to the query? YES!
             if len(data) >= 1:
@@ -244,7 +245,7 @@ def get_bookings(roomdata, epoch):
                 fullname, mail, profile = check_user_details(data[0].name1)
                 user_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#userInfo" data-bs-fullname="{fullname}" data-bs-mail="{mail}" data-bs-profile="{profile}" data-bs-username="{data[0].name1}" data-bs-bookurl="{bookurl}">{showstring.replace("XXX", "")}</a>'
                 expire_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#oldBooking">{showstring.replace("XXX", "")}</a>'
-                book_icon = f'<a href="{SITE_PREFIX}/book/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
+                book_icon = f'<a href="{baseurl}book/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
                 admin_icon = f'<font size=+1><i class="bi bi-shield-lock"></i></font>'
                 #delete_icon = f'<font color="red"><i class="bi bi-calendar-x-fill"></i></font>'
                 #delete_div = f'<span style="float:right">{delete_icon}</span>'
@@ -295,7 +296,8 @@ def set_booking(roomdata, epoch, pod, form):
         # disallow booking if booking in the past (but give a grace period)
         if not check_book_epoch(epoch, GRACE_MINUTES):
             flash(f'Not permitted to book pod at this time! You cant book expired timeslots!', 'warning')
-            return False, f'/show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
+            baseurl = url_for("help").replace("help", "")
+            return False, f'{baseurl}show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
         else:
             # check how many bookings currently exist on the user, beginning on any current booking timeslot
             now_hr = epoch_hr('HR')
@@ -306,10 +308,10 @@ def set_booking(roomdata, epoch, pod, form):
             duration_data = [x.duration for x in Bookings.query.filter(Bookings.time>=user_time_start).filter(Bookings.name1==current_user.username).all()]
             if sum(duration_data) > 2:
                 flash(f'Not permitted to book pod at this time! You have too many booked slots!', 'warning')
-                return False, f'/show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
+                return False, f'{baseurl}show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
     if len(Bookings.query.filter(Bookings.time==epoch).filter(Bookings.room==roomdata.id).filter(Bookings.pod==ord(pod.upper())-64).all()) >= 1:
         flash('This timeslot is no longer available. Please pick another time or pod.', 'warning')
-        return False, f'/show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
+        return False, f'{baseurl}show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
     else:
         booking = Bookings(
             room=roomdata.id,
@@ -354,7 +356,7 @@ def show(room, caldate='Null'):
     show['dates'] = dates
     show['clocks'] = BOOK_HOURS
     show['query'], show['flag'] = get_bookings(roomdata, dates['today']['string'])
-    return render_template('show.html', show=show, cal=scheduledetails, SITE_PREFIX=SITE_PREFIX)
+    return render_template('show.html', show=show, cal=scheduledetails, SITE_PREFIX=url_for("help").replace("help", ""))
 
 @app.route('/book')
 @app.route('/book/<room>')

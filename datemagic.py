@@ -96,7 +96,7 @@ def show_calendar(urldate, room, SITE_PREFIX):
         def formatday(self, day, weekday):
             _date = [int(x) for x in str(date.today())[2:].split('-')]
             daystr = f'{self._url[0]}-{self._url[1]}-{day}'
-            url = f'{SITE_PREFIX}/show/ROOM/'
+            url = f'{SITE_PREFIX}show/ROOM/'
             if day == self._today and day == self._url[2] and _date[1] == self._url[1]:
                 return f'<td class="urltoday"><a href="{url}{daystr}" class="calurl">{day}</a></td>'
             elif day == self._today and _date[1] == self._url[1]:
@@ -130,8 +130,8 @@ def show_calendar(urldate, room, SITE_PREFIX):
                 else:
                     next_m = urldate[1]+1
                     prev_m = urldate[1]-1
-                line = line.replace('</th>', f'</th><th><a href="{SITE_PREFIX}/show/{room}/{urldate[0]}-{next_m}-1"><i class="bi bi-caret-right-fill" style="color:black"></i></a></th>')
-                line = line.replace('<th colspan="7" class="month">', f'<th><a href="{SITE_PREFIX}/show/{room}/{urldate[0]}-{prev_m}-1"><i class="bi bi-caret-left-fill" style="color:black"></i></a></th><th colspan="5" class="month">')
+                line = line.replace('</th>', f'</th><th><a href="{SITE_PREFIX}show/{room}/{urldate[0]}-{next_m}-1"><i class="bi bi-caret-right-fill" style="color:black"></i></a></th>')
+                line = line.replace('<th colspan="7" class="month">', f'<th><a href="{SITE_PREFIX}show/{room}/{urldate[0]}-{prev_m}-1"><i class="bi bi-caret-left-fill" style="color:black"></i></a></th><th colspan="5" class="month">')
             html_output += line
     html_output = html_output.replace('ROOM', room)
     return html_output

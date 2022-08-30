@@ -15,7 +15,7 @@
 
         <h1>Debug page</h1>
         <p>
-            {{ url_for("book", room='B112', caldate='').split('/') }}<br>
+            {{ url_for("help").replace("help", "book") }}<br>
            {# 
             {% for x in debugdata %}
                 {{ x.username, x.fullname, x.mail, x.profile }}
