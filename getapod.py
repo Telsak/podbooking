@@ -243,13 +243,7 @@ def get_bookings(roomdata, epoch):
                 if len(data[0].comment) > 0:
                     showstring += f'<br>{data[0].comment}'
                 fullname, mail, profile = check_user_details(data[0].name1)
-                user_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#userInfo" \
-                                data-bs-fullname="{fullname}" \
-                                data-bs-mail="{mail}" \
-                                data-bs-profile="{profile}" \
-                                data-bs-username="{data[0].name1}" \
-                                data-bs-bookurl="{bookurl}">{showstring.replace("XXX", "")} \
-                                data-bs-baseurl="{baseurl}"</a>'
+                user_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#userInfo" data-bs-fullname="{fullname}" data-bs-mail="{mail}" data-bs-profile="{profile}" data-bs-username="{data[0].name1}" data-bs-bookurl="{bookurl}">{showstring.replace("XXX", "")} data-bs-baseurl="{baseurl}"</a>'
                 expire_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#oldBooking">{showstring.replace("XXX", "")}</a>'
                 book_icon = f'<a href="{baseurl}book/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
                 admin_icon = f'<font size=+1><i class="bi bi-shield-lock"></i></font>'

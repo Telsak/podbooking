@@ -23,6 +23,6 @@ var exampleModal = document.getElementById('userInfo')
         if (loggedin != 'no') {
             //urldelete.innerHTML = '<a class="btn btn-danger" href="/delete/' + bookurl + '" role="button">Delete booking</a>&nbsp;'
             urldelete.outerHTML = '<a class="btn btn-danger mr-auto" href="' + baseurl + 'delete/' + bookurl + '" role="button">Delete booking</a>'
-        }        
+            }        
         }
     )
