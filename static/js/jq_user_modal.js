@@ -8,6 +8,7 @@ var exampleModal = document.getElementById('userInfo')
         var mail = button.getAttribute('data-bs-mail')
         var profile = button.getAttribute('data-bs-profile')
         var bookurl = button.getAttribute('data-bs-bookurl')
+        var baseurl = button.getAttribute('data-bs-baseurl')
         // Update the modal's content.
         var modalTitle = exampleModal.querySelector('.modal-title')
         // modalTitle.textContent = 'User Information for ' + username
@@ -21,7 +22,7 @@ var exampleModal = document.getElementById('userInfo')
         profilediv.innerHTML = '<img src="https://mittkonto.hv.se/public/bilder/' + profile + '" height="130" width="100">';
         if (loggedin != 'no') {
             //urldelete.innerHTML = '<a class="btn btn-danger" href="/delete/' + bookurl + '" role="button">Delete booking</a>&nbsp;'
-            urldelete.outerHTML = '<a class="btn btn-danger mr-auto" href="/delete/' + bookurl + '" role="button">Delete booking</a>'
+            urldelete.outerHTML = '<a class="btn btn-danger mr-auto" href="' + baseurl + 'delete/' + bookurl + '" role="button">Delete booking</a>'
         }        
         }
     )
