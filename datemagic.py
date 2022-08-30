@@ -1,4 +1,4 @@
-from cgitb import html
+#from cgitb import html
 from time import localtime, mktime, time
 from datetime import datetime, date
 from calendar import HTMLCalendar
@@ -38,12 +38,13 @@ def init_dates(today_d):
            }
 
 def ics_date(dtstart, dtend):
+    # +2 to compensate for ICS being in ZULU time
     sd, _, st  = dtstart.partition("T")
     dtst = datetime(
             int(sd[:4]),
             int(sd[4:6]),
             int(sd[6:8]),
-            int(st[:2]),
+            int(st[:2])+2,
             int(st[2:4])
             )
     showsum = dtst.strftime('%y-%m-%d %H:%M')
@@ -52,7 +53,7 @@ def ics_date(dtstart, dtend):
             int(ed[:4]),
             int(ed[4:6]),
             int(ed[6:8]),
-            int(et[:2]),
+            int(et[:2])+2,
             int(et[2:4])
             )
     showsum += dten.strftime('-%H:%M')
@@ -84,7 +85,7 @@ def date_to_str():
     '''Todays date but without the leading 2 digits in 2022'''
     return str(date.today())[2:]
 
-def show_calendar(urldate, room):
+def show_calendar(urldate, room, SITE_PREFIX):
     
     class RoomCalendar(HTMLCalendar):
         def __init__(self, url=[], today=[], *args, **kwargs):
@@ -95,7 +96,7 @@ def show_calendar(urldate, room):
         def formatday(self, day, weekday):
             _date = [int(x) for x in str(date.today())[2:].split('-')]
             daystr = f'{self._url[0]}-{self._url[1]}-{day}'
-            url = '/show/ROOM/'
+            url = f'{SITE_PREFIX}/show/ROOM/'
             if day == self._today and day == self._url[2] and _date[1] == self._url[1]:
                 return f'<td class="urltoday"><a href="{url}{daystr}" class="calurl">{day}</a></td>'
             elif day == self._today and _date[1] == self._url[1]:
@@ -129,8 +130,8 @@ def show_calendar(urldate, room):
                 else:
                     next_m = urldate[1]+1
                     prev_m = urldate[1]-1
-                line = line.replace('</th>', f'</th><th><a href="/show/{room}/{urldate[0]}-{next_m}-1"><i class="bi bi-caret-right-fill" style="color:black"></i></a></th>')
-                line = line.replace('<th colspan="7" class="month">', f'<th><a href="/show/{room}/{urldate[0]}-{prev_m}-1"><i class="bi bi-caret-left-fill" style="color:black"></i></a></th><th colspan="5" class="month">')
+                line = line.replace('</th>', f'</th><th><a href="{SITE_PREFIX}/show/{room}/{urldate[0]}-{next_m}-1"><i class="bi bi-caret-right-fill" style="color:black"></i></a></th>')
+                line = line.replace('<th colspan="7" class="month">', f'<th><a href="{SITE_PREFIX}/show/{room}/{urldate[0]}-{prev_m}-1"><i class="bi bi-caret-left-fill" style="color:black"></i></a></th><th colspan="5" class="month">')
             html_output += line
     html_output = html_output.replace('ROOM', room)
     return html_output

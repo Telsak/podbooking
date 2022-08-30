@@ -18,7 +18,7 @@
     <div class="row justify-content-center flex-nowrap">
         <div class="col-6 col-md-auto">
             <table class="caltable" style="width:1%">
-                {{ show_calendar(show['dates']['today']['date'] , show['room']['name'])|safe }}
+                {{ show_calendar(show['dates']['today']['date'] , show['room']['name'], SITE_PREFIX)|safe }}
             </table>
         </div>
         <div class="col-6 col-md-auto">

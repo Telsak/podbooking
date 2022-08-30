@@ -73,7 +73,7 @@ def pull_ics_data():
     domain = 'https://schema.hv.se/'
     path = 'setup/jsp/SchemaICAL.ics?startDatum='
     querydate = f'20{date_to_str()}'
-    intervall = '&intervallTyp=v&intervallAntal=6'
+    intervall = '&intervallTyp=v&intervallAntal=3'
     extra = '&sokMedAND=false&sprak=SV&'
     resurser = 'resurser=l.B112%2Cl.B114%2Cl.B118%2Cl.B123%2Cl.B125%2C'
     url = f'{domain}{path}{querydate}{intervall}{extra}{resurser}'

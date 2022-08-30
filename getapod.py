@@ -16,12 +16,14 @@ from time import sleep
 
 GRACE_MINUTES = 60
 BOOK_HOURS = [8,10,13,15,17,19,21]
+SITE_PREFIX = ''
 lock_commit = False
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 userdetails = dict()
 scheduledetails = dict()
 scheduletimestamp = 0
+
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite') 
@@ -193,7 +195,7 @@ admin = Admin(app, name='Podbokning', template_mode='bootstrap4', index_view=MyA
 admin.add_view(RoomsModelView(Rooms, db.session))
 admin.add_view(UserModelView(User, db.session))
 admin.add_view(BookingModelView(Bookings, db.session))
-admin.add_link(menu.MenuLink(name='Logout', category='', url='/logout?next=/'))
+#admin.add_link(menu.MenuLink(name='Logout', category='', url='/logout?next=/'))
 
 def check_user_details(cname='EMPTY'):
     global userdetails
@@ -230,7 +232,7 @@ def get_bookings(roomdata, epoch):
             mod_epoch = epoch+(hour*3600)
             data = Bookings.query.filter(Bookings.time==(mod_epoch)).filter(Bookings.room==roomdata.id).filter(Bookings.pod==pod).all()
             bookurl = f'{roomdata.name}/{sec_to_date(mod_epoch)}/{hour}/{chr(pod+64)}'
-            book_icon = f'<a href="/book/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
+            book_icon = f'<a href="{SITE_PREFIX}/book/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
             expired_icon = f'<font size=+1><i class="bi bi-x-octagon"></i></font>'
             # matching bookings to the query? YES!
             if len(data) >= 1:
@@ -242,11 +244,11 @@ def get_bookings(roomdata, epoch):
                 fullname, mail, profile = check_user_details(data[0].name1)
                 user_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#userInfo" data-bs-fullname="{fullname}" data-bs-mail="{mail}" data-bs-profile="{profile}" data-bs-username="{data[0].name1}" data-bs-bookurl="{bookurl}">{showstring.replace("XXX", "")}</a>'
                 expire_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#oldBooking">{showstring.replace("XXX", "")}</a>'
-                book_icon = f'<a href="/book/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
+                book_icon = f'<a href="{SITE_PREFIX}/book/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
                 admin_icon = f'<font size=+1><i class="bi bi-shield-lock"></i></font>'
-                delete_icon = f'<font color="red"><i class="bi bi-calendar-x-fill"></i></font>'
-                delete_div = f'<span style="float:right">{delete_icon}</span>'
-                admin_del = f'<a href="/delete/{bookurl}">{showstring.replace("XXX", delete_div)}</a>'
+                #delete_icon = f'<font color="red"><i class="bi bi-calendar-x-fill"></i></font>'
+                #delete_div = f'<span style="float:right">{delete_icon}</span>'
+                #admin_del = f'<a href="{SITE_PREFIX}/delete/{bookurl}">{showstring.replace("XXX", delete_div)}</a>'
                 # if the pod isn't marked as available
                 if data[0].comment == 'DAYBOOKING' and data[0].name1 in admins:
                     bookflag = 'DAYBOOKING'
@@ -342,7 +344,7 @@ def show(room, caldate='Null'):
         flash("No such resource, check room name!", "danger")
         abort(404, description="Resource not found")
     if caldate == 'Null':
-        return redirect(f'/show/{room.upper()}/{date_to_str()}')
+        return redirect(url_for("show", room=room.upper(), caldate=date_to_str()))
     else:
         today_d = caldate
     dates = init_dates(today_d)
@@ -352,7 +354,7 @@ def show(room, caldate='Null'):
     show['dates'] = dates
     show['clocks'] = BOOK_HOURS
     show['query'], show['flag'] = get_bookings(roomdata, dates['today']['string'])
-    return render_template('show.html', show=show, cal=scheduledetails)
+    return render_template('show.html', show=show, cal=scheduledetails, SITE_PREFIX=SITE_PREFIX)
 
 @app.route('/book')
 @app.route('/book/<room>')
@@ -380,12 +382,12 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
 
             lock_commit = False
             
-            return redirect(f"/show/{roomdata.name.upper()}/{caldate}", code=302)
+            return redirect(url_for("show", room=roomdata.name.upper(), caldate=date_to_str()), code=302)
         else:
             return render_template('debug.html', debugdata=booking)
     else:
         if 'Null' in locals().values():
-            return redirect(f"/show/B112/{date_to_str()}", code=302)
+            return redirect(url_for("show", room="B112", caldate=date_to_str()), code=302)
         else:
             roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
             # if this is a valid book url...
@@ -394,7 +396,7 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
                 book_time = date_to_sec(caldate) + (3600 * int(hr))
                 return render_template('book.html', data=locals())
             else:
-                return redirect(f"/show/{roomdata.name.upper()}", code=302)
+                return redirect(url_for("show", room=roomdata.name.upper()), code=302)
 
 @app.route('/delete/<room>')
 @app.route('/delete/<room>/<caldate>')
@@ -404,7 +406,7 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
 def delete(room='Null', caldate='Null', hr='Null', pod='Null'):
     # verify delete url args
     if 'Null' in locals().values():
-        return redirect(f"/show/B112/{date_to_str()}", code=302)
+        return redirect(url_for("show", room="B112", caldate=date_to_str()), code=302)
     else:
         try:
             _ = ord(pod)-64
@@ -412,8 +414,7 @@ def delete(room='Null', caldate='Null', hr='Null', pod='Null'):
             _ = caldate[:]
         except:
             flash("Invalid deletion data!", "danger")
-            return redirect("/show/B112", code=302)
-        # room.upper in [x for x.name in get_rooms()]
+            return redirect(url_for("show", room="B112", code=302))
         epoch = date_to_sec(caldate)
         roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
         delete_request = Bookings.query.filter(Bookings.time==(epoch+(int(hr)*3600))).filter(Bookings.room==roomdata.id).filter(Bookings.pod==ord(pod)-64)
@@ -430,7 +431,7 @@ def delete(room='Null', caldate='Null', hr='Null', pod='Null'):
             flash("Reservation slot deleted", "success")
         else:
             flash("Unauthorized deletion request!", "warning")
-        return redirect(f'/show/{roomdata.name.upper()}/{caldate}', code=302)
+        return redirect(url_for("show", room=roomdata.name.upper(), caldate=caldate), code=302)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -522,7 +523,7 @@ def help():
 @app.route('/')
 def index():
     # TODO: Set up a landing page for the booking system. Don't overdo it though.
-    return redirect('/show/B112', code=302)
+    return redirect(url_for("show", room='B112'), code=302)
 
 @app.route('/debug')
 #@login_required
