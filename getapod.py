@@ -532,7 +532,6 @@ def index(data='Null'):
         return redirect(url_for("index"))
     else:
         return render_template('index.html')
-    #return redirect(url_for("show", room='B112'), code=302)
 
 @app.route('/debug')
 @login_required
