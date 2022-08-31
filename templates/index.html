@@ -12,21 +12,40 @@
 {% endwith %}
 
 <!-- ======= Hero Section ======= -->
-<section id="hero" class="d-flex align-items-center">
-
+<section id="hero" class="d-flex align-items-start">
     <div class="container">
-      <div class="row">
+      <div class="row align-items-start">
         <div class="col-lg-6 pt-4 pt-lg-0 order-2 order-lg-1 d-flex flex-column justify-content-center">
-          <h1>Creating websites that make you stop & stare</h1>
-          <h2>Accusantium quam, aliquam ultricies eget tempor id, aliquam eget nibh et. Maecen aliquam, risus at semper. Proin iaculis purus consequat sem cure digni ssim. Donec porttitora entum.</h2>
-          <div><a href="#about" class="btn-get-started scrollto">Get Started</a></div>
+          <h1>Bokning av Cisco utrustning</h1>
+          <h2>I våra Cisco salar finns utrustning för alla nivåer av studier, som CCNA, CCNP, CyberSecurity samt brandväggar i flera utföranden.  
+            Ett krav för att slutföra din utbildning och få en bra start i branschen är att du behärskar den riktiga utrustningen och 
+            det är precis den möjligheten du får i våra labbsalar.<br><br>
+            <b>Salarna B112, B113, B114, B118, B123 och B125 är alla tillgängliga för studenter att boka.</b>
+            <br><br>
+            Disciplin och hårt arbete i dessa salar har sett till att de studenter
+            som tar sin examen går direkt ut till jobb!</h2>
         </div>
         <div class="col-lg-6 order-1 order-lg-2 hero-img">
-          <img src="{{ url_for('static', filename='images/rack.png')}}" class="img-fluid" alt="">
+          <img src="{{ url_for('static', filename='images/rack.png')}}" class="img-fluid rounded shadow mb-5 bg-body" alt="">
+        </div>
+      </div><br>
+      <div class="row">
+        <div class="col-lg-12 pt-4 pt-lg-0 order-2 order-lg-1 d-flex flex-column justify-content-center">
+          <h1>Bokningsregler</h1>
+          <h2>
+          <ul>
+            <li>Du kan endast boka max två tider samtidigt i Cisco salarna.</li>
+            <li>Boka ej dessa två pass så de passerar över lunchtiden (Alltså från 10:00 - 15:00) utan håll dig till förmiddag/eftermiddag om du bokar dubbla pass.</li>
+            <li>Ställ i ordning efter dig i god tid så nästa labbpass kan starta på utsatt tid.</li>
+            <li>När du bokar se till att du i första hand labbar tillsammans med en klasskamrat så utrustningen räcker till alla tidsmässigt.</li>
+            <li>All mat och dryck får ej passera längre in i salen än småborden som finns vid dörren i alla salar.</li>
+            <li>Schemalagd aktivitet har alltid företräde för utrustningen, se <a href="https://schema.hv.se">schema.hv.se</a> eller längst ner på bokningssidan för salen för aktuella schemalagda pass.</li>
+          </ul> 
+              <b>Bryter du mot dessa regler upprepade gånger kan din access till den bokningsbara utrustningen komma att begränsas eller dras in helt.</b><br>
+          </h2>
+          <div><a href="{{url_for('show', room='B112')}}" class="btn-get-started scrollto">Jag förstår, ta mig till salarna!</a></div>
         </div>
       </div>
     </div>
-
   </section><!-- End Hero -->
-
 {% endblock %}

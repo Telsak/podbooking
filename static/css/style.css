@@ -76,7 +76,6 @@
 #hero {
     width: 100%;
     height: 80vh;
-    background: #f9f9f9;
   }
   
 #hero .container {
@@ -86,6 +85,7 @@
 #hero h1 {
   margin: 0;
   font-size: 42px;
+  font-family: "Dosis", sans-serif;
   font-weight: 700;
   line-height: 56px;
   color: #0f394c;
@@ -95,6 +95,7 @@
 #hero h2 {
   color: #1c698c;
   margin: 10px 0 0 0;
+  font-family: "Dosis", sans-serif;
   font-size: 20px;
 }
 
@@ -116,4 +117,4 @@
 #hero .btn-get-started:hover {
   background: #76c7ed;
 }
-  
+
