@@ -145,8 +145,8 @@ class UserModelView(ModelView):
         if is_created:
             model.password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
             model.created = unixtime()
-            #model.fullname, model.mail, model.profile = scrape_user_info(model.username, model.role.name)
-            model.fullname, model.mail, model.profile = 'student', 'student@student.hv.se', 'no_image_portrait.jpg'
+            model.fullname, model.mail, model.profile = scrape_user_info(model.username, model.role.name)
+            #model.fullname, model.mail, model.profile = 'student', 'student@student.hv.se', 'no_image_portrait.jpg'
         else:
             old_password = form.password.object_data
             # If password has been changed, hash password
