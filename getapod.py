@@ -387,7 +387,8 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
             
             return redirect(url_for("show", room=roomdata.name.upper(), caldate=date_to_str()), code=302)
         else:
-            return render_template('debug.html', debugdata=booking)
+            #return render_template('debug.html', debugdata=booking)
+            return redirect(booking)
     else:
         if 'Null' in locals().values():
             return redirect(url_for("show", room="B112", caldate=date_to_str()), code=302)
