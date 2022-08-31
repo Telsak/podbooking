@@ -75,13 +75,8 @@
 --------------------------------------------------------------*/
 #hero {
     width: 100%;
-    height: 80vh;
   }
   
-#hero .container {
-  padding-top: 84px;
-}
-
 #hero h1 {
   margin: 0;
   font-size: 42px;
