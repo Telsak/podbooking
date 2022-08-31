@@ -227,7 +227,7 @@ def get_bookings(roomdata, epoch):
     tdcl = f'class="text-center align-middle'
     bookflag = 'STANDARD'
     admins = [x.username for x in User.query.filter(User.role_id!=2).all()]
-    baseurl = url_for("help").replace("help", "")
+    baseurl = url_for("index")
     for hour in BOOK_HOURS:
         booking_data[hour] = {}
         for pod in range(1, roomdata.pods+1):
@@ -295,9 +295,9 @@ def set_booking(roomdata, epoch, pod, form):
     roomflag = availability[current_user.role.name]
     if current_user.role.name == "Student":
         # disallow booking if booking in the past (but give a grace period)
+        baseurl = url_for("index")
         if not check_book_epoch(epoch, GRACE_MINUTES):
             flash(f'Not permitted to book pod at this time! You cant book expired timeslots!', 'warning')
-            baseurl = url_for("help").replace("help", "")
             return False, f'{baseurl}show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
         else:
             # check how many bookings currently exist on the user, beginning on any current booking timeslot
@@ -357,7 +357,7 @@ def show(room, caldate='Null'):
     show['dates'] = dates
     show['clocks'] = BOOK_HOURS
     show['query'], show['flag'] = get_bookings(roomdata, dates['today']['string'])
-    return render_template('show.html', show=show, cal=scheduledetails, SITE_PREFIX=url_for("help").replace("help", ""))
+    return render_template('show.html', show=show, cal=scheduledetails, SITE_PREFIX=url_for("index"))
 
 @app.route('/book')
 @app.route('/book/<room>')
