@@ -521,8 +521,12 @@ def logout():
     return redirect(url_for('index'))
 
 @app.route('/help')
-def help():
-    return render_template('help.html')
+@app.route('/help/<lang>')
+def help(lang='Null'):
+    if lang == 'en':
+        return render_template('help_en.html')
+    else:
+        return render_template('help.html')
 
 @app.route('/')
 @app.route('/<data>')
@@ -530,6 +534,8 @@ def index(data='Null'):
     # TODO: Set up a landing page for the booking system. Don't overdo it though.
     if 'php' in data:
         return redirect(url_for("index"))
+    elif 'en' == data:
+        return render_template('index_en.html')
     else:
         return render_template('index.html')
 

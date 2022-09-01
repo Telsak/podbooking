@@ -18,73 +18,79 @@
     <div class="accordion col-sm-10 col-md-10 col-lg-8" id="accordionHelp">
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb">
-            <li class="breadcrumb-item active" aria-current="page">swedish</li>
-            <li class="breadcrumb-item"><a href="{{ request.url_rule }}/en">english</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('help') }}">swedish</a></li>
+            <li class="breadcrumb-item active" aria-current="page">english</li>
           </ol>
         </nav>
-        <h2 class="page-title">&nbsp;Vanliga frågor</h1>
+        <h2 class="page-title">&nbsp;Frequently asked questions</h1>
         <div class="accordion-item">
           <h2 class="accordion-header" id="headingOne">
             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-              <b>"Varför kan jag inte logga in?"</b>
+              <b>"Why can't I log in?"</b>
             </button>
           </h2>
           <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionHelp">
             <div class="accordion-body">
-              Se till att du använder samma användarnamn som när du registrerade dig. Det går även att använda endast det korta aliaset, se exemplet nedan.<br>
-               <code>stna0001@student.hv.se < JA</code><br>
-               <code>stna0001 < JA</code><br>
-               <code>student.studentsson@student.hv.se < NEJ</code><br><br>
-              Om du inte har registrerat dig måste du göra det <a href="{{ url_for('signup') }}">här.</a>
+              You must use the same username you provided when you registered. You can also use the short alias, see the example below.<br>
+               <code>stna0001@student.hv.se < YES</code><br>
+               <code>stna0001 < YES</code><br>
+               <code>student.studentsson@student.hv.se < NO</code><br><br>
+               If you haven't yet registered for the booking system you can do that <a href="{{ url_for('signup') }}">here.</a>
             </div>
           </div>
         </div>
         <div class="accordion-item">
           <h2 class="accordion-header" id="headingTwo">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-              <b>"Varför fungerar inte mitt lösenord?"</b>
+              <b>"My password isn't working!"</b>
             </button>
           </h2>
           <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionHelp">
             <div class="accordion-body">
-              Om du har ändrat till HV-lösenord efter registreringen på podbokningen ändras det inte här också. Kontakta Simon för att ordna en ändring om du inte kommer ihåg ditt gamla HV lösenord.
+              If you have changed your main HV-password after registering on the booking system this change will not be reflected here. 
+              Please contact <a href="mailto:simon.olofsson@hv.se?Subject=GETAPOD Lost password"> webmaster</a> if you cannot remember your old HV password.
             </div>
           </div>
         </div>
         <div class="accordion-item">
           <h2 class="accordion-header" id="headingFive">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
-              <b>"Varför kan jag inte skapa ett konto?"</b>
+              <b>"Why can't I register an account?"</b>
             </button>
           </h2>
           <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#accordionHelp">
             <div class="accordion-body">
-              För att skapa ett konto måste du ha ett aktivt studentkonto på Högskolan Väst. Använd det korta aliaset enligt instruktioner på <a href="{{ url_for('signup') }}">registreringssidan.</a> Du behöver använda samma lösenord som du har satt för ditt HV-konto.<br>
+              In order to create an account you must have an active student account with University West. 
+              Use the short alias described in the instructions on the <a href="{{ url_for('signup') }}">register</a> page.
+              You need to use the same password that is set for your HV-account.
             </div>
           </div>
         </div>
         <div class="accordion-item">
           <h2 class="accordion-header" id="headingThree">
             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-              <b>"Varför kan jag inte boka en pod?"</b>
+              <b>"Why can't I book a pod?"</b>
             </button>
           </h2>
           <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionHelp">
             <div class="accordion-body">
-              Alla studenter är begränsade till max 2 bokningar samtidigt. Om du får meddelandet <code>"Not permitted to book pod at this time! You have too many booked slots!"</code> betyder det att du har nått den gränsen och måste vänta till nästa pass för att göra en ny bokning.<br><strong>Bokningar som har passerat, eller gått ut räknas inte mot den här begränsningen.</strong><br><br>
-              Om ett pass för en pod är rödmarkerad betyder det att den är reserverad av en lärare.
+              All students are limited to a maximum of 2 reservations at the same time. If you are shown the message <code>"Not permitted to book pod at this time! You have too many booked slots!"</code> 
+              this means you have hit this limit and must wait for the next timeslot before you can make another reservation.
+              <br><br><strong>Expired reservations will not count towards this maximum.</strong><br><br>
+              If a timeslot for a pod is marked in red this means it has been reserved by a member of the teaching staff.
             </div>
           </div>
         </div>
         <div class="accordion-item">
             <h2 class="accordion-header" id="headingFour">
               <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-                <b>"Varför kan jag inte avboka en pod, det har gått förut?"</b>
+                <b>"I am unable to remove a reservation despite being able to in the past"</b>
               </button>
             </h2>
             <div id="collapseFour" class="accordion-collapse collapse" aria-labelledby="headingFour" data-bs-parent="#accordionHelp">
               <div class="accordion-body">
-                Du kan avboka en bokning utan problem så länge du gör det inom 45 minuter efter att passet har startat. Efter det låses bokningen och kan inte längre tas bort.
+                You can cancel a reservation without issues as long as you do it within the grace period after the timeslot has begun (At this time the grace period is 45 minutes). 
+                After this grace period the reservation is locked and can no longer be cancelled.
               </div>
             </div>
           </div>

@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+    {% for category, message in messages %}
+        <div class="alert alert-{{category}} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+{% endwith %}
+
+<!-- ======= Hero Section ======= -->
+<section id="hero" class="d-flex align-items-start">
+    <div class="container">
+      <div class="row align-items-start">
+        <div class="col-lg-6 pt-4 pt-lg-0 order-2 order-lg-1 d-flex flex-column justify-content-center">
+          <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item" aria-current="page"><a href="{{url_for('index')}}">swedish</a></li>
+              <li class="breadcrumb-item active" aria-current="page">english</li>
+            </ol>
+          </nav>          
+          <h1>Booking of Cisco equipment</h1>
+          <h2>The Cisco lab rooms contain equipment for all level of studies, such as CCNA, CCNP, CyberSecurity and firewalls in various configurations.
+            A requirement to finish your education and acquire a solid foundation for your professional life is mastery of the physical equipment and this is exactly what our labrooms provide access to.<br><br>
+            <b>Students have access to and are able to book equipment in the following lab rooms: B112, B113, B114, B118, B123 and B125.</b>
+            <br><br>
+            Hard work and discipline in these labrooms have always been essential, giving students who graduate the skills to be very attractive for the job market.</h2>
+        </div>
+        <div class="col-lg-6 order-1 order-lg-2 hero-img">
+          <img src="{{ url_for('static', filename='images/rack.png')}}" class="img-fluid rounded shadow mb-5 bg-body" alt="">
+        </div>
+      </div><br>
+      <div class="row">
+        <div class="col-lg-12 pt-4 pt-lg-0 order-2 order-lg-1 d-flex flex-column justify-content-center">
+          <h1>Rules for booking equipment</h1>
+          <h2>
+          <ul>
+            <li>You may only reserve two timeslots at the same time in the Cisco lab rooms.</li>
+            <li>Don't book these two slots across the lunch-break (Meaning from 10:00 - 15:00), rather stick to either morning/afternoon if you need double timeslots.</li>
+            <li>Ensure you return your station to its original condition before your timeslot ends so the next student kan begin on time.</li>
+            <li>When you reserve a slot, prioritize working together with a classmate to ensure everyone has a fair chance to access the lab.</li>
+            <li>Food and drink may <b>not</b> be consumed at the desks and must be left at the small tables located at the entrance of all the lab rooms.</li>
+            <li>University scheduled activities will always take priority over student reservations, see <a href="https://schema.hv.se">schema.hv.se</a> or the bottom of the booking page for the lab room to check upcoming scheduled activities.</li>
+          </ul> 
+              <b>Repeated violations of these rules can result in restrictions on your ability to access this bookable resource.</b><br>
+          </h2>
+          <div><a href="{{url_for('show', room='B112')}}" class="btn-get-started scrollto">I understand, take me to the lab rooms!</a></div>
+        </div>
+      </div>
+      <div class="row" style="height: 50px;"></div>
+    </div>
+  </section><!-- End Hero -->
+  <div style="flex-grow:1"></div>
+      
+{% endblock %}

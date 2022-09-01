@@ -16,6 +16,12 @@
     <div class="container">
       <div class="row align-items-start">
         <div class="col-lg-6 pt-4 pt-lg-0 order-2 order-lg-1 d-flex flex-column justify-content-center">
+          <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item active" aria-current="page">swedish</li>
+              <li class="breadcrumb-item"><a href="{{ request.url_rule }}en">english</a></li>
+            </ol>
+          </nav>          
           <h1>Bokning av Cisco utrustning</h1>
           <h2>I våra Cisco salar finns utrustning för alla nivåer av studier, som CCNA, CCNP, CyberSecurity samt brandväggar i flera utföranden.  
             Ett krav för att slutföra din utbildning och få en bra start i branschen är att du behärskar den riktiga utrustningen och 
@@ -46,7 +52,8 @@
           <div><a href="{{url_for('show', room='B112')}}" class="btn-get-started scrollto">Jag förstår, ta mig till salarna!</a></div>
         </div>
       </div>
+      <div class="row" style="height: 50px;"></div>
     </div>
   </section><!-- End Hero -->
-  
+  <div style="flex-grow:1"></div>
 {% endblock %}
