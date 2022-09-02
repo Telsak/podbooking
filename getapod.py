@@ -1,4 +1,5 @@
 import os
+from requests import post
 from flask import Flask, render_template, abort, redirect, request, flash, url_for
 from flask_admin import Admin, AdminIndexView, expose, menu
 from flask_admin.contrib.sqla import ModelView
@@ -24,6 +25,10 @@ userdetails = dict()
 scheduledetails = dict()
 scheduletimestamp = 0
 
+wh = {'url': 'https://discord.com/api/webhooks/815971751552221184/jr-X1ZjbgI4DTYsMRpeC3JEu342G-pH9sotOjg85gLgjoK5WyNfESgj7-G-G8lsfrPOq',
+      'src': 'getapod',
+      'lvl': 'INFO'
+    } 
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite') 
@@ -309,9 +314,13 @@ def set_booking(roomdata, epoch, pod, form):
             duration_data = [x.duration for x in Bookings.query.filter(Bookings.time>=user_time_start).filter(Bookings.name1==current_user.username).all()]
             if sum(duration_data) > 2:
                 flash(f'Not permitted to book pod at this time! You have too many booked slots!', 'warning')
+                post(wh['url'], json={"username": wh['src']+': BOOK-WARNING', 
+                    "content": f'{current_user.username} : Not permitted to book pod at this time! You have too many booked slots!'})
                 return False, f'{baseurl}show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
     if len(Bookings.query.filter(Bookings.time==epoch).filter(Bookings.room==roomdata.id).filter(Bookings.pod==ord(pod.upper())-64).all()) >= 1:
         flash('This timeslot is no longer available. Please pick another time or pod.', 'warning')
+        post(wh['url'], json={"username": wh['src']+': BOOK-WARNING', 
+            "content": f'{current_user.username} : This timeslot is no longer available. Please pick another time or pod.'})
         return False, f'{baseurl}show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
     else:
         booking = Bookings(
@@ -378,10 +387,14 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
             db.session.add(booking)
             try:
                 db.session.commit()
+                post(wh['url'], json={"username": wh['src']+': BOOK-INFO', 
+                    "content": f'{current_user.username} : Pod successfully booked!'})
                 flash(f'Pod successfully booked!', 'success')
             except Exception as e:
                 db.session.rollback()
                 flash(e, "danger")
+                post(wh['url'], json={"username": wh['src']+': BOOK-WARNING', 
+                    "content": f'{current_user.username} : {e}'})
 
             lock_commit = False
             
@@ -432,8 +445,12 @@ def delete(room='Null', caldate='Null', hr='Null', pod='Null'):
             db.session.commit()
             
             lock_commit = False            
+            post(wh['url'], json={"username": wh['src']+': DELETE-INFO', 
+                    "content": f'{current_user.username} : Reservation slot deleted!'})
             flash("Reservation slot deleted", "success")
         else:
+            post(wh['url'], json={"username": wh['src']+': DELETE-WARNING', 
+                    "content": f'{current_user.username} : Unauthorized deletion request!'})
             flash("Unauthorized deletion request!", "warning")
         return redirect(url_for("show", room=roomdata.name.upper(), caldate=caldate), code=302)
 
@@ -502,13 +519,20 @@ def signup():
                 db.session.add(user)
                 db.session.commit()
 
+                post(wh['url'], json={"username": wh['src']+': SIGNUP-INFO', 
+                    "content": f'{name} : User successfully created!'})
+
                 lock_commit = False
 
                 login_user(user)
                 return redirect(url_for('index'))
             else:
+                post(wh['url'], json={"username": wh['src']+': SIGNUP-WARNING', 
+                    "content": f'{name} : Invalid user or password!'})
                 flash('Invalid user or password!', 'danger')
         else:
+            post(wh['url'], json={"username": wh['src']+': SIGNUP-WARNING', 
+                    "content": f'{name} : User already exists!'})
             flash('User already exists! Try logging in instead.', 'danger')
         return render_template('signup.html', form=form)
 
