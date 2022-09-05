@@ -306,8 +306,10 @@ def set_booking(roomdata, epoch, pod, form):
             now_hr = epoch_hr('HR')
             user_time_start = epoch_hr('NOW')
             for hour in BOOK_HOURS:
-                if now_hr in range(hour, hour+3):     
-                    user_time_start = date_start_epoch(epoch) + (3600*hour)
+                print(hour, now_hr, range(hour, hour+3))
+                if now_hr in range(hour, hour+3):
+                    user_time_start = date_start_epoch(user_time_start) + (3600*hour)
+                    print(user_time_start)
             duration_data = [x.duration for x in Bookings.query.filter(Bookings.time>=user_time_start).filter(Bookings.name1==current_user.username).all()]
             if sum(duration_data) > 2:
                 flash(f'Not permitted to book pod at this time! You have too many booked slots!', 'warning')
@@ -395,7 +397,6 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
 
             lock_commit = False
             
-            #return redirect(url_for("show", room=roomdata.name.upper(), caldate=date_to_str()), code=302)
             return redirect(url_for("show", room=roomdata.name.upper(), caldate=caldate), code=302)
         else:
             #return render_template('debug.html', debugdata=booking)
