@@ -35,5 +35,16 @@
                      <button type="submit" class="btn btn-primary">Submit</button>
               </div>
        </form>
+       {% if current_user.role.name in ['Admin', 'Teacher'] %}
+              <h5>Salsboknings-lathund för lärare</h5>
+              Skriv ett av följande ord i versaler i kommentarsfältet som lärare:<br>
+              <ul>
+                     <li>MORNING - Bokar 08-12 förmiddagen</li>
+                     <li>AFTERNOON - Bokar 13-17 eftermiddagen</li>
+                     <li>SCHOOLDAY - Bokar 08-17 hela skoldagen</li>
+                     <li>ALLSLOTS - Bokar alla poddar, alla tider</li>              
+              </ul>
+              Tänk på att sätta din bokning så den ligger under den tidsperioden du vill boka
+       {% endif %}
        </div>
 {% endblock %}
