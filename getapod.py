@@ -395,7 +395,8 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
 
             lock_commit = False
             
-            return redirect(url_for("show", room=roomdata.name.upper(), caldate=date_to_str()), code=302)
+            #return redirect(url_for("show", room=roomdata.name.upper(), caldate=date_to_str()), code=302)
+            return redirect(url_for("show", room=roomdata.name.upper(), caldate=caldate), code=302)
         else:
             #return render_template('debug.html', debugdata=booking)
             return redirect(booking)
