@@ -71,16 +71,36 @@
                 {% for hour in show['clocks'] %}
                     <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">{{ hour }}-{{ hour+2 }}</td>
                     {% for pod in show['query'][hour] %}
-                        {% if show['flag'] == 'STANDARD' %}
-                            {{ show['query'][hour][pod]|safe }}
-                        {% elif show['flag'] == 'DAYBOOKING' and current_user.is_authenticated %}
+                        {% if current_user.is_authenticated %}
+
                             {% if current_user.role.name in ['Admin', 'Teacher'] %}
                                 {{ show['query'][hour][pod]|safe }}
                             {% else %}
-                                <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                                {% if show['flag'] == 'MORNING' and hour < 13 %}
+                                    <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                                {% elif show['flag'] == 'AFTERNOON' and hour > 12 and hour < 17 %}
+                                    <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                                {% elif show['flag'] == 'SCHOOLDAY' and hour < 17 %}
+                                    <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                                {% elif show['flag'] == 'ALLSLOTS' %}
+                                    <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                                {% else %}
+                                    {{ show['query'][hour][pod]|safe }}
+                                {% endif %}
                             {% endif %}
+
                         {% else %}
-                            <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                            {% if show['flag'] == 'MORNING' and hour < 13 %}
+                                <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                            {% elif show['flag'] == 'AFTERNOON' and hour > 12 and hour < 17 %}
+                                <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                            {% elif show['flag'] == 'SCHOOLDAY' and hour < 17 %}
+                                <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                            {% elif show['flag'] == 'ALLSLOTS' %}
+                                <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                            {% else %}
+                                {{ show['query'][hour][pod]|safe }}
+                            {% endif %}
                         {% endif %}
                     {% endfor %}
                 </tr>

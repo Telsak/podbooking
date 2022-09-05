@@ -201,7 +201,6 @@ admin = Admin(app, name='Podbokning', template_mode='bootstrap4', index_view=MyA
 admin.add_view(RoomsModelView(Rooms, db.session))
 admin.add_view(UserModelView(User, db.session))
 admin.add_view(BookingModelView(Bookings, db.session))
-#admin.add_link(menu.MenuLink(name='Logout', category='', url='/logout?next=/'))
 
 def check_user_details(cname='EMPTY'):
     global userdetails
@@ -253,12 +252,10 @@ def get_bookings(roomdata, epoch):
                 expire_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#oldBooking">{showstring.replace("XXX", "")}</a>'
                 book_icon = f'<a href="{baseurl}book/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
                 admin_icon = f'<font size=+1><i class="bi bi-shield-lock"></i></font>'
-                #delete_icon = f'<font color="red"><i class="bi bi-calendar-x-fill"></i></font>'
-                #delete_div = f'<span style="float:right">{delete_icon}</span>'
-                #admin_del = f'<a href="{SITE_PREFIX}/delete/{bookurl}">{showstring.replace("XXX", delete_div)}</a>'
                 # if the pod isn't marked as available
-                if data[0].comment == 'DAYBOOKING' and data[0].name1 in admins:
-                    bookflag = 'DAYBOOKING'
+                if data[0].name1 in admins:
+                    if data[0].comment in ['ALLSLOTS', 'MORNING', 'AFTERNOON', 'SCHOOLDAY']:
+                        bookflag = data[0].comment
                 if data[0].flag != 'AVAILABLE':
                     if current_user.is_authenticated:
                         if current_user.role.name in ['Admin', 'Teacher']:
@@ -555,7 +552,6 @@ def help(lang='Null'):
 @app.route('/')
 @app.route('/<data>')
 def index(data='Null'):
-    # TODO: Set up a landing page for the booking system. Don't overdo it though.
     if 'php' in data:
         return redirect(url_for("index"))
     elif 'en' == data:
