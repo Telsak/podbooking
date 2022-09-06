@@ -190,7 +190,7 @@ cython_debug/
 # Ignore code-workspaces
 *.code-workspace
 
-# End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,python
 bind.crd
 data.sqlite
-data.sqlite
+wh.crd
+# End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,python

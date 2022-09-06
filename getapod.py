@@ -1,4 +1,5 @@
 import os
+from base64 import b64decode
 from requests import post
 from flask import Flask, render_template, abort, redirect, request, flash, url_for
 from flask_admin import Admin, AdminIndexView, expose, menu
@@ -35,6 +36,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'da
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SECRET_KEY'] = 'thisisasecretkeyoncethisgoeslivenoreallyipromise'
 app.config['FLASK_ADMIN_SWATCH'] = 'lumen'
+app.config['LOGSEVERITY'] = 4
 
 login_manager = LoginManager()
 login_manager.session_protection = "strong"
@@ -47,6 +49,18 @@ migrate = Migrate(app, db, render_as_batch=True)
 
 login_manager.init_app(app)
 bcrypt.init_app(app)
+
+def log_webhook(x, url='Null', facility='', severity=4, msg='Null'):
+    if x == 'GETURL':
+        with open('wh.crd') as file: a64 = file.read()
+        return f"https://discord.com/api/webhooks/{b64decode(a64.encode('ascii')).decode('ascii')}"
+    elif x == 'POST':
+        if severity <= app.config['LOGSEVERITY']:
+            levels = ['EMERGENCY', 'ALERT', 'CRITICAL', 'ERROR', 'WARNING', 'NOTICE', 'INFORMATIONAL', 'DEBUG']
+            post(url, json={"username": f'getapod: {facility}-{levels[severity]}', 
+                        "content": msg})
+
+app.config['WEBHOOK'] = log_webhook('GETURL')
 
 def get_rooms():
     return Rooms.query.all()
@@ -313,13 +327,17 @@ def set_booking(roomdata, epoch, pod, form):
             duration_data = [x.duration for x in Bookings.query.filter(Bookings.time>=user_time_start).filter(Bookings.name1==current_user.username).all()]
             if sum(duration_data) > 2:
                 flash(f'Not permitted to book pod at this time! You have too many booked slots!', 'warning')
-                post(wh['url'], json={"username": wh['src']+': BOOK-WARNING', 
-                    "content": f'{current_user.username} : Not permitted to book pod at this time! You have too many booked slots!'})
+                log_webhook('POST', url=app.config['WEBHOOK'], facility='BOOK', severity=4, 
+                    msg=f'{current_user.username} : Not permitted to book pod at this time! You have too many booked slots!')
+#                post(wh['url'], json={"username": wh['src']+': BOOK-WARNING', 
+#                    "content": f'{current_user.username} : Not permitted to book pod at this time! You have too many booked slots!'})
                 return False, f'{baseurl}show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
     if len(Bookings.query.filter(Bookings.time==epoch).filter(Bookings.room==roomdata.id).filter(Bookings.pod==ord(pod.upper())-64).all()) >= 1:
         flash('This timeslot is no longer available. Please pick another time or pod.', 'warning')
-        post(wh['url'], json={"username": wh['src']+': BOOK-WARNING', 
-            "content": f'{current_user.username} : This timeslot is no longer available. Please pick another time or pod.'})
+        log_webhook('POST', url=app.config['WEBHOOK'], facility='BOOK', severity=4, 
+            msg=f'{current_user.username} : This timeslot is no longer available. Please pick another time or pod.')
+#        post(wh['url'], json={"username": wh['src']+': BOOK-WARNING', 
+#            "content": f'{current_user.username} : This timeslot is no longer available. Please pick another time or pod.'})
         return False, f'{baseurl}show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
     else:
         booking = Bookings(
@@ -386,14 +404,18 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
             db.session.add(booking)
             try:
                 db.session.commit()
-                post(wh['url'], json={"username": wh['src']+': BOOK-INFO', 
-                    "content": f'{current_user.username} : Pod successfully booked!'})
+                log_webhook('POST', url=app.config['WEBHOOK'], facility='BOOK', severity=6, 
+                    msg=f'{current_user.username} : Pod successfully booked!')
+#                post(wh['url'], json={"username": wh['src']+': BOOK-INFO', 
+#                    "content": f'{current_user.username} : Pod successfully booked!'})
                 flash(f'Pod successfully booked!', 'success')
             except Exception as e:
                 db.session.rollback()
                 flash(e, "danger")
-                post(wh['url'], json={"username": wh['src']+': BOOK-WARNING', 
-                    "content": f'{current_user.username} : {e}'})
+                log_webhook('POST', url=app.config['WEBHOOK'], facility='BOOK', severity=4, 
+                    msg=f'{current_user.username} : {e}')
+#                post(wh['url'], json={"username": wh['src']+': BOOK-WARNING', 
+#                    "content": f'{current_user.username} : {e}'})
 
             lock_commit = False
             
@@ -444,12 +466,17 @@ def delete(room='Null', caldate='Null', hr='Null', pod='Null'):
             db.session.commit()
             
             lock_commit = False            
-            post(wh['url'], json={"username": wh['src']+': DELETE-INFO', 
-                    "content": f'{current_user.username} : Reservation slot deleted!'})
+            
+            log_webhook('POST', url=app.config['WEBHOOK'], facility='DELETE', severity=6, 
+                msg=f'{current_user.username} : Reservation slot deleted!')
+#            post(wh['url'], json={"username": wh['src']+': DELETE-INFO', 
+#                    "content": f'{current_user.username} : Reservation slot deleted!'})
             flash("Reservation slot deleted", "success")
         else:
-            post(wh['url'], json={"username": wh['src']+': DELETE-WARNING', 
-                    "content": f'{current_user.username} : Unauthorized deletion request!'})
+            log_webhook('POST', url=app.config['WEBHOOK'], facility='DELETE', severity=4, 
+                msg=f'{current_user.username} : Unauthorized deletion request!')
+#            post(wh['url'], json={"username": wh['src']+': DELETE-WARNING', 
+#                    "content": f'{current_user.username} : Unauthorized deletion request!'})
             flash("Unauthorized deletion request!", "warning")
         return redirect(url_for("show", room=roomdata.name.upper(), caldate=caldate), code=302)
 
