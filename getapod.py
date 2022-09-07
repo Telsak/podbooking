@@ -26,10 +26,10 @@ userdetails = dict()
 scheduledetails = dict()
 scheduletimestamp = 0
 
-wh = {'url': 'https://discord.com/api/webhooks/815971751552221184/jr-X1ZjbgI4DTYsMRpeC3JEu342G-pH9sotOjg85gLgjoK5WyNfESgj7-G-G8lsfrPOq',
-      'src': 'getapod',
-      'lvl': 'INFO'
-    } 
+#wh = {'url': 'https://discord.com/api/webhooks/815971751552221184/jr-X1ZjbgI4DTYsMRpeC3JEu342G-pH9sotOjg85gLgjoK5WyNfESgj7-G-G8lsfrPOq',
+#      'src': 'getapod',
+#      'lvl': 'INFO'
+#    } 
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite') 
@@ -321,24 +321,18 @@ def set_booking(roomdata, epoch, pod, form):
             now_hr = epoch_hr('HR')
             user_time_start = epoch_hr('NOW')
             for hour in BOOK_HOURS:
-                print(hour, now_hr, range(hour, hour+3))
                 if now_hr in range(hour, hour+3):
                     user_time_start = date_start_epoch(user_time_start) + (3600*hour)
-                    print(user_time_start)
             duration_data = [x.duration for x in Bookings.query.filter(Bookings.time>=user_time_start).filter(Bookings.name1==current_user.username).all()]
             if sum(duration_data) > 2:
                 flash(f'Not permitted to book pod at this time! You have too many booked slots!', 'warning')
                 log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
                     msg=f'{current_user.username} : Not permitted to book pod at this time! You have too many booked slots!')
-#                post(wh['url'], json={"username": wh['src']+': BOOK-WARNING', 
-#                    "content": f'{current_user.username} : Not permitted to book pod at this time! You have too many booked slots!'})
                 return False, f'{baseurl}show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
     if len(Bookings.query.filter(Bookings.time==epoch).filter(Bookings.room==roomdata.id).filter(Bookings.pod==ord(pod.upper())-64).all()) >= 1:
         flash('This timeslot is no longer available. Please pick another time or pod.', 'warning')
         log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
             msg=f'{current_user.username} : This timeslot is no longer available. Please pick another time or pod.')
-#        post(wh['url'], json={"username": wh['src']+': BOOK-WARNING', 
-#            "content": f'{current_user.username} : This timeslot is no longer available. Please pick another time or pod.'})
         return False, f'{baseurl}show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
     else:
         booking = Bookings(
@@ -408,16 +402,12 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
                 db.session.commit()
                 log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=6, 
                     msg=f'{current_user.username} : Pod successfully booked!')
-#                post(wh['url'], json={"username": wh['src']+': BOOK-INFO', 
-#                    "content": f'{current_user.username} : Pod successfully booked!'})
                 flash(f'Pod successfully booked!', 'success')
             except Exception as e:
                 db.session.rollback()
                 flash(e, "danger")
                 log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
                     msg=f'{current_user.username} : {e}')
-#                post(wh['url'], json={"username": wh['src']+': BOOK-WARNING', 
-#                    "content": f'{current_user.username} : {e}'})
 
             lock_commit = False
             
@@ -472,14 +462,10 @@ def delete(room='Null', caldate='Null', hr='Null', pod='Null'):
             
             log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=6, 
                 msg=f'{current_user.username} : Reservation slot deleted!')
-#            post(wh['url'], json={"username": wh['src']+': DELETE-INFO', 
-#                    "content": f'{current_user.username} : Reservation slot deleted!'})
             flash("Reservation slot deleted", "success")
         else:
             log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
                 msg=f'{current_user.username} : Unauthorized deletion request!')
-#            post(wh['url'], json={"username": wh['src']+': DELETE-WARNING', 
-#                    "content": f'{current_user.username} : Unauthorized deletion request!'})
             flash("Unauthorized deletion request!", "warning")
         return redirect(url_for("show", room=roomdata.name.upper(), caldate=caldate), code=302)
 
@@ -551,8 +537,6 @@ def signup():
 
                 log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=6, 
                     msg=f'{current_user.username} : User successfully created!')
-#                post(wh['url'], json={"username": wh['src']+': SIGNUP-INFO', 
-#                    "content": f'{name} : User successfully created!'})
 
                 lock_commit = False
 
@@ -561,14 +545,10 @@ def signup():
             else:
                 log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
                     msg=f'{current_user.username} : Invalid user or password!')
-#                post(wh['url'], json={"username": wh['src']+': SIGNUP-WARNING', 
-#                    "content": f'{name} : Invalid user or password!'})
                 flash('Invalid user or password!', 'danger')
         else:
             log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=3, 
-                msg=f'{current_user.username} : User already exists!')
-#            post(wh['url'], json={"username": wh['src']+': SIGNUP-WARNING', 
-#                    "content": f'{name} : User already exists!'})
+                msg=f'{name} : User already exists!')
             flash('User already exists! Try logging in instead.', 'danger')
         return render_template('signup.html', form=form)
 
