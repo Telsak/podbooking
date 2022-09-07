@@ -603,6 +603,10 @@ def index(data='Null'):
 def debug():
     return render_template('debug.html', debugdata=abs(unixtime()-scheduletimestamp))
 
+@app.route('/test')
+def test():
+    return render_template('test.html')
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
 
