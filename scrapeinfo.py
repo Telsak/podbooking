@@ -4,6 +4,7 @@ from requests import head, ConnectionError
 from time import sleep
 from datemagic import unixtime, date_to_str, ics_date
 from jicson import fromWeb
+from requests import post
 
 def get_bind_creds():
     with open('bind.crd') as file:
@@ -39,14 +40,17 @@ def scrape_user_info(cname, role):
     return display_name, mail, profile
 
 def test_ldap_auth(cname, password):
+    webhook = 'https://discord.com/api/webhooks/815971751552221184/jr-X1ZjbgI4DTYsMRpeC3JEu342G-pH9sotOjg85gLgjoK5WyNfESgj7-G-G8lsfrPOq'
     config = ldap_settings()
     ldap_manager = LDAP3LoginManager()
     ldap_manager.init_config(config)
     response = ldap_manager.authenticate(f'{cname}@student.hv.se', password)
+    svar = post(webhook, json={"username": 'debug', "content": f'testar {cname}@student.hv.se'})
     if 'success' in str(response.status):
         return True
     else:
         response = ldap_manager.authenticate(f'{cname}@hv.se', password)
+        svar = post(webhook, json={"username": 'debug', "content": f'testar {cname}@hv.se'})
         if 'success' in str(response.status):
             return True
         else:
