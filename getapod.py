@@ -544,7 +544,7 @@ def signup():
                 return redirect(url_for('index'))
             else:
                 log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
-                    msg=f'{current_user.username} : Invalid user or password!')
+                    msg=f'{name} : Invalid user or password!')
                 flash('Invalid user or password!', 'danger')
         else:
             log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=3, 
