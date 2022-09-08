@@ -46,7 +46,11 @@ def test_ldap_auth(cname, password):
     if 'success' in str(response.status):
         return True
     else:
-        return False
+        response = ldap_manager.authenticate(f'{cname}@hv.se', password)
+        if 'success' in str(response.status):
+            return True
+        else:
+            return False
 
 def get_profile(cname):
     n = 1
