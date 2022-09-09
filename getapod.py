@@ -1,7 +1,7 @@
 import os
 from base64 import b64decode
 from requests import post
-from flask import Flask, render_template, abort, redirect, request, flash, url_for
+from flask import Flask, render_template, abort, redirect, request, flash, url_for, session
 from flask_admin import Admin, AdminIndexView, expose, menu
 from flask_admin.contrib.sqla import ModelView
 from flask_sqlalchemy import SQLAlchemy
@@ -566,11 +566,18 @@ def help(lang='Null'):
 @app.route('/<data>')
 def index(data='Null'):
     if 'php' in data:
+        labrooms = ['','B112', 'B114', 'B118', '', '', '', 'B125', 'B123']
+        labroom_id = int(request.args.get('room'))
+        session['labroom'] = labrooms[labroom_id]
         return redirect(url_for("index"))
     elif 'en' == data:
         return render_template('index_en.html')
     else:
-        return render_template('index.html')
+        if session['labroom']:
+            labroom = session.pop('labroom')
+            return render_template('index.html', rr=labroom)
+        else:
+            return render_template('index.html', rr='Null')
 
 @app.route('/debug')
 @login_required

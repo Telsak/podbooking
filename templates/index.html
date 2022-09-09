@@ -49,7 +49,11 @@
           </ul> 
               <b>Bryter du mot dessa regler upprepade gånger kan din access till den bokningsbara utrustningen komma att begränsas eller dras in helt.</b><br>
           </h2>
-          <div><a href="{{url_for('show', room='B112')}}" class="btn-get-started scrollto">Jag förstår, ta mig till salarna!</a></div>
+          {% if rr == 'Null' %}
+            <div><a href="{{url_for('show', room='B112')}}" class="btn-get-started scrollto">Jag förstår, ta mig till salarna!</a></div>
+          {% else %}
+            <div><a href="{{url_for('show', room=rr)}}" class="btn-get-started scrollto">Jag förstår, ta mig till sal {{ rr }}!</a></div>
+          {% endif %}
         </div>
       </div>
       <div class="row" style="height: 50px;"></div>
