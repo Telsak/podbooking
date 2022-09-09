@@ -26,11 +26,6 @@ userdetails = dict()
 scheduledetails = dict()
 scheduletimestamp = 0
 
-#wh = {'url': 'https://discord.com/api/webhooks/815971751552221184/jr-X1ZjbgI4DTYsMRpeC3JEu342G-pH9sotOjg85gLgjoK5WyNfESgj7-G-G8lsfrPOq',
-#      'src': 'getapod',
-#      'lvl': 'INFO'
-#    } 
-
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'data.sqlite') 
 app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
@@ -281,7 +276,6 @@ def get_bookings(roomdata, epoch):
                 else:
                     if current_user.is_authenticated:
                         if check_book_epoch(mod_epoch, 45) and current_user.username == data[0].name1:
-                            #booking_data[hour][pod] = f'<td {tdsb} {tdcl} table-warning"><a href="/delete/{bookurl}">{showstring.replace("XXX", "")}</td>'
                             booking_data[hour][pod] = f'<td {tdsb} {tdcl} table-warning">{user_link}</td>'
                         elif current_user.role.name in ['Admin', 'Teacher']:
                             booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{user_link}</td>'

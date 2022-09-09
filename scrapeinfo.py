@@ -81,34 +81,37 @@ def pull_ics_data():
     domain = 'https://schema.hv.se/'
     path = 'setup/jsp/SchemaICAL.ics?startDatum='
     querydate = f'20{date_to_str()}'
-    intervall = '&intervallTyp=v&intervallAntal=3'
+    intervall = '&intervallTyp=v&intervallAntal=2'
     extra = '&sokMedAND=false&sprak=SV&'
     resurser = 'resurser=l.B112%2Cl.B114%2Cl.B118%2Cl.B123%2Cl.B125%2C'
     url = f'{domain}{path}{querydate}{intervall}{extra}{resurser}'
     
-    result = fromWeb(url, 'Basic')
     timestamp = unixtime()
-
-    if 'VEVENT' in result['VCALENDAR'][0]:   
-        x = 0
-        for event in result['VCALENDAR'][0]['VEVENT']:
-            x += 1
-            showsum = ics_date(event['DTSTART'], event['DTEND'])
-            event['SHOWDATE'] = showsum
-            showsum = event['SUMMARY'].split('Kurs.grp: ')[1].split(' Sign:')[0]
-
-            sumspl = showsum.split()
-            if len(sumspl) % 2 == 0:
-                sumlen = (len(sumspl)//2)
-                p1 = sumspl[0:sumlen]
-                p2 = sumspl[sumlen:]
-                if p1 == p2:
-                    showsum = ' '.join(p1)
-            event['SHOWCOURSE'] = showsum
-            showsum = event['SUMMARY'].split('Moment: ')[1].split(' Program:')[0]        
-            event['SHOWSUMMARY'] = showsum
-            event['ACCNUM'] = str(x)
-        return result, timestamp
-    else:
+    try:
+        result = fromWeb(url, 'Basic')
+        if 'VEVENT' in result['VCALENDAR'][0]:   
+            x = 0
+            for event in result['VCALENDAR'][0]['VEVENT']:
+                x += 1
+                showsum = ics_date(event['DTSTART'], event['DTEND'])
+                event['SHOWDATE'] = showsum
+                showsum = event['SUMMARY'].split('Kurs.grp: ')[1].split(' Sign:')[0]
+                sumspl = showsum.split()
+                if len(sumspl) % 2 == 0:
+                    sumlen = (len(sumspl)//2)
+                    p1 = sumspl[0:sumlen]
+                    p2 = sumspl[sumlen:]
+                    if p1 == p2:
+                        showsum = ' '.join(p1)
+                event['SHOWCOURSE'] = showsum
+                showsum = event['SUMMARY'].split('Moment: ')[1].split(' Program:')[0]        
+                event['SHOWSUMMARY'] = showsum
+                event['ACCNUM'] = str(x)
+            return result, timestamp
+        else:
+            result = {}
+            return result, timestamp
+    except:
         result = {}
         return result, timestamp
+   
