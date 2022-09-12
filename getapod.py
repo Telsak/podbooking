@@ -573,10 +573,10 @@ def index(data='Null'):
     elif 'en' == data:
         return render_template('index_en.html')
     else:
-        if session['labroom']:
+        try:
             labroom = session.pop('labroom')
             return render_template('index.html', rr=labroom)
-        else:
+        except:
             return render_template('index.html', rr='Null')
 
 @app.route('/debug')
