@@ -209,7 +209,7 @@
         const loggedin = document.getElementById("Username").innerText;
         const urldelete = document.getElementById("Delete");
         const userinfo = document.getElementById("Info");
-        namediv.innerHTML = '<h5 class="name">' + fullname + profile.split("_")[0] + '</h5>';
+        namediv.innerHTML = '<h5 class="name">' + fullname + '</h5>';
         maildiv.innerHTML = '<p class="mail"><a href="mailto:' + mail + '">' + mail + '</a></p>';
         profilediv.innerHTML = '<img src="https://mittkonto.hv.se/public/bilder/' + profile + '" class="img-fluid img-thumbnail mt-1 mb-1" height="130" width="100">';
         userinfo.innerHTML = '<a class="btn btn-secondary mr-auto" href="' + baseurl + 'user/' + username + '" role="button">Info</a>'
