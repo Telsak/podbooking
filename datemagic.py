@@ -59,8 +59,11 @@ def ics_date(dtstart, dtend):
     showsum += dten.strftime('-%H:%M')
     return showsum
 
-def unixtime():
-    return int(time())
+def unixtime(option=0):
+    if option != 0:
+        return str(datetime.fromtimestamp(option))
+    else:
+        return int(time())
 
 def check_book_epoch(epoch, minutes):
     '''Booking possible if within # minutes of pod timeslot start'''

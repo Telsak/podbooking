@@ -78,7 +78,7 @@ def get_profile(cname):
         sleep(0.02)
 
 def pull_ics_data():
-    domain = 'https://schema.hv.se/'
+    domain = 'http://schema.hv.se/'
     path = 'setup/jsp/SchemaICAL.ics?startDatum='
     querydate = f'20{date_to_str()}'
     intervall = '&intervallTyp=v&intervallAntal=2'

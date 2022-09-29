@@ -12,7 +12,7 @@ from wtforms import StringField, SubmitField, PasswordField, HiddenField
 from wtforms.validators import DataRequired
 from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
 from datemagic import date_start_epoch, sec_to_date, date_to_sec, init_dates, date_to_str, check_book_epoch, epoch_hr, show_calendar, unixtime
-from scrapeinfo import pull_ics_data, scrape_user_info, test_ldap_auth
+from scrapeinfo import get_profile, pull_ics_data, scrape_user_info, test_ldap_auth
 from flask_migrate import Migrate
 from time import sleep
 
@@ -69,11 +69,22 @@ def get_user(user):
 def get_db_bookings():
     return Bookings.query.all()
 
+def get_user_num_bookings(user):
+    return len(Bookings.query.filter(Bookings.name1==user).all())
+
+def get_user_hours(user):
+    bh = len(Bookings.query.filter(Bookings.name1==user).all()) * 2
+    ph = len(Bookings.query.filter(Bookings.name2==user).all()) * 2
+    return bh + ph
+
 app.jinja_env.globals.update(get_rooms=get_rooms)
 app.jinja_env.globals.update(get_users=get_users)
 app.jinja_env.globals.update(get_user=get_user)
 app.jinja_env.globals.update(get_db_bookings=get_db_bookings)
 app.jinja_env.globals.update(show_calendar=show_calendar)
+app.jinja_env.globals.update(get_user_num_bookings=get_user_num_bookings)
+app.jinja_env.globals.update(get_user_hours=get_user_hours)
+app.jinja_env.globals.update(unixtime=unixtime)
 
 class LoginForm(FlaskForm):
     name = StringField("Username", validators=[DataRequired()])
@@ -160,7 +171,6 @@ class UserModelView(ModelView):
             model.password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
             model.created = unixtime()
             model.fullname, model.mail, model.profile = scrape_user_info(model.username, model.role.name)
-            #model.fullname, model.mail, model.profile = 'student', 'student@student.hv.se', 'no_image_portrait.jpg'
         else:
             old_password = form.password.object_data
             # If password has been changed, hash password
@@ -346,6 +356,12 @@ def set_booking(roomdata, epoch, pod, form):
 def page_not_found(e):
     return render_template('404.html'), 404
 
+@app.before_request
+def before_request():
+    if current_user.is_authenticated:
+        current_user.last_login = unixtime()
+        db.session.commit()
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(user_id)
@@ -407,7 +423,6 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
             
             return redirect(url_for("show", room=roomdata.name.upper(), caldate=caldate), code=302)
         else:
-            #return render_template('debug.html', debugdata=booking)
             return redirect(booking)
     else:
         if 'Null' in locals().values():
@@ -583,6 +598,26 @@ def index(data='Null'):
 @login_required
 def debug():
     return render_template('debug.html', debugdata=abs(unixtime()-scheduletimestamp))
+
+@app.route('/user/<username>')
+@app.route('/user/<username>/<option>')
+@login_required
+def user(username, option=''):
+    user = User.query.filter_by(username=username).first_or_404()
+    if option == '':
+        return render_template('user.html', user=user)
+    elif option == 'refresh':
+        if current_user.username == username:
+            profile = get_profile(current_user.username)
+            if profile != current_user.profile:
+                current_user.profile = profile
+                db.session.commit()
+                flash("Profile image has been updated from mittkonto.hv.se", "success")
+            else:
+                flash("There is no newer image on mittkonto.hv.se, profile not changed!", "warning")
+        else:
+            flash("Invalid update request!", "error")
+        return redirect(url_for('user', username=username, option='').rstrip('/'))
 
 @app.route('/test')
 def test():

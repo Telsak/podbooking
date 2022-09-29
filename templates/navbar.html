@@ -31,7 +31,7 @@
               <img src="https://mittkonto.hv.se/public/bilder/{{ current_user.profile }}" style="border-radius: 50%; width: 32px; height: 32px; margin: -4px 0; float: left; margin-right: 10px; object-fit: cover">&nbsp;{{ current_user.fullname }}
               </a>
             <ul class="dropdown-menu" aria-labelledby="navbarAccountDropdown">
-              <!--<a class="dropdown-item d-flex align-items-center" href="#"> <span class="align-middle"><i class="bi bi-person"></i>&nbsp;Profile</span> </a></li>-->
+              <a class="dropdown-item d-flex align-items-center" href="{{ url_for('user', username=current_user.username, option='').rstrip('/') }}"> <span class="align-middle"><i class="bi bi-person"></i>&nbsp;Profile</span> </a></li>
               <a class="dropdown-item d-flex align-items-center" href="{{ url_for('help') }}"> <span class="align-middle"><i class="bi bi-question-circle"></i>&nbsp;Help</span> </a></li>
               <li><hr class="dropdown-divider"></li>
               <a class="dropdown-item d-flex align-items-center" href="{{ url_for('logout') }}"> <span class="align-middle"><i class="bi bi-box-arrow-right"></i>&nbsp;Logout</span> </a></li>

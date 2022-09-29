@@ -11,25 +11,8 @@
 {% endif %}
 {% endwith %}
 
+<h1>Debug page</h1>
 
 
-        <h1>Debug page</h1>
-        <p>
-            {{ url_for("help").replace("help", "book") }}<br>
-           {# 
-            {% for x in debugdata %}
-                {{ x.username, x.fullname, x.mail, x.profile }}
-            {% endfor %}
-            #}
-            {{ debugdata }}
-            
-        </p>
-        <table class="table table-sm table-borderless" style="width:1%">
-            {{ show_calendar('22-6-21', 'B112', SITE_PREFIX)|safe }}
-        </table>
-            
-            
-            
-            
-
+        
 {% endblock %}
