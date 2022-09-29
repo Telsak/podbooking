@@ -32,6 +32,7 @@ app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
 app.config['SECRET_KEY'] = 'thisisasecretkeyoncethisgoeslivenoreallyipromise'
 app.config['FLASK_ADMIN_SWATCH'] = 'lumen'
 app.config['LOGSEVERITY'] = 4
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 login_manager = LoginManager()
 login_manager.session_protection = "strong"
