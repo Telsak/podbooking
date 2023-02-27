@@ -28,17 +28,10 @@ from scrapeinfo import get_profile, pull_ics_data, scrape_user_info, test_ldap_a
 from flask_migrate import Migrate
 from time import sleep
 
-from apscheduler.schedulers.background import BackgroundScheduler
-from threading import Lock
-from pytz import utc
-from datetime import datetime
-
 GRACE_MINUTES = 60
 BOOK_HOURS = [8,10,13,15,17,19,21]
 SITE_PREFIX = ''
 lock_commit = False
-
-data_lock = Lock()
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 userdetails = dict()
@@ -632,6 +625,11 @@ def load_user(user_id):
 @app.route('/show/<room>')
 @app.route('/show/<room>/<caldate>')
 def show(room, caldate='Null'):
+    global scheduledetails
+    global scheduletimestamp
+    if len(scheduledetails) == 0 or abs(unixtime()-scheduletimestamp) > 21600:
+        scheduledetails = {}
+        scheduledetails, scheduletimestamp = pull_ics_data()
     if room.upper() not in [x.name for x in Rooms.query.all()]:
         flash("No such resource, check room name!", "danger")
         abort(404, description="Resource not found")
@@ -1194,20 +1192,6 @@ def user(username, option=''):
         else:
             flash("Invalid update request!", "error")
         return redirect(url_for('user', username=username, option='').rstrip('/'))
-
-def check_kronox_schedule():
-    global scheduledetails
-    global scheduletimestamp
-    if len(scheduledetails) == 0 or abs(unixtime()-scheduletimestamp) > 21600:
-        with data_lock:
-            temporary_details = {}
-            temporary_details, scheduletimestamp = pull_ics_data()
-            if len(temporary_details) > 0:
-                scheduledetails = temporary_details
- 
-kronox_schedule = BackgroundScheduler(timezone=utc)
-kronox_schedule.start()
-kronox_schedule.add_job(check_kronox_schedule,'interval', minutes=60, next_run_time=datetime.utcnow())
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
