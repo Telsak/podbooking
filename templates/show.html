@@ -110,7 +110,6 @@
     </tr>
     </table>
 
-{#
     {% if 'VEVENT' in cal['VCALENDAR'][0] %}
         <div class="accordion" id="accordionSchedule">
         {% for event in cal['VCALENDAR'][0]['VEVENT'] %}
@@ -131,7 +130,6 @@
         {% endfor %}
         </div>
     {% endif %}
-#}
 </div>
 <div class="row" style="height: 50px;"></div>
 
