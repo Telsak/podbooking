@@ -636,6 +636,12 @@ def show(room, caldate='Null'):
     if caldate == 'Null':
         return redirect(url_for("show", room=room.upper(), caldate=date_to_str()))
     else:
+        try:
+            date_check = caldate.split('-')[0]
+            _ = int(date_check)
+        except:
+            flash("Invalid date entered. (Not a number)", "danger")
+            return redirect(url_for('show', room=room.upper()))
         today_d = caldate
     dates = init_dates(today_d)
     show = {}
