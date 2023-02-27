@@ -13,19 +13,36 @@
     {% endif %}
 {% endwith %}
 
+{% set skill_id = request.path.split('/')[2] %}
 {% set date_path = request.path.split('/')[3] %}
+{% set room_path = request.path.split('/')[4] %}
 {% set baseurl = url_for("help").replace("help", "") %}
 <div class="container-fluid">
     <div class="row justify-content-center flex-nowrap">
         <div class="col-6 col-md-auto">
-            <table class="caltable" style="width:1%">
-                {{ show_calendar(show['dates']['today']['date'] , show['room']['name'], SITE_PREFIX)|safe }}
-            </table>
-        </div>
-        <div class="col-6 col-md-auto">
+            <nav style="--bs-breadcrumb-divider: url(&#34;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3E%3Cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%236c757d'/%3E%3C/svg%3E&#34;);" aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                  <li class="breadcrumb-item"><a href="{{ url_for('skills') }}">skills</a></li>
+                  <li class="breadcrumb-item active" aria-current="page">{{ show['dict']['skill'].name }}</li>
+                </ol>
+              </nav>
             <table>
                 <tr>
-                    <th style="text-align: left;"><h1><b>{{ show['room']['name'] }}</b></h1></th>
+                    {% if current_user.role.name in ['Admin', 'Teacher'] %}
+                        <th style="text-align: left;">
+                            <h1>
+                                <b>{{ show['dict']['skill'].name }}
+                                    <a href="{{ url_for('skills', id=skill_id, caldate=date_path, room=room_path) }}"
+                                        data-bs-toggle="tooltip" 
+                                        data-bs-title="Print attendance">
+                                        <i class="bi bi-printer"></i>
+                                    </a>
+                                </b>
+                            </h1>
+                        </th>
+                    {% else %}
+                        <th style="text-align: left;"><h1><b>{{ show['dict']['skill'].name }}</b></h1></th>
+                    {% endif %}
                 </tr>
                 <tr>
                 <th style="text-align: left;"></th>
@@ -33,9 +50,8 @@
                 <tr>
                     <td>Icon legend:
                     <ul class="list-inline">
-                        <li class="list-inline-item"><i class="bi bi-shield-lock-fill"> - Reserved by teacher</i></li><br>
+                        <li class="list-inline-item"><i class="bi bi-shield-lock"> - Reserved by teacher</i></li><br>
                         <li class="list-inline-item"><i class="bi bi-calendar-plus"> - Available for students</i></li><br>
-                        <li class="list-inline-item"><i class="bi bi-x-octagon"> - Expired timeslot</i></li>
                     </ul></td>
                 </tr>
             </table>
@@ -45,13 +61,22 @@
         <p style="text-align:center">
             <br>
             <font color="blue" size=+2>
-                <a class="btn btn-secondary" href="{{baseurl}}show/{{ show['room']['name'] }}/{{show['dates']['yesterday']['date']}}" role="button"><< Prev</a>
-                <a class="btn btn-secondary" href="{{baseurl}}show/{{ show['room']['name'] }}" role="button">Today</a>
-                <a class="btn btn-secondary" href="{{baseurl}}show/{{ show['room']['name'] }}/{{show['dates']['tomorrow']['date']}}" role="button">Next >></a>
+                {% for date in show['dict']['alldates'] %}
+                    {% if date == date_path %}
+                        <a class="btn btn-primary" href="{{baseurl}}showskill/{{ show['dict']['skill'].id }}/{{ date }}" role="button">{{ date[2:] }}<br>{{ sec_to_weekday(date_to_sec(date[2:])) }}</a>
+                    {% else %}
+                        <a class="btn btn-secondary" href="{{baseurl}}showskill/{{ show['dict']['skill'].id }}/{{ date }}" role="button">{{ date[2:] }}<br>{{ sec_to_weekday(date_to_sec(date[2:])) }}</a>
+                    {% endif %}                        
+                </li>    
+                {% endfor %}
             </font>
             <br><br>
-            {% for room in get_rooms() %}
-                <a class="btn btn-secondary" href="{{baseurl}}show/{{ room.name }}/{{ date_path }}" role="button">{{ room.name }}</a>
+            {% for item in room %}
+                {% if item == request.path.split('/')[4] %}
+                    <a class="btn btn-primary" aria-current="page" href="{{baseurl}}showskill/{{ show['dict']['skill'].id }}/{{ date_path }}/{{ item }}" role="button">{{ item }}</a>
+                {% else %}
+                    <a class="btn btn-secondary" aria-current="page" href="{{baseurl}}showskill/{{ show['dict']['skill'].id }}/{{ date_path }}/{{ item }}" role="button">{{ item }}</a>
+                {% endif %}  
             {% endfor %}
         </p>
     </div>
@@ -64,76 +89,28 @@
                 <tr>
                     <th class="table-primary">Time</th>
                     {% for pod in show['room']['pods'] %}
-                    <th class="table-primary">Pod {{ pod }}</th>
+                    <th class="table-primary"></th>
                     {% endfor %}
                 </tr>
                 <tr>
                 {% for hour in show['clocks'] %}
-                    <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">{{ hour }}-{{ hour+2 }}</td>
+                    {% set dur = show['dict']['dates'][date_path][room_path]['duration'] %}
+                    <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">{{ hour }} - {{ endtimes(hour, dur) }}</td>
                     {% for pod in show['query'][hour] %}
-                        {% if current_user.is_authenticated %}
-
-                            {% if current_user.role.name in ['Admin', 'Teacher'] %}
-                                {{ show['query'][hour][pod]|safe }}
-                            {% else %}
-                                {% if show['flag'] == 'MORNING' and hour < 13 %}
-                                    <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
-                                {% elif show['flag'] == 'AFTERNOON' and hour > 12 and hour < 17 %}
-                                    <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
-                                {% elif show['flag'] == 'SCHOOLDAY' and hour < 17 %}
-                                    <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
-                                {% elif show['flag'] == 'ALLSLOTS' %}
-                                    <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
-                                {% else %}
-                                    {{ show['query'][hour][pod]|safe }}
-                                {% endif %}
-                            {% endif %}
-
-                        {% else %}
-                            {% if show['flag'] == 'MORNING' and hour < 13 %}
-                                <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
-                            {% elif show['flag'] == 'AFTERNOON' and hour > 12 and hour < 17 %}
-                                <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
-                            {% elif show['flag'] == 'SCHOOLDAY' and hour < 17 %}
-                                <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
-                            {% elif show['flag'] == 'ALLSLOTS' %}
-                                <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
-                            {% else %}
-                                {{ show['query'][hour][pod]|safe }}
-                            {% endif %}
-                        {% endif %}
+                        {{ show['query'][hour][pod]|safe }}
                     {% endfor %}
                 </tr>
-                {% endfor %}     
+                {% endfor %}
             </table>
         </td>
     </tr>
     </table>
-
-{#
-    {% if 'VEVENT' in cal['VCALENDAR'][0] %}
-        <div class="accordion" id="accordionSchedule">
-        {% for event in cal['VCALENDAR'][0]['VEVENT'] %}
-            {% if show['room']['name'] in event['LOCATION'] %}
-                <div class="accordion-item">
-                    <h2 class="accordion-header" id={{ 'heading' + event['ACCNUM'] }}>
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target={{ '#collapse' + event['ACCNUM'] }} aria-expanded="true" aria-controls={{ 'collapse' + event['ACCNUM'] }}>
-                            {{ event['SHOWDATE'][3:] + ' ' + event['SHOWCOURSE'] }}
-                        </button>
-                    </h2>
-                    <div id={{ 'collapse' + event['ACCNUM'] }} class="accordion-collapse collapse" aria-labelledby={{ 'heading' + event['ACCNUM'] }} data-bs-parent="#accordionSchedule">
-                        <div class="accordion-body">
-                            {{ event['SHOWSUMMARY'] }}
-                        </div>
-                    </div>
-                </div>   
-            {% endif %}
-        {% endfor %}
-        </div>
-    {% endif %}
-#}
 </div>
-<div class="row" style="height: 50px;"></div>
+<div class="row" style="height: 50px;">
+    {% if current_user.role.name in ['Admin', 'Teacher'] %}
+        <p class="text-end"><a href="#" style="text-decoration: none; color:darkgrey">π</a>&NonBreakingSpace;&NonBreakingSpace;</span>
+    {% endif %}
+</div>
 
 <div class="modal fade" id="userInfo" tabindex="-1" aria-labelledby="userInfoLabel" aria-hidden="true">
     <div class="modal-dialog" style="width:fit-content">
@@ -158,14 +135,9 @@
         {% else %}
             <div id="Username" style="display: none">no</div>
         {% endif %}
-    <div class="modal-footer justify-content-between">
-          {% if current_user.is_authenticated %}
+        <div class="modal-footer justify-content-between">
             <div id="Delete"></div>
             <div id="Info"></div>
-          {% else %}
-            <div id="Delete"></div>
-            <div id="Info"></div>
-          {% endif %}
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
     </div>
 </div>
@@ -189,7 +161,6 @@
     </div>
 </div>
 
-<!--<script type="text/javascript" src="{{ url_for('static', filename='/js/jq_user_modal.js') }}"></script>-->
 <script>
     var exampleModal = document.getElementById('userInfo')
     exampleModal.addEventListener('show.bs.modal', function (event) {
@@ -204,7 +175,6 @@
         var baseurl = button.getAttribute('data-bs-baseurl')
         // Update the modal's content.
         var modalTitle = exampleModal.querySelector('.modal-title')
-        // modalTitle.textContent = 'User Information for ' + username
         const namediv = document.getElementById("Name");
         const maildiv = document.getElementById("Mail");
         const profilediv = document.getElementById("Profile");
@@ -216,12 +186,16 @@
         profilediv.innerHTML = '<img src="https://mittkonto.hv.se/public/bilder/' + profile + '" class="img-fluid img-thumbnail mt-1 mb-1" height="130" width="100">';
         userinfo.innerHTML = '<a class="btn btn-secondary mr-auto" href="' + baseurl + 'user/' + username + '" role="button">Info</a>'
         if (loggedin != 'no') {
-            //urldelete.innerHTML = '<a class="btn btn-danger" href="/delete/' + bookurl + '" role="button">Delete booking</a>&nbsp;'
-            urldelete.outerHTML = '<a class="btn btn-danger mr-auto" href="' + baseurl + 'delete/' + bookurl + '" role="button">Delete booking</a>'
+            urldelete.outerHTML = '<a class="btn btn-danger mr-auto" href="' + baseurl + 'sbdelete/' + bookurl + '" role="button">Delete</a>'
             }
         
         }
     )
 </script>
+
+<script>
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+    const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+  </script>
 
 {% endblock %}

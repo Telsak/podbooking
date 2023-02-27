@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Skillbooking user list</title>
+    <link rel="shortcut icon" href="{{ url_for('static', filename = 'favicon.ico') }}" type="image/x-icon">
+    <link rel="icon" href="{{ url_for('static', filename = 'favicon.ico') }}" type="image/x-icon">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/js/bootstrap.bundle.min.js" integrity="sha384-pprn3073KE6tl6bjs2QrFaJGz5/SUsLqktiwsUTF55Jfv3qYSDhgCecCxMW52nD2" crossorigin="anonymous"></script>
+      
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/print.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.3.0/font/bootstrap-icons.css">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/7.0.0/normalize.min.css">    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/paper-css/0.3.0/paper.css">
+
+    <style>@page { size: A4 }</style>
+  </head>
+  <body class="A4">
+    <section class="sheet padding-10mm">
+        <article>
+            <h1 class="display-6 text-center">{{ skill.name }} / {{ request.path.split('/')[4] }}</h1>
+            <div class="container mh-100">
+                <table class="table table-bordered table-sm">
+                    <th class="primary">{{ skill.name }}, Room: {{ request.path.split('/')[5] }}</th>
+                </table>
+                <div class="row">
+                {% for time in data['students'] %} 
+                    <div class="col-md-6">
+                        <table class="table table-sm" style="border-spacing:0px;">
+                        <tr style="padding: 0">
+                            <th class="primary text-start" style="border-bottom: 2px solid #000">{{ time }} - {{ data['students'][time]['endtime'] }}</th>
+                            <th class="primary" style="border-bottom: 2px solid #000">Pod</th>
+                        </tr style="padding: 0">
+                        <!-- This is for each student in the booking list -->
+                            {% for student in data['students'][time]['info']|sort(attribute='role.name', reverse = True) %}
+                                <tr>
+                                    {% if student.role.name not in ['Admin', 'Teacher'] %}
+                                        <td width="90%" style="padding: 0;border-bottom: 1px solid #000">
+                                            &nbsp;{{ student.fullname }}
+                                        </td>
+                                        <td width="10%" style="padding: 0;border-bottom: 1px solid #000;border-left: 1px solid #000;">
+                                            &nbsp;
+                                        </td>
+                                    {% endif %}
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                    {% endfor %}
+            </div>
+        </article>
+    </section>
+</body>
+</html>
+

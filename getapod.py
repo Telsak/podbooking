@@ -1,17 +1,29 @@
 import os
 from base64 import b64decode
 from requests import post
-from flask import Flask, render_template, abort, redirect, request, flash, url_for, session
-from flask_admin import Admin, AdminIndexView, expose, menu
+from flask import (
+    Flask, render_template, abort, redirect, request, 
+    flash, url_for, session
+)
+from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.contrib.sqla import ModelView
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import event
 from flask_bcrypt import Bcrypt
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, PasswordField, HiddenField
-from wtforms.validators import DataRequired
-from flask_login import UserMixin, login_user, LoginManager, current_user, logout_user, login_required
-from datemagic import date_start_epoch, sec_to_date, date_to_sec, init_dates, date_to_str, check_book_epoch, epoch_hr, show_calendar, unixtime
+from wtforms import (
+    StringField, SubmitField, PasswordField, HiddenField, SelectField,
+    IntegerField, TextAreaField
+)
+from wtforms.validators import DataRequired, NumberRange
+from flask_login import (
+    UserMixin, login_user, LoginManager, current_user, 
+    logout_user, login_required
+)
+from datemagic import (
+    date_start_epoch, sec_to_date, date_to_sec, init_dates, 
+    date_to_str, check_book_epoch, epoch_hr, show_calendar, 
+    unixtime, endtimes, sec_to_weekday
+)
 from scrapeinfo import get_profile, pull_ics_data, scrape_user_info, test_ldap_auth
 from flask_migrate import Migrate
 from time import sleep
@@ -86,19 +98,84 @@ app.jinja_env.globals.update(show_calendar=show_calendar)
 app.jinja_env.globals.update(get_user_num_bookings=get_user_num_bookings)
 app.jinja_env.globals.update(get_user_hours=get_user_hours)
 app.jinja_env.globals.update(unixtime=unixtime)
+app.jinja_env.globals.update(sec_to_date=sec_to_date)
+app.jinja_env.globals.update(endtimes=endtimes)
+app.jinja_env.globals.update(sec_to_weekday=sec_to_weekday)
+app.jinja_env.globals.update(date_to_sec=date_to_sec)
 
 class LoginForm(FlaskForm):
-    name = StringField("Username", validators=[DataRequired()])
-    password = PasswordField("Password", validators=[DataRequired()])
-    next = HiddenField("Hidden")
-    submit = SubmitField("Submit")
+    name = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    next = HiddenField('Hidden')
+    submit = SubmitField('Submit')
 
 class BookForm(FlaskForm):
-    name = StringField("Användarnamn", validators=[DataRequired()], render_kw={'readonly': True})
-    partner = StringField("Labbpartner")
-    comment = StringField("Kommentar")
-    next = HiddenField("Hidden")
+    name = StringField('Användarnamn', validators=[DataRequired()], render_kw={'readonly': True})
+    partner = StringField('Labbpartner')
+    comment = StringField('Kommentar')
+    next = HiddenField('Hidden')
+    submit = SubmitField('Submit')
+
+class CreateSkillsInstanceForm(FlaskForm):
+    name = StringField('Provnamn', validators=[DataRequired()])
+    course = StringField('Kurskod', validators=[DataRequired()])
+    period = SelectField('Läsperiod', choices=['LP1', 'LP2', 'LP3', 'LP4'], validators=[DataRequired()])
+    type = SelectField(u'Skilltyp', choices=['Skill', 'Omskill'], validators=[DataRequired()])
+    year = StringField('Läsår', validators=[DataRequired()])
+    comment = TextAreaField('Kommentar')
+    next = HiddenField('Hidden')
     submit = SubmitField("Submit")
+
+class CreateSkillsLocAndDatesForm(FlaskForm):
+    skill_id = HiddenField(validators=[DataRequired()], render_kw={'readonly': True})
+    skill_name = StringField('Skill', validators=[DataRequired()])
+    standard_dates = StringField('Datum', validators=[DataRequired()])
+    standard_times = StringField('Tider', validators=[DataRequired()])
+    standard_rooms = StringField('Salar', validators=[DataRequired()])
+    standard_duration = IntegerField('Längd', validators=[DataRequired(), NumberRange(60,300, 'Välj mellan 60 - 300 min')])
+    extra_dates = StringField('Extra datum')
+    extra_times = StringField('Extra tider')
+    extra_rooms = StringField('Extra salar')
+    extra_duration = IntegerField('Längd', validators=[NumberRange(60,300, 'Välj mellan 60 - 300 min')])
+    comment = TextAreaField('Kommentar')
+    next = HiddenField('Hidden')
+    submit = SubmitField("Submit")
+    
+class SkillInstance(db.Model):
+    __tablename__ = 'skillinstance'
+    id = db.Column(db.Integer, primary_key=True)
+    created = db.Column(db.Integer)
+    owner = db.Column(db.String(128))
+    name = db.Column(db.String(128))
+    course = db.Column(db.String(128))
+    schoolyear = db.Column(db.Integer)
+    period = db.Column(db.String(4))
+    standard_dates = db.Column(db.String(512))
+    standard_rooms = db.Column(db.String(128))
+    standard_times = db.Column(db.String(256))
+    standard_duration = db.Column(db.Integer)
+    extra_dates = db.Column(db.String(512))
+    extra_rooms = db.Column(db.String(128))
+    extra_times = db.Column(db.String(256))
+    extra_duration = db.Column(db.Integer)
+    bookings = db.relationship('SkillBooking', backref='skillinstance')
+    type = db.Column(db.String(32))
+    status = db.Column(db.String(32))
+    comment = db.Column(db.String(1024))
+
+class SkillBooking(db.Model):
+    __tablename__ = 'skillbookings'
+    id = db.Column(db.Integer, primary_key=True)
+    skill_id = db.Column(db.Integer, db.ForeignKey('skillinstance.id'))
+    date = db.Column(db.String(16))
+    time = db.Column(db.Integer)
+    room = db.Column(db.String(16))
+    timeslot = db.Column(db.Integer)
+    student = db.Column(db.String(16))
+    result = db.Column(db.String(32))
+    teacher = db.Column(db.String(32))
+    comment = db.Column(db.String(256))
+    flag = db.Column(db.String(64))
 
 class Rooms(db.Model):
     __tablename__ = 'getapod_rooms'
@@ -151,7 +228,6 @@ class User(UserMixin, db.Model):
     role_id = db.Column(db.Integer, db.ForeignKey('roles.id'))
     password = db.Column(db.String(300), nullable=False, unique=True)
     flag = db.Column(db.String(64), nullable=False)
-    # TODO: #9 ta bort last_login!
     last_login = db.Column(db.Integer, nullable=False)
     created = db.Column(db.Integer)
     fullname = db.Column(db.String(128))
@@ -204,6 +280,17 @@ class BookingModelView(ModelView):
         if not self.is_accessible():
             return redirect(url_for('login'))
 
+class SkillInstanceModelView(ModelView):
+    form_columns = ('name', 'course', 'schoolyear', 'period')
+    
+    def is_accessible(self):
+        if current_user.is_active and current_user.is_authenticated:
+            return current_user.role.name in ['Admin', 'Teacher'] 
+    
+    def _handle_view(self, name):
+        if not self.is_accessible():
+            return redirect(url_for('login'))
+
 class MyAdminIndexView(AdminIndexView):
     def is_accessible(self):
         return current_user.is_authenticated and current_user.role.name in ["Admin", "Teacher"]
@@ -221,6 +308,7 @@ admin = Admin(app, name='Podbokning', template_mode='bootstrap4', index_view=MyA
 admin.add_view(RoomsModelView(Rooms, db.session))
 admin.add_view(UserModelView(User, db.session))
 admin.add_view(BookingModelView(Bookings, db.session))
+admin.add_view(SkillInstanceModelView(SkillInstance, db.session))
 
 def check_user_details(cname='EMPTY'):
     global userdetails
@@ -243,6 +331,77 @@ def check_user_details(cname='EMPTY'):
         return userdetails[cname]['fullname'], userdetails[cname]['mail'], userdetails[cname]['profile']
     else:
         return 'noname', 'nomail', 'noprofile'
+
+def get_skillbookings(roomdata, caldate, skill, sdict):    
+    booking_data = {}
+    tds = f'style="border-radius:10px;width: {100//roomdata.pods}%"'
+    tdsb = f'style="border-radius:10px;border-width:3px;border-color:DarkSlateGray;width: {100//roomdata.pods}%"'
+    tdcl = f'class="text-center align-middle'
+    bookflag = 'STANDARD'
+    baseurl = url_for("index")
+    BOOK_HOURS = sdict['dates'][caldate][roomdata.name]['times']
+    epoch = date_to_sec(caldate[2:])
+    for hour in BOOK_HOURS:
+        booking_data[hour] = {}
+        for pod in range(1, roomdata.pods+1):
+            mod_epoch = epoch+((int(hour.split(':')[0])*3600) + (int(hour.split(':')[1])*60))
+            data = SkillBooking.query.filter(
+                SkillBooking.time==mod_epoch).filter(
+                SkillBooking.room==roomdata.name.upper()).filter(
+                SkillBooking.timeslot==pod).filter(
+                SkillBooking.skill_id==skill.id).all()
+            bookurl = f'{skill.id}/{sec_to_date(mod_epoch)}/{roomdata.name}/{hour}/{pod}'
+            book_icon = f'<a href="{baseurl}bookskill/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
+            expired_icon = f'<font size=+1><i class="bi bi-x-octagon"></i></font>'
+            if data is None:
+                if current_user.is_authenticated and current_user.role.name in ['Admin', 'Teacher']:
+                    booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{book_icon}</td>'
+                else:
+                    if check_book_epoch(mod_epoch, 1):
+                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{book_icon}</td>'
+                    else:
+                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-secondary">{expired_icon}</td>'
+            else:
+                if len(data) >= 1:
+                    data = data[0]
+                    showstring = f'XXX{data.student}</a>'
+                    fullname, mail, profile = check_user_details(data.student)
+                    user_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#userInfo" data-bs-fullname="{fullname}" data-bs-mail="{mail}" data-bs-profile="{profile}" data-bs-username="{data.student}" data-bs-bookurl="{bookurl}" data-bs-baseurl="{baseurl}">{showstring.replace("XXX", "")}</a>'
+                    expire_link = f'<a href="#" data-bs-toggle="modal" data-bs-target="#oldBooking">{showstring.replace("XXX", "")}</a>'
+                    book_icon = f'<a href="{baseurl}book/{bookurl}" style=color:black><font size=+1><i class="bi bi-calendar-plus"></i></font></a>'
+                    admin_icon = f'<font size=+1><i class="bi bi-shield-lock"></i></font>'
+                    # if the pod isn't marked as available
+                    if data.flag != 'AVAILABLE':
+                        if current_user.is_authenticated:
+                            if current_user.role.name in ['Admin', 'Teacher']:
+                                booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{user_link}</td>'
+                            else:
+                                booking_data[hour][pod] = f'<td {tds} {tdcl} table-danger">{admin_icon}</td>'
+                        else:
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-danger">{admin_icon}</td>'
+                    else:
+                        if current_user.is_authenticated:
+                            if check_book_epoch(mod_epoch, 1) and current_user.username == data.student:
+                                booking_data[hour][pod] = f'<td {tdsb} {tdcl} table-warning">{user_link}</td>'
+                            elif current_user.role.name in ['Admin', 'Teacher']:
+                                booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{user_link}</td>'
+                            elif current_user.username == data.student:
+                                booking_data[hour][pod] = f'<td {tds} {tdcl} table-secondary">{expire_link}</td>'
+                            else:
+                                booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{user_link}</td>'
+                        else:
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-warning">{user_link}</td>'
+                # matching bookings to the query? NO!
+                else:
+                    if current_user.is_authenticated and current_user.role.name in ['Admin', 'Teacher']:
+                        booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{book_icon}</td>'
+                    else:
+                        if check_book_epoch(mod_epoch, 1):
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-success">{book_icon}</td>'
+                        else:
+                            booking_data[hour][pod] = f'<td {tds} {tdcl} table-secondary">{expired_icon}</td>'
+
+    return booking_data, bookflag
 
 def get_bookings(roomdata, epoch):
     booking_data = {}
@@ -353,9 +512,105 @@ def set_booking(roomdata, epoch, pod, form):
         )
         return True, booking
 
+def set_skillbooking(room, skill, epoch, pod, form):
+    fac='SKILLBOOKING'
+    bookflag = 'UNAVAILABLE'
+    if current_user.role.name == "Student":
+        # disallow booking if booking in the past
+        baseurl = url_for("index")
+        bookflag = 'AVAILABLE'
+        if not check_book_epoch(epoch, 0):
+            flash(f'Not permitted to book pod at this time! The exam has already started!', 'warning')
+            return False, f'{baseurl}skills'
+        else:
+            # check so the user doesn't already have a skill booking..
+            num_skillbookings = len(SkillBooking.query.filter(SkillBooking.skill_id==skill.id).filter(SkillBooking.student==form.get('booker')).all())
+            if num_skillbookings > 0:
+                flash(f'Not permitted to book skill at this time! You already have a booked slot!', 'warning')
+                log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
+                    msg=f'{current_user.username} : Not permitted to book skill at this time! You already have a booked slot!')
+                return False, f'{baseurl}skills'
+    if len(SkillBooking.query.filter(
+            SkillBooking.skill_id==skill.id).filter(
+            SkillBooking.time==epoch).filter(
+            SkillBooking.room==room.upper()).filter(
+            SkillBooking.timeslot==pod).all()) > 0:
+        flash('This timeslot is no longer available. Please pick another time or seat.', 'warning')
+        log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
+            msg=f'{current_user.username} : This timeslot is no longer available. Please pick another time or seat.')
+        return False, f'{baseurl}showskill/{skill.id}/{room.upper()}/{sec_to_date(epoch)}'
+    else:
+        # teachers booking students trip this statement, avoids red-marked reservation slot
+        if current_user.username != form.get('booker'):
+            bookflag = 'AVAILABLE'
+        booking = SkillBooking(
+            skill_id=skill.id,
+            room=room.upper(),
+            date=sec_to_date(epoch),
+            time=epoch,
+            timeslot=pod,
+            student=form.get('booker'),
+            result='UNGRADED',
+            teacher='UNGRADED',
+            comment='UNGRADED',
+            flag=bookflag
+        )
+        return True, booking
+
+def get_skill_users(id, caldate, room):
+    skill_dict = build_skill_dict(SkillInstance.query.filter(SkillInstance.id==id).first())
+    userdata = {}
+    userdata['date'] = caldate
+    userdata['room'] = room.upper()
+    userdata['students'] = {}
+    skill_data = skill_dict[0]['dates'][caldate][room.upper()] 
+    for time in skill_data['times']:
+        skill_time = date_to_sec(caldate[2:]) + (int(time.split(':')[0])*3600) + (int(time.split(':')[1])*60)
+        skill_time_end = endtimes(time, skill_data['duration'])
+        students = SkillBooking.query.filter(
+                   SkillBooking.skill_id==id).filter(
+                   SkillBooking.time==skill_time).filter(
+                   SkillBooking.room==room.upper()).all()
+        userdata['students'][time] = {}
+        studentlist = []
+        for student in students:
+            user = User.query.filter(User.username==student.student).first()
+            studentlist.append(user)
+        userdata['students'][time]['info'] = studentlist
+        userdata['students'][time]['endtime'] = skill_time_end
+        
+    return userdata
+
+def build_skill_dict(skill):
+    std_dates = sorted(skill.standard_dates.split(','))
+    ext_dates = sorted(skill.extra_dates.split(','))
+    all_dates = sorted(set(std_dates + ext_dates)) if 'UNSET' not in ext_dates else std_dates
+    sdata = {"alldates" : all_dates, "skill" : skill, "dates" : {}}
+    try:
+        for date in std_dates:
+            for room in sorted(skill.standard_rooms.upper().split(',')):
+                if date not in sdata["dates"]:
+                    sdata["dates"][date] = {}
+                sdata["dates"][date][room] = {
+                    "times": sorted(skill.standard_times.split(',')),
+                    "duration": skill.standard_duration
+                }
+        if 'UNSET' not in ext_dates:
+            for date in ext_dates:
+                for room in sorted(skill.extra_rooms.upper().split(',')):
+                    if date not in sdata["dates"]:
+                        sdata["dates"][date] = {}
+                    sdata["dates"][date][room] = {
+                        "times": sorted(skill.extra_times.split(',')),
+                        "duration": skill.extra_duration
+                    }
+        return sdata, 'True'
+    except:
+        return sdata, 'False'
+
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('404.html'), 404
+    return render_template('404.html', msg=e), 404
 
 @app.before_request
 def before_request():
@@ -391,6 +646,140 @@ def show(room, caldate='Null'):
     show['query'], show['flag'] = get_bookings(roomdata, dates['today']['string'])
     return render_template('show.html', show=show, cal=scheduledetails, SITE_PREFIX=url_for("index"))
 
+@app.route('/showskill/<id>')
+@app.route('/showskill/<id>/<caldate>')
+@app.route('/showskill/<id>/<caldate>/<room>')
+@login_required
+def showskill(id, room='Null', caldate='Null'):
+    if 'Null' in caldate:
+        try:
+            skill = SkillInstance.query.filter(SkillInstance.id==id).first()
+            _ = skill.id
+        except:
+            flash("DATE: No such resource, check skill identifier!", "danger")
+            return redirect(url_for('skills'))
+        std_dates = sorted(skill.standard_dates.split(','))
+        std_rooms = sorted(skill.standard_rooms.upper().split(','))
+        return redirect(url_for('showskill', id=skill.id, caldate=std_dates[0], room=std_rooms[0]))
+    elif 'Null' in room:
+        # catching requests for the default view for a specific skilldate but no room
+        try:
+            skill = SkillInstance.query.filter(SkillInstance.id==id).first()
+            _ = skill.id
+        except:
+            flash("ROOM: No such resource, check skill identifier!", "danger")
+            return redirect(url_for('skills'))
+        show = {}
+        show['dict'], show['status'] = build_skill_dict(skill)
+        all_rooms = sorted([x for x in show['dict']['dates'][caldate].keys()])
+        return redirect(url_for('showskill', id=skill.id, caldate=caldate, room=all_rooms[0]))
+    else:
+        try:
+            skill = SkillInstance.query.filter(SkillInstance.id==id).first()
+            roomdata = Rooms.query.filter(Rooms.name==room).all()[0]
+            x, y = skill.id, roomdata.id
+            if skill.status != 'PUBLISH' and current_user.role.name not in ['Admin', 'Teacher']:
+                raise ValueError('ID: Skill is not published!')
+        except:
+            flash("ID: No such resource, check skill identifier!", "danger")
+            return redirect(url_for('skills'))
+        room = room.upper()
+        if ((room in skill.standard_rooms.upper().split(',') and caldate in skill.standard_dates.split(',')) or 
+            (room in skill.extra_rooms.upper().split(',') and caldate in skill.extra_dates.split(','))):
+            # the room and date exists in the skillinstance object we selected
+            show = {}
+            show['dict'], show['status'] = build_skill_dict(skill)
+            if show['status'] == 'True':
+                show['room'] = {'name': room, 'pods': [x for x in range(roomdata.pods)]}
+                show['clocks'] = show['dict']['dates'][caldate][roomdata.name]['times']
+                show['query'], show['status'] = get_skillbookings(roomdata, caldate, skill, show['dict'])
+                all_rooms = sorted([x for x in show['dict']['dates'][caldate].keys()])
+                return render_template('showskill.html', show=show, SITE_PREFIX=url_for("index"), room=all_rooms)
+            else:
+                flash("Unable to process skillinfo!", "danger")
+                return redirect(url_for('skills'))
+        else:
+            flash("No skill instance with that calender & room data!", "danger")
+            return redirect(url_for('skills'))
+
+@app.route('/bookskill')
+@app.route('/bookskill/<id>')
+@app.route('/bookskill/<id>/<caldate>')
+@app.route('/bookskill/<id>/<caldate>/<room>')
+@app.route('/bookskill/<id>/<caldate>/<room>/<time>/<pod>', methods=('GET', 'POST'))
+@login_required
+def bookskill(id='Null', room='Null', caldate='Null', time='Null', pod='Null'):
+    if request.method == 'POST':
+        fac='BOOKSKILL'
+        # verify the request is valid
+        try:
+            _ = int(id)
+            skill = SkillInstance.query.filter(SkillInstance.id==id).first()
+            _ = skill.id
+            if skill.status != 'PUBLISH' and current_user.role.name not in ['Admin', 'Teacher']:
+                raise ValueError('ID: Skill is not published!')
+            # manual input of invalid id will abort on .username attribute, crashing to exception and abort booking
+            booker = request.form.get('booker')
+            booker_query = User.query.filter(User.username==booker).first()
+            booker == booker_query.username
+            sdict = build_skill_dict(skill)
+            # check if this is a NAIS booking
+            if caldate in skill.extra_dates and room in skill.extra_rooms and time in skill.extra_times:
+                if f'NAIS-{request.form.get("booker")}' not in skill.comment:
+                    flash(f'You do not have access to book the extended skill session!', "danger")
+                    return redirect(url_for("skills"))
+            if time in sdict[0]['dates']['20' + caldate][room.upper()]['times']:
+                book_time = date_to_sec(caldate) + (int(time.split(':')[0])*3600) + (int(time.split(':')[1])*60)
+                state, booking = set_skillbooking(room.upper(), skill, book_time, pod, request.form)
+                if state:
+                    global lock_commit
+                    while lock_commit == True:
+                        sleep(0.005)
+                    lock_commit = True
+
+                    db.session.add(booking)
+                    try:
+                        db.session.commit()
+                        log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=6, 
+                            msg=f'{current_user.username} : Skill successfully booked!')
+                        flash(f'Skill successfully booked!', 'success')
+                    except Exception as e:
+                        db.session.rollback()
+                        flash(f'Exception at rollback: {e}', "danger")
+                        log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
+                            msg=f'{current_user.username} : {e}')
+
+                    lock_commit = False
+                    
+                    return redirect(url_for("showskill", id=skill.id, room=room.upper(), caldate='20' + caldate), code=302)
+                else:
+                    return redirect(booking)
+        except Exception as e:
+            flash(f"Invalid booking parameters! {e}", "warning")
+            return redirect(url_for("skills"))
+    elif request.method == 'GET':
+        if 'Null' in locals().values():
+            flash("Invalid booking parameters!", "warning")
+            return redirect(url_for("skills"))
+        else:
+            # verify the request is valid
+            try:
+                _ = int(id)
+                skill = SkillInstance.query.filter(SkillInstance.id==id).first()
+                _ = skill.id
+                if skill.status != 'PUBLISH' and current_user.role.name not in ['Admin', 'Teacher']:
+                    raise ValueError('ID: Skill is not published!')
+                sdict = build_skill_dict(skill)
+                if time in sdict[0]['dates']['20' + caldate][room.upper()]['times']:
+                    DAY = 84600
+                    students = User.query.filter(User.role_id==2).filter(User.last_login>=unixtime()-(30*DAY)).order_by("username").all()
+                    return render_template('bookskill.html', data=locals(), skill=skill, student_data=students)
+                else:
+                    return redirect(url_for("showskill", id=id), code=302)
+            except Exception as e:
+                flash(f"Invalid booking parameters! {e}", "warning")
+                return redirect(url_for("skills"))
+            
 @app.route('/book')
 @app.route('/book/<room>')
 @app.route('/book/<room>/<caldate>')
@@ -478,6 +867,48 @@ def delete(room='Null', caldate='Null', hr='Null', pod='Null'):
                 msg=f'{current_user.username} : Unauthorized deletion request!')
             flash("Unauthorized deletion request!", "warning")
         return redirect(url_for("show", room=roomdata.name.upper(), caldate=caldate), code=302)
+
+@app.route('/sbdelete/<id>/<caldate>/<room>/<time>/<pod>')
+@login_required
+def sbdelete(id='Null', caldate='Null', room='Null', time='Null', pod='Null'):
+    # verify delete url args
+    if 'Null' in locals().values():
+        return redirect(url_for("skills"), code=302)
+    else:
+        try:
+            _ = int(pod)
+            _ = time[:]
+            _ = caldate[:]
+            skill = SkillInstance.query.filter(SkillInstance.id==id).first()
+            if skill.status != 'PUBLISH' and current_user.role.name not in ['Admin', 'Teacher']:
+                    raise ValueError('ID: Skill is not published!')
+        except:
+            flash("Invalid deletion data!", "danger")
+            return redirect(url_for("skills"), code=302)
+        fac='SKILLBOOKING-DELETE'
+        epoch = date_to_sec(caldate)
+        mod_epoch = epoch + ((int(time.split(':')[0])*3600) + (int(time.split(':')[1])*60))
+
+        delete_request = SkillBooking.query.filter(SkillBooking.skill_id==id).filter(SkillBooking.time==mod_epoch).filter(SkillBooking.room==room.upper()).filter(SkillBooking.timeslot==pod)
+        if current_user.username == delete_request[0].student or current_user.role.name in ['Teacher', 'Admin']:
+            global lock_commit
+            while lock_commit == True:
+                sleep(0.025)
+            lock_commit = True
+            
+            delete_request.delete()
+            db.session.commit()
+            
+            lock_commit = False            
+            
+            log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=6, 
+                msg=f'{current_user.username} : Reservation slot deleted!')
+            flash("Skill Reservation slot deleted", "success")
+        else:
+            log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
+                msg=f'{current_user.username} : Unauthorized deletion request!')
+            flash("Unauthorized skill deletion request!", "warning")
+        return redirect(url_for("showskill", id=id, room=room.upper(), caldate='20' + caldate), code=302)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -570,6 +1001,136 @@ def logout():
     logout_user()
     return redirect(url_for('index'))
 
+@app.route('/skillstatus/<id>/<status>')
+@login_required
+def skillstatus(id, status):
+    if current_user.role.name in ['Admin', 'Teacher']:
+        skill = SkillInstance.query.filter(SkillInstance.id==id).first()
+        skill.status = status
+        db.session.commit()
+        flash(f"Skill {id}:{skill.name} status changed to {skill.status}.", "success")
+        return redirect(url_for('skills'), code=302)
+    else:
+        abort(404, description="Resource not found")
+
+@app.route('/skills')
+@app.route('/skills/<year>')
+@app.route('/skills/users/<id>/<caldate>/<room>/')
+@login_required
+def skills(year='Null', id='Null', caldate='Null', room='Null'):
+    sk_rule = request.url_rule
+    if 'users' in str(sk_rule):
+        data = get_skill_users(id, caldate, room)
+        skill = SkillInstance.query.filter(SkillInstance.id==id).first()
+        return render_template('skills_users.html', data=data, skill=skill)
+    else:
+        if year != 'Null':
+            all_skills = SkillInstance.query.filter(SkillInstance.name.contains(year)).all()
+        else:
+            all_skills = SkillInstance.query.all()
+        archived, published = 0, 0
+        for skill in all_skills:
+            if skill.status == 'PUBLISH':
+                published += 1
+            elif skill.status == 'ARCHIVED':
+                archived += 1
+        active = len(all_skills) - archived
+        return render_template('skills.html', all=all_skills, numskills=(active, published, archived), year=year)
+
+@app.route('/setskill', methods=['GET', 'POST'])
+@login_required
+def setskill():
+    if current_user.role.name in ['Admin', 'Teacher']:
+        form = CreateSkillsInstanceForm()
+        if request.method == 'GET':
+            return render_template('skills_teacher.html', form=form)
+        elif request.method == 'POST':
+            if form.validate_on_submit():
+                if form.comment.data is None:
+                    form.comment.data = ''
+                instance = SkillInstance(
+                    created=unixtime(),
+                    owner=current_user.username,
+                    name=form.name.data,
+                    course=form.course.data,
+                    schoolyear=form.year.data,
+                    period=form.period.data,
+                    standard_times='UNSET',
+                    standard_dates='UNSET',
+                    standard_rooms='UNSET',
+                    standard_duration=60,
+                    comment=form.comment.data,
+                    extra_times='UNSET',
+                    extra_dates='UNSET',
+                    extra_rooms='UNSET',
+                    extra_duration=60,
+                    type=form.type.data,
+                    status='HIDDEN'
+                )
+
+                global lock_commit
+                while lock_commit == True:
+                    sleep(0.025)
+                lock_commit = True
+                
+                db.session.add(instance)
+                db.session.commit()
+
+                #log_webhook('POST', url=app.config['WEBHOOK'], facility='SKILLINSTANCE', severity=6, 
+                #    msg=f'{current_user.username} : Skill added ({form.name}-{form.course}-{form.year}-{form.period})')
+
+                lock_commit = False
+
+                return redirect(url_for("skills"))
+    else:
+        return redirect(url_for("skills"))
+
+@app.route('/skilldates/<id>', methods=['GET', 'POST'])
+@login_required
+def skilldates(id):
+    if current_user.role.name in ['Admin', 'Teacher']:
+        form = CreateSkillsLocAndDatesForm()
+        if request.method == 'GET':
+            try:
+                skillinstance = SkillInstance.query.filter(SkillInstance.id==id).first()
+                _ = skillinstance.id
+            except:
+                flash("No such resource, check skill identifier!", "danger")
+                abort(404, description="Resource not found")
+
+            skillinstance = SkillInstance.query.filter(SkillInstance.id==id).first()
+            form.comment.data = skillinstance.comment
+            return render_template('skills_date_and_loc.html', form=form, skill=skillinstance)
+        elif request.method == 'POST':
+            if form.validate_on_submit():
+                skillinstance = SkillInstance.query.filter(SkillInstance.id==form.skill_id.data).first()
+                skillinstance.name = form.skill_name.data
+                skillinstance.standard_dates = form.standard_dates.data.lstrip(';').replace(' ', '').replace(';', ',').replace('-0', '-')
+                skillinstance.standard_times = form.standard_times.data.lstrip(',').replace(' ', '')
+                skillinstance.standard_rooms = form.standard_rooms.data.lstrip(',').replace(' ', '')
+                skillinstance.standard_duration = form.standard_duration.data
+                skillinstance.comment = form.comment.data
+                               
+                num_unset = sum([int('UNSET' in i) for i in [form.extra_dates.data, form.extra_times.data, form.extra_rooms.data]])
+                if 0 < num_unset < 3:
+                    flash("Error, either fill all extra fields or leave them untouched", "warning")
+                    return redirect(url_for("skills"))
+                else:
+                    skillinstance.extra_dates = form.extra_dates.data.lstrip(';').replace(' ', '').replace(';', ',').replace('-0', '-')
+                    skillinstance.extra_times = form.extra_times.data.lstrip(',').replace(' ', '')
+                    skillinstance.extra_rooms = form.extra_rooms.data.lstrip(',').replace(' ', '')
+                    skillinstance.extra_duration = form.extra_duration.data
+                
+                db.session.commit()
+                flash("Skill successfully updated!", "success")
+                return redirect(url_for("skills"))
+            else:
+                flash("form could not be validated!", "danger")
+                return redirect(url_for("skills"))
+    else:
+        flash("Unauthorized request!", "danger")
+        return redirect(url_for("skills"))
+
 @app.route('/help')
 @app.route('/help/<lang>')
 def help(lang='Null'):
@@ -598,7 +1159,13 @@ def index(data='Null'):
 @app.route('/debug')
 @login_required
 def debug():
-    return render_template('debug.html', debugdata=abs(unixtime()-scheduletimestamp))
+    exists = db.session.query(User.id).filter(User.username=='siol0003').scalar() is not None
+    # way to reload custom app settings without forcing a restart or sending a HUP-kill signal
+    # this will update the config for the worker serving content and we only use 1 worker right now
+    # restarts will read config from the file as normal..
+    #from flask import current_app
+    #current_app.config['WEBHOOK'] = 'put the new data here'
+    return render_template('debug.html', debugdata=exists)
 
 @app.route('/user/<username>')
 @app.route('/user/<username>/<option>')
@@ -619,10 +1186,6 @@ def user(username, option=''):
         else:
             flash("Invalid update request!", "error")
         return redirect(url_for('user', username=username, option='').rstrip('/'))
-
-@app.route('/test')
-def test():
-    return render_template('test.html')
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

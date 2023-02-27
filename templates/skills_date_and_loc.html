@@ -1,0 +1,214 @@
+{% extends 'base.html' %}
+{% block content %}
+<br>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+       <div class="row justify-content-center">
+          <div class="alert alert-{{category}} alert-dismissible fade show col-sm-10 col-md-10 col-lg-8" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+       </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<p>skills_date_and_loc.html</p>
+
+<div class="signup-form" style="width:800px">
+  <form method="post">
+  <h4>Skill dates and locations</h4>
+  <div>
+    {{ form.csrf_token }}
+    <div class="row">
+      <div>
+        <div class="input-group mb-3">
+          <span class="input-group-text" id="basic-addon1">
+            Id: {{ skill.id }}
+          </span>
+          {{ form.skill_name(class="form-control", value=skill.name) }}
+          {{ form.skill_id(class="form-control", value=skill.id) }}
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <div class="input-group mb-3" id="skilldatum" data-td-target-input="nearest" data-td-target-toggle="nearest">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-td-target="#skilldatum" data-td-toggle="datetimepicker" aria-expanded="false">Datum</button>
+          <button onclick = "clear_text('datestext')" class="btn btn-outline-secondary" type="button" id="button-dates"><i class="bi bi-trash"></i></button>
+          {{ form.standard_dates(class="form-control", id="datestext", value=skill.standard_dates) }}
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-8">
+        <div class="input-group mb-3" id="skilltid" data-td-target-input="nearest" data-td-target-toggle="nearest">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Tider</button>
+          <ul class="dropdown-menu" style="max-height: 200px; margin-bottom: 10px; overflow-y:auto; -webkit-overflow-scrolling: touch;">
+            {% for h in range(7,20) %}
+              {% for m in range(0,45,15) %}
+                <li><a onclick = "add_text('timestext', '{{ h }}:{{ m }}')" class="dropdown-item" href="#" id="{{ h }}:{{ m }}">{{ "%02d" % h }}:{{ "%02d" % m }}</a></li>
+              {% endfor %}
+            {% endfor %}
+          </ul>
+          <button onclick = "clear_text('timestext')" class="btn btn-outline-secondary" type="button" id="button-dates"><i class="bi bi-trash"></i></button>
+          {{ form.standard_times(class="form-control", id="timestext", value=skill.standard_times) }}
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="input-group mb-3">
+          <span class="input-group-text" id="basic-addon1">
+            Längd i minuter:
+          </span>
+          {{ form.standard_duration(class="form-control", value=skill.standard_duration) }}
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <div class="input-group mb-3">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Salar</button>
+          <ul class="dropdown-menu">
+            {% for room in get_rooms() %}
+              <li><a onclick = "add_text('roomstext', '{{ room.name }}')" class="dropdown-item" href="#" id="{{ room.name }}">{{ room.name }}</a></li>
+            {% endfor %}
+          </ul>
+          <button onclick = "clear_text('roomstext')" class="btn btn-outline-secondary" type="button" id="button-rooms"><i class="bi bi-trash"></i></button>
+            <div class="col-6" >
+              {{ form.standard_rooms(class="form-control", id="roomstext", value=skill.standard_rooms) }}
+            </div>
+        </div>        
+      </div>
+    </div>
+    <br>
+    <div class="row">
+      {{ form.comment.label(class="form-label") }}
+      <div class="form-textarea">
+        {{ form.comment(class="form-control", rows="4") }}
+      </div>
+    </div>
+
+    <hr>
+    <div class="row">
+      <div>
+        <div class="input-group mb-3" id="extradatum" data-td-target-input="nearest" data-td-target-toggle="nearest">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-td-target="#extradatum" data-td-toggle="datetimepicker" aria-expanded="false">Extra datum</button>
+          <button onclick = "clear_text('extradatestext')" class="btn btn-outline-secondary" type="button" id="button-dates"><i class="bi bi-trash"></i></button>
+          {{ form.extra_dates(class="form-control", id="extradatestext", value=skill.extra_dates) }}
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-8">
+        <div class="input-group mb-3" id="extraskilltid" data-td-target-input="nearest" data-td-target-toggle="nearest">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Extra tider</button>
+          <ul class="dropdown-menu" style="max-height: 200px; margin-bottom: 10px; overflow-y:auto; -webkit-overflow-scrolling: touch;">
+            {% for h in range(7,20) %}
+              {% for m in range(0,45,15) %}
+                <li><a onclick = "add_text('extratimestext', '{{ h }}:{{ m }}')" class="dropdown-item" href="#" id="{{ h }}:{{ m }}">{{ "%02d" % h }}:{{ "%02d" % m }}</a></li>
+              {% endfor %}
+            {% endfor %}
+          </ul>
+          <button onclick = "clear_text('extratimestext')" class="btn btn-outline-secondary" type="button" id="button-dates"><i class="bi bi-trash"></i></button>
+          {{ form.extra_times(class="form-control", id="extratimestext", value=skill.extra_times) }}
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="input-group mb-3">
+          <span class="input-group-text" id="basic-addon1">
+            Längd i minuter:
+          </span>
+          {{ form.extra_duration(class="form-control", value=skill.extra_duration) }}
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <div class="input-group mb-3">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">Extra salar</button>
+          <ul class="dropdown-menu">
+            {% for room in get_rooms() %}
+              <li><a onclick = "add_text('extraroomstext', '{{ room.name }}')" class="dropdown-item" href="#" id="{{ room.name }}">{{ room.name }}</a></li>
+            {% endfor %}
+          </ul>
+          <button onclick = "clear_text('extraroomstext')" class="btn btn-outline-secondary" type="button" id="button-rooms"><i class="bi bi-trash"></i></button>
+            <div class="col-6" >
+              {{ form.extra_rooms(class="form-control", id="extraroomstext", value=skill.extra_rooms) }}
+            </div>
+        </div>
+      </div>
+    </div>
+    <br/>
+    <div class="d-grid d-md-flex justify-content-md-end">
+      {{ form.submit(class="btn btn-primary", value="Update skill") }}
+    </div>
+    
+  </div>
+  </form>
+  <p>Stuff here to help with info for filling out the form?</p>
+</div>
+
+<script>
+  function add_text(item, varval) {
+    var text = ',' + document.getElementById(varval).text;
+    document.getElementById(item).value = document.getElementById(item).value + text
+  };
+</script>
+
+<script>
+  function clear_text(item) {
+    document.getElementById(item).value = ''
+  }
+</script>
+
+<script>
+  // https://getdatepicker.com/6/ - Simon
+  new tempusDominus.TempusDominus(document.getElementById('skilldatum'), 
+  {
+    multipleDates: true,
+    display: {
+      icons: {
+        time: 'bi bi-clock', date: 'bi bi-calendar', up: 'bi bi-arrow-up', down: 'bi bi-arrow-down',
+        previous: 'bi bi-chevron-left', next: 'bi bi-chevron-right', today: 'bi bi-calendar-check', clear: 'bi bi-trash', close: 'bi bi-x',
+      },
+      toolbarPlacement: 'top',
+      buttons: {
+        clear: true
+      },
+      keepOpen: false,
+      viewMode: 'calendar',
+      components: {
+        calendar: true, year: true, month: true, date: true, decades: false,
+        clock: false, hours: false, minutes: false, seconds: false,
+        }
+    }
+  }
+);
+</script>
+
+<script>
+  // https://getdatepicker.com/6/ - Simon
+  new tempusDominus.TempusDominus(document.getElementById('extradatum'), 
+  {
+    display: {
+      icons: {
+        time: 'bi bi-clock', date: 'bi bi-calendar', up: 'bi bi-arrow-up', down: 'bi bi-arrow-down',
+        previous: 'bi bi-chevron-left', next: 'bi bi-chevron-right', today: 'bi bi-calendar-check', clear: 'bi bi-trash', close: 'bi bi-x',
+      },
+      toolbarPlacement: 'top',
+      buttons: {
+        clear: true
+      },
+      keepOpen: false,
+      viewMode: 'calendar',
+      components: {
+        calendar: true, year: true, month: true, date: true, decades: false,
+        clock: false, hours: false, minutes: false, seconds: false,
+        }
+    }
+  }
+);
+</script>
+
+{% endblock %}

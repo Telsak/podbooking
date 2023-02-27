@@ -27,23 +27,23 @@
     text-decoration: none;
 }
 
-.login-form, .signup-form, .booking-form {
+.login-form, .signup-form, .booking-form, .skills-form {
     width: 440px;
     margin: 50px auto;
 }
 
-.login-form h2, .signup-form h2, .booking-form h2 {
+.login-form h2, .signup-form h2, .booking-form h2, .skills-form h2 {
     margin: 0 0 15px;
 }
 
-.login-form form, .signup-form form, .booking-form form {
+.login-form form, .signup-form form, .booking-form form, .skills-form form {
     margin-bottom: 15px;
     background: #f7f7f7;
     box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
     padding: 30px;
 }
 
-.login-form .btn, .signup-form .btn, .booking-form .btn {
+.login-form .btn, .signup-form .btn, .booking-form .btn, .skills-form .btn {
     font-size: 15px;
     font-weight: bold;
 }
@@ -56,18 +56,23 @@
     border-radius: 10%;
 }
 
-.name{
+.name {
 	font-size: 15px;
 	font-weight: bold;
 	color: #272727;
 	position: relative;
 	top: 8px;
 }
-.mail{
+.mail {
 	font-size: 14px;
 	color: grey;
 	position: relative;
 	top: 2px;
+}
+
+td.min {
+  width: 1%;
+  white-space: nowrap;
 }
 
 /*--------------------------------------------------------------
@@ -111,4 +116,31 @@
 
 #hero .btn-get-started:hover {
   background: #76c7ed;
+}
+
+/* Ribbon section */
+.ribbon {
+  position: absolute;
+  left: -10px; top: 0px;
+  z-index: 2;
+  overflow: hidden;
+  width: 100px; height: 100px;
+  text-align: right;
+}
+.ribbon span {
+  font-size: 12px;
+  font-weight: bold;
+  color: #FFF;
+  text-transform: uppercase;
+  text-align: center;
+  line-height: 30px;
+  transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+  width: 150px;
+  display: block;
+  background: #c50909;
+  background: linear-gradient(#c50909 0%, #c50909 100%);
+  box-shadow: 0 3px 10px -5px rgba(0, 0, 0, 1);
+  position: absolute;
+  top: 19px; right: -21px;
 }

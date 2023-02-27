@@ -1,0 +1,27 @@
+{% if numskills[1] > 0 %}
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col"><div class="text-start">Namn</div></th>
+          <th scope="col"><div class="text-start">Kurs</div></th>
+          <th scope="col"><div class="text-start">Period</div></th>
+          <th scope="col"><div class="text-start"></div></th>
+        </tr>
+      </thead>
+      <tbody class="table-group-divider">
+        {% for skill in all|reverse %}
+          {% if 'PUBLISH' in skill.status %}
+            <tr>
+              <td class="align-middle" style="width:70%">{{ skill.name }}</td>
+              <td class="align-middle" style="width:5%">{{ skill.course }}</td>
+              <td class="align-middle" style="width:5%">{{ skill.period }}</td>
+              <td class="text-end" style="width:100px"><a class="btn btn-primary" href="{{ url_for('showskill', id=skill.id ) }}" role="button">Signup</a></td>
+            </tr>
+            </div>
+          {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+{% else %}
+    <p>Just nu finns det ingen skills exam att boka!</p>
+{% endif %}

@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% block content %}
+<br>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+       <div class="row justify-content-center">
+          <div class="alert alert-{{category}} alert-dismissible fade show col-sm-10 col-md-10 col-lg-8" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+       </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<h1 class="display-6">Skills Exam Bookings</h1>
+{% if current_user.role.name in ['Admin', 'Teacher'] %}
+  <div id="teacher-skills">
+    <div id="active-skills">
+      <a href="{{ url_for('setskill') }}">Skapa ny skill</a><br><br>
+      {% include 'skills_teacher_active_skills.html' %}
+    </div>
+    <br><br><br><br>
+    <div id="archived-skills">
+      {% include 'skills_teacher_archived_skills.html' %}
+    </div>
+  </div>
+{% else %}
+  {% if year == 'Null' %}
+    <a href="{{ url_for('skills', year='CCNA') }}">CCNA</a> Skills Exams - (First year)<br>
+    <a href="{{ url_for('skills', year='CCNP') }}">CCNP</a> Skills Exams - (Second year)<br>
+  {% else %}
+    <div id="student-skills">
+      {% include 'skills_student.html' %}
+    </div>
+  {% endif %}
+{% endif %}
+
+<script>
+  const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+  const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+</script>
+
+{% endblock %}

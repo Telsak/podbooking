@@ -12,5 +12,19 @@
 {% endwith %}
 
 <h1>Debug page</h1>
-        
+{{ debugdata }}
+
+<div class="container mt-3">
+    <p>Click on the button to toggle between showing and hiding content.</p>
+    <a href="#" data-bs-toggle="collapse" data-bs-target="#demo"><i class="bi bi-caret-right-fill"></i></a>
+    <div id="demo" class="collapse border border-2 border-top-0 p-2">
+      Lorem ipsum dolor sit amet, consectetur adipisicing elit,
+      sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+      quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+    </div>
+  </div>
+
+<button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="window.print()">Print</button>
+<a class="btn btn-primary" href="{{baseurl}}show" target="_blank" role="button">Popup</a>
+
 {% endblock %}

@@ -3,11 +3,17 @@ from time import localtime, mktime, time
 from datetime import datetime, date
 from calendar import HTMLCalendar
 
-def sec_to_date(sec):
+def sec_to_date(sec, option=0):
     '''str_date returns in the format YY-M-D'''
     ds = localtime(sec)
-    str_date = f'{str(ds.tm_year)[2:]}-{ds.tm_mon}-{ds.tm_mday}'
-    return str_date
+    str_date = f'{str(ds.tm_year)[2:]}-{ds.tm_mon}-{ds.tm_mday} {ds.tm_hour}:{ds.tm_min}'
+    if option==0:
+        return str_date.split()[0]
+    elif option==1:
+        return str_date
+
+def sec_to_weekday(epoch):
+    return datetime.fromtimestamp(epoch).strftime("%A")
 
 def date_to_sec(str_date):
     '''str_date should always be in the format YY-M-D
@@ -87,6 +93,13 @@ def epoch_hr(epoch):
 def date_to_str():
     '''Todays date but without the leading 2 digits in 2022'''
     return str(date.today())[2:]
+
+def endtimes(datestr, dur):
+    _ = datestr.split(':')
+    hr, m = int(_[0]), int(_[1])
+    hr += dur // 60
+    m += dur % 60
+    return f'{hr:02d}:{m:02d}'
 
 def show_calendar(urldate, room, SITE_PREFIX):
     

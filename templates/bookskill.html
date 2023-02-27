@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block content %}
+<br>
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<div class="row justify-content-center">
+       <div class="alert alert-{{category}} alert-dismissible fade show col-sm-10 col-md-10 col-lg-8" role="alert">
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+       </div>
+</div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+<div class="booking-form">
+       <form class="row g-3" method="post">
+              <h5>{{ skill.name }} - {{ skill.type }}</h5>
+              <h5>Booking of {{ data.room }} - {{ data.caldate }} - {{ data.time }}</h5>
+              <div>
+                     <label for="booker" class="form-label">User</label>
+                     {% if current_user.role.name in ['Admin', 'Teacher'] %}
+                     <div class="input-group mb-3">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button"
+                                   data-bs-toggle="dropdown" aria-expanded="false">Student</button>
+                            <ul class="dropdown-menu" style="max-height:300px;overflow-y:auto;">
+                                   {% for student in student_data %}
+                                   <li><a onclick="add_text('{{ student.username }}')" class="dropdown-item" href="#"
+                                                 id="{{ student.username }}">{{ student.fullname }}</a></li>
+                                   {% endfor %}
+                            </ul>
+                            <div class="col-6">
+                                   <input type="text" class="form-control" id="booker" name="booker"
+                                          value="{{ current_user.username }}">
+                            </div>
+                            <button onclick="add_text('{{ current_user.username }}')" class="btn btn-outline-secondary"
+                                   type="button" id="button-addon1">Me</button>
+                     </div>
+                     {% else %}
+                     <input type="text" class="form-control" id="booker" name="booker"
+                            value="{{ current_user.username }}" readonly>
+                     {% endif %}
+                     <br>
+                     <input type="hidden" id="status" value="AVAILABLE" name="status">
+                     <div class="row">
+                            <div class="col">
+                                   <a class="btn btn-danger" href="{{ url_for('skills') }}" role="button">Cancel</a>
+                            </div>
+                            <div class="col col-auto">
+                                   <button type="submit" class="btn btn-primary">Submit</button>
+                            </div>
+                     </div>
+              </div>
+       </form>
+       {% if current_user.role.name in ['Admin', 'Teacher'] %}
+              <h5>Skillboknings-lathund för lärare</h5>
+              Du kan boka en student genom att välja deras namn i listan i User-fältet eller välj dig själv med knappen
+              "Me".<br><br>
+              Listan på studenter är alla studenter som varit inloggade någon gång under den senaste 30 dagarna.
+              <script>
+                     function add_text(item) {
+                            document.getElementById('booker').value = item;
+                     };
+              </script>
+              <script>
+                     function clear_text() {
+                            document.getElementById('booker').value = '';
+                     }
+              </script>
+       {% endif %}
+</div>
+{% endblock %}

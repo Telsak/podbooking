@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block content %}
+<br>
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+       <div class="row justify-content-center">
+          <div class="alert alert-{{category}} alert-dismissible fade show col-sm-10 col-md-10 col-lg-8" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+       </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<p>skills_teacher.html</p>
+
+<div class="signup-form" style="width:800px">
+  <form method="post">
+  <h4>Teacher skills creation</h4>
+  
+  <div>
+    {{ form.csrf_token }}
+    <div class="row">
+      <div class="col-8">
+        {{ form.name.label(class="form-label") }}
+        {{ form.name(class="form-control") }}
+      </div>
+      <div class="col-4">
+        {{ form.type.label(class="form-label") }}
+        {{ form.type(class="form-control") }}
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-4">
+        {{ form.course.label(class="form-label") }}
+        {{ form.course(class="form-control") }}
+      </div>
+      <div class="col-4">
+        {{ form.year.label(class="form-label") }}
+        {{ form.year(class="form-control") }}
+      </div>
+      <div class="col-4">
+        {{ form.period.label(class="form-label") }}
+        {{ form.period(class="form-control") }}
+      </div>
+    </div>
+    <div class="row">
+      {{ form.comment.label(class="form-label") }}
+      <div class="form-textarea">
+        {{ form.comment(rows="2", class="form-control") }}
+      </div>
+    </div>
+ 
+    <br/>
+    <div class="d-grid d-md-flex justify-content-md-end">
+      {{ form.submit(class="btn btn-primary", value="Create skill") }}
+    </div>
+    
+  </div>
+  </form>
+  <p>För att lägga till student som ska kunna boka en anpassad tid - lägg till strängen NAIS-studentid i kommentaren.<br>
+    T.ex: NAIS-stna0001. Flera studenter, dela bara upp det: NAIS-abcd0001, NAIS-cdef0002<br>
+    Det finns ingen kontroll av det du skriver in här, så var noga.
+  </p>
+</div>
+
+{% endblock %}

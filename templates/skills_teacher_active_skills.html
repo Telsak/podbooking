@@ -1,0 +1,90 @@
+<h2>Aktiva skillar</h2>
+{% if numskills[0] > 0 %}
+  <table class="table table-hover">
+    <thead class="table-light">
+      <tr>
+        <th scope="col" class="min"><div class="text-start"></div></th>
+        <th scope="col"><div class="text-start">Skapad</div></th>
+        <th scope="col"><div class="text-start">Namn</div></th>
+        <th scope="col"><div class="text-start">Kurs</div></th>
+        <th scope="col"><div class="text-start">LP</div></th>
+        <th scope="col"><div class="text-start">Datum</div></th>
+        <th scope="col"><div class="text-start">Salar</div></th>
+        <th scope="col"><div class="text-start">Tider</div></th>
+        <th scope="col"><div class="text-start">Action</div></th>
+        <th scope="col"><div class="text-start"><i class="bi bi-eye"></i></div></th>
+        <th scope="col"><div class="text-start"><i class="bi bi-archive"></i></div></th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for skill in all|reverse %}
+      {% if skill.status != 'ARCHIVED' %}
+        <tr>
+          <td class="min">
+            <a href="#" data-bs-toggle="tooltip"
+              data-bs-title="Skapad av: {{ skill.owner }}">
+            <i class="bi bi-file-person"></i></a>
+          </td>
+          <td class="min">
+            {% set created = sec_to_date(skill.created, 1).split() %}
+            {{ created[0] }}
+          </th>
+          <td>{{ skill.name }}</td>
+          <td>{{ skill.course}}</td>
+          <td>{{ skill.period }}</td>
+          <td class="table-info">
+            {% set date_l = skill.standard_dates.split(',') %}
+            {% for date in date_l %}
+              {{ date }}<br>
+            {% endfor %}
+          </td>
+          <td class="table-info">
+            {% set room_l = skill.standard_rooms.split(',') %}
+            {% for room in room_l %}
+              {{ room }}<br>
+            {% endfor %}
+          </td>
+          <td class="table-info">
+            {% set standard_times_l = skill.standard_times.split(',') %}
+            {% for time in standard_times_l %}
+              {{ time }}<br>
+            {% endfor %}
+          </td>
+          <td class="min">
+            {% if 'UNSET' not in skill.standard_dates %}
+              <a href="{{ url_for('showskill', id=skill.id) }}"
+                data-bs-toggle="tooltip" 
+                data-bs-title="View skill">
+                  <i class="bi bi-zoom-in"></i></a>&nbsp;
+            {% endif %}
+            <a href="{{ url_for('skilldates', id=skill.id) }}" 
+              data-bs-toggle="tooltip" 
+              data-bs-title="Edit skill">
+                <i class="bi bi-pencil-square"></i></a>&nbsp;
+            {% if skill.comment|length > 0 %}
+            <a href="#" data-bs-toggle="tooltip"
+              data-bs-title="{{ skill.comment }}"><i class="bi bi-chat-left-text"></i></a>
+            {% endif %}
+          </td>
+            <td class="min">
+              {% if 'HIDDEN' in skill.status %}
+                <a href="{{ url_for('skillstatus', id=skill.id, status='PUBLISH') }}"><i class="bi bi-slash-circle"></i></a>
+              {% elif 'PUBLISH' in skill.status %}
+                <a href="{{ url_for('skillstatus', id=skill.id, status='HIDDEN') }}" class="text-success"><i class="bi bi-check-circle-fill"></i></a>
+              {% endif %}
+            </td>
+            <td class="min">
+              {% if 'HIDDEN' in skill.status %}
+                <a href="{{ url_for('skillstatus', id=skill.id, status='ARCHIVED') }}" data-bs-toggle="tooltip" data-bs-title="Archive"><i class="bi bi-download"></i></a>
+              {% else %}
+                <a href="#" data-bs-toggle="tooltip" data-bs-title="Cannot archive published skill"><i class="bi bi-download text-muted"></i></a>
+              {% endif %}
+            </td>
+        </tr>
+      {% endif %}
+    {% endfor %}
+{% else %}
+    <p>Inga aktiva skillar!</p>
+{% endif %}
+  </tbody>
+  </table>

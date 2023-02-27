@@ -1,7 +1,5 @@
 {% extends 'base.html' %}
 {% block content %}
-  <br>
-  <h1>Error 404</h1>
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
       {% for category, message in messages %}
@@ -14,4 +12,9 @@
       {% endfor %}
     {% endif %}
   {% endwith %}
+
+  <br>
+  <h1>This is a 404 error!!</h1>
+  {{ msg }}
+
 {% endblock %}
