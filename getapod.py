@@ -985,10 +985,10 @@ def signup():
                 db.session.commit()
 
                 log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=6, 
-                    msg=f'{current_user.username} : User successfully created!')
+                    msg=f'{name.lower()} : User successfully created!')
+                flash('User successfully created!', 'success')
 
                 lock_commit = False
-
                 login_user(user)
                 return redirect(url_for('index'))
             else:
