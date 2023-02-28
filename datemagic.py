@@ -67,7 +67,7 @@ def ics_date(dtstart, dtend):
 
 def unixtime(option=0):
     if option != 0:
-        return str(datetime.fromtimestamp(option))
+        return datetime.fromtimestamp(option)
     else:
         return int(time())
 

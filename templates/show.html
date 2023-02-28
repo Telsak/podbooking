@@ -5,7 +5,7 @@
         {% for category, message in messages %}
         <div class="row justify-content-center">
             <div class="alert alert-{{category}} alert-dismissible fade show col-sm-10 col-md-10 col-lg-8" role="alert">
-            {{ message }}
+            {{ message|safe }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         </div>

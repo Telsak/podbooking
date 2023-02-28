@@ -3,7 +3,7 @@ from base64 import b64decode
 from requests import post
 from flask import (
     Flask, render_template, abort, redirect, request, 
-    flash, url_for, session
+    flash, url_for, session, Response
 )
 from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.contrib.sqla import ModelView
@@ -27,6 +27,8 @@ from datemagic import (
 from scrapeinfo import get_profile, pull_ics_data, scrape_user_info, test_ldap_auth
 from flask_migrate import Migrate
 from time import sleep
+
+from icalmagic import generate_ical
 
 GRACE_MINUTES = 60
 BOOK_HOURS = [8,10,13,15,17,19,21]
@@ -810,7 +812,7 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
                 db.session.commit()
                 log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=6, 
                     msg=f'{current_user.username} : Pod successfully booked!')
-                flash(f'Pod successfully booked!', 'success')
+                #flash(f'Pod successfully booked! <a href="#">Link</a>', 'success')
             except Exception as e:
                 db.session.rollback()
                 flash(e, "danger")
@@ -819,6 +821,9 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
 
             lock_commit = False
             
+            ical_data = generate_ical(book_time, current_user.username, room.upper(), pod, request.form['comment'])
+            session['ics'] = ical_data
+            flash(f'Pod successfully booked! <a href="{url_for("getcal")}">Add me to calendar</a>', 'success')
             return redirect(url_for("show", room=roomdata.name.upper(), caldate=caldate), code=302)
         else:
             return redirect(booking)
@@ -834,6 +839,16 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
                 return render_template('book.html', data=locals())
             else:
                 return redirect(url_for("show", room=roomdata.name.upper()), code=302)
+
+@app.route('/getcal')
+@login_required
+def getcal():
+    ical_data = session['ics']
+    response = Response(ical_data, mimetype='text/calendar')
+    response.headers.set('Content-Type', 'text/calendar')
+    response.headers.set('Content-Disposition', 'attachment', filename='booking.ics')
+    print(ical_data)
+    return response
 
 @app.route('/delete/<room>')
 @app.route('/delete/<room>/<caldate>')
