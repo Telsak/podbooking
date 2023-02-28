@@ -628,8 +628,10 @@ def show(room, caldate='Null'):
     global scheduledetails
     global scheduletimestamp
     if len(scheduledetails) == 0 or abs(unixtime()-scheduletimestamp) > 21600:
-        scheduledetails = {}
-        scheduledetails, scheduletimestamp = pull_ics_data()
+        tempdetails = {}
+        tempdetails, scheduletimestamp = pull_ics_data()
+        if len(tempdetails) > 0:
+            scheduledetails = tempdetails
     if room.upper() not in [x.name for x in Rooms.query.all()]:
         flash("No such resource, check room name!", "danger")
         abort(404, description="Resource not found")
