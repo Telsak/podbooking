@@ -972,7 +972,7 @@ def signup():
         form.name.data = ''
         form.password.data = ''
         
-        user = User.query.filter_by(username=name).first()
+        user = User.query.filter_by(username=name.lower()).first()
         # if user doesnt exist
         if user is None:
             if test_ldap_auth(name.lower(), password):
@@ -1014,6 +1014,7 @@ def signup():
             log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=3, 
                 msg=f'{name} : User already exists!')
             flash('User already exists! Try logging in instead.', 'danger')
+            return redirect(url_for('login'))
         return render_template('signup.html', form=form)
 
     return render_template('signup.html', form=form)
