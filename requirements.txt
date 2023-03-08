@@ -1,5 +1,6 @@
 alembic==1.8.1
 Flask==2.1.2
+Werkzeug==2.1.2
 Flask_Admin==1.6.0
 Flask_Bcrypt==1.0.1
 flask_ldap3_login==0.9.18
