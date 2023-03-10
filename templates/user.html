@@ -61,6 +61,30 @@
                 <br><br><br>
                 <p class="lead fw-normal mb-1">About</p>
                 <div class="p-4" style="background-color: #f8f9fa;">
+                  {% if data|length > 0 %}
+                    <table class="table table-striped table-bordered" style="border-collapse:separate;border-spacing:5px;width:inherit !important;">
+                      <tr>
+                        <th class="table-primary">Date</th>
+                        <th class="table-primary">Time</th>
+                        <th class="table-primary">Location</th>
+                        <th class="table-primary">Comment</th>
+                        <th class="table-primary">❔</th>
+                      </tr>
+                      {% for b in data %}
+                        <tr>
+                          <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">{{ data[b]['date'][0] }}</td>
+                          <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">{{ data[b]['date'][1] }}:00-{{ data[b]['date'][1] + 2}}:00</td>
+                          <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">{{ data[b]['room'] }} Pod {{ data[b]['pod'] }}</td>
+                          <td class="table-primary">{{ data[b]['comment'] }}</td>
+                          <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">
+                            <a href="{{baseurl}}delete/{{ data[b]['room'] }}/{{ data[b]['date'][0] }}/{{ data[b]['date'][1] }}/{{ data[b]['pod'] }}">
+                              <i class="bi bi-file-earmark-x-fill" style="color:red"></i>
+                            </a>
+                          </td>
+                        </tr>
+                      {% endfor %}
+                    </table>
+                  {% endif %}
                   <p class="font-italic mb-1">{{ user.role.name }}</p>
                   {% if current_user.is_authenticated %}
                     {% if current_user.username == user.username or current_user.role.name in ['Admin', 'Teacher'] %}

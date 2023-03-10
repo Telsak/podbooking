@@ -12,7 +12,28 @@
 {% endwith %}
 
 <h1>Debug page</h1>
-{{ debugdata }}
+{% if debugdata|length > 0 %}
+  
+  <table class="table table-striped table-bordered" style="border-collapse:separate;border-spacing:5px;width:inherit !important;">
+    <tr>
+      <th class="table-primary">Date</th>
+      <th class="table-primary">Time</th>
+      <th class="table-primary">Location</th>
+      <th class="table-primary">Comment</th>
+      <th class="table-primary">❔</th>
+    </tr>
+    {% for b in debugdata %}
+      <tr>
+        <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">{{ debugdata[b]['date'][0] }}</td>
+        <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">{{ debugdata[b]['date'][1] }}:00-{{ debugdata[b]['date'][1] + 2}}:00</td>
+        <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">{{ debugdata[b]['room'] }} Pod {{ debugdata[b]['pod'] }}</td>
+        <td class="table-primary">{{ debugdata[b]['comment'] }}</td>
+        <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">
+          <a href="{{baseurl}}delete/{{ debugdata[b]['room'] }}/{{ debugdata[b]['date'][0] }}/{{ debugdata[b]['date'][1] }}/{{ debugdata[b]['pod'] }}"><i class="bi bi-file-earmark-x-fill"></i></a></td>
+      </tr>
+    {% endfor %}
+  </table>
+{% endif %}
 
 <div class="container mt-3">
     <p>Click on the button to toggle between showing and hiding content.</p>

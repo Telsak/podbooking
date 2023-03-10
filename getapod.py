@@ -513,6 +513,28 @@ def set_booking(roomdata, epoch, pod, form):
             confirmation='PENDING'
         )
         return True, booking
+    
+def view_bookings(user):
+    now_hr = epoch_hr('HR')
+    user_time_start = epoch_hr('NOW')
+    for hour in BOOK_HOURS:
+        if now_hr in range(hour, hour+3):
+            user_time_start = date_start_epoch(user_time_start) + (3600*hour)
+    try:
+        bookings_list = [x for x in Bookings.query.filter(Bookings.time>=user_time_start).filter(Bookings.name1==user).all()]
+    except:
+        bookings_list = []
+    bookings_dict = {}
+    if len(bookings_list) >= 1:
+        rooms = get_rooms()
+        for i in range(len(bookings_list)):
+            b = bookings_list[i]
+            date = sec_to_date(b.time), epoch_hr(b.time)
+            room = rooms[b.room-1]
+            pod = chr(b.pod+64)
+            comment = b.comment
+            bookings_dict[i+1] = {'date': date, 'room': room.name, 'pod': pod, 'comment': comment}
+    return bookings_dict
 
 def set_skillbooking(room, skill, epoch, pod, form):
     fac='SKILLBOOKING'
@@ -1189,7 +1211,7 @@ def debug():
     # restarts will read config from the file as normal..
     #from flask import current_app
     #current_app.config['WEBHOOK'] = 'put the new data here'
-    return render_template('debug.html', debugdata=exists)
+    return render_template('debug.html', debugdata=view_bookings('siol0003'))
 
 @app.route('/user/<username>')
 @app.route('/user/<username>/<option>')
@@ -1197,7 +1219,7 @@ def debug():
 def user(username, option=''):
     user = User.query.filter_by(username=username).first_or_404()
     if option == '':
-        return render_template('user.html', user=user)
+        return render_template('user.html', user=user, data=view_bookings(user.username))
     elif option == 'refresh':
         if current_user.username == username:
             profile = get_profile(current_user.username)
@@ -1209,7 +1231,7 @@ def user(username, option=''):
                 flash("There is no newer image on mittkonto.hv.se, profile not changed!", "warning")
         else:
             flash("Invalid update request!", "error")
-        return redirect(url_for('user', username=username, option='').rstrip('/'))
+        return redirect(url_for('user', username=username, option='', data=view_bookings(user.username)).rstrip('/'))
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')
