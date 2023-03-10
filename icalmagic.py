@@ -2,7 +2,7 @@ from icalendar import Calendar, Event, vCalAddress, vText
 from datemagic import unixtime
 import pytz
 
-def generate_ical(booking_time, username, room, pod, comment):
+def generate_ical(booking_time, username, room, pod):
     sweden_tz = pytz.timezone('Europe/Stockholm')
     
     start_time = sweden_tz.localize(unixtime(booking_time))

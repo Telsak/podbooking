@@ -534,6 +534,9 @@ def view_bookings(user):
             pod = chr(b.pod+64)
             comment = b.comment
             bookings_dict[i+1] = {'date': date, 'room': room.name, 'pod': pod, 'comment': comment}
+            ical_data = generate_ical(b.time, user, room.name, pod)
+            session[f'ics{i+1}'] = ical_data
+
     return bookings_dict
 
 def set_skillbooking(room, skill, epoch, pod, form):
@@ -843,9 +846,9 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
 
             lock_commit = False
             
-            ical_data = generate_ical(book_time, current_user.username, room.upper(), pod, request.form['comment'])
-            session['ics'] = ical_data
-            flash(f'Pod successfully booked! <a href="{url_for("getcal")}">Add me to calendar</a>', 'success')
+            ical_data = generate_ical(book_time, current_user.username, room.upper(), pod)
+            session['icsflash'] = ical_data
+            flash(f'Pod successfully booked! <a href="{url_for("getcal", ics="icsflash")}">Add me to calendar</a>', 'success')
             return redirect(url_for("show", room=roomdata.name.upper(), caldate=caldate), code=302)
         else:
             return redirect(booking)
@@ -862,14 +865,13 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
             else:
                 return redirect(url_for("show", room=roomdata.name.upper()), code=302)
 
-@app.route('/getcal')
+@app.route('/getcal/<ics>')
 @login_required
-def getcal():
-    ical_data = session['ics']
+def getcal(ics):
+    ical_data = session[ics]
     response = Response(ical_data, mimetype='text/calendar')
     response.headers.set('Content-Type', 'text/calendar')
     response.headers.set('Content-Disposition', 'attachment', filename='booking.ics')
-    print(ical_data)
     return response
 
 @app.route('/delete/<room>')
@@ -1023,11 +1025,10 @@ def signup():
 
                 log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=6, 
                     msg=f'{name.lower()} : User successfully created!')
-                flash('User successfully created!', 'success')
+                flash('User successfully created, go ahead and log in!', 'success')
 
                 lock_commit = False
-                login_user(user)
-                return redirect(url_for('index'))
+                return redirect(url_for('login'))
             else:
                 log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
                     msg=f'{name} : Invalid user or password!')

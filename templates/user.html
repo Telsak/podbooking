@@ -62,24 +62,22 @@
                 <p class="lead fw-normal mb-1">About</p>
                 <div class="p-4" style="background-color: #f8f9fa;">
                   {% if data|length > 0 %}
-                    <table class="table table-striped table-bordered" style="border-collapse:separate;border-spacing:5px;width:inherit !important;">
+                    <table class="table" style="width:inherit !important;">
                       <tr>
-                        <th class="table-primary">Date</th>
-                        <th class="table-primary">Time</th>
-                        <th class="table-primary">Location</th>
-                        <th class="table-primary">Comment</th>
-                        <th class="table-primary">❔</th>
+                        <th class="table-primary">When</th>
+                        <th class="table-primary">Where</th>
+                        <th class="table-primary"><i class="bi bi-calendar3"></i></th>
+                        <th class="table-primary"><i class="bi bi-trash"></i></th>
                       </tr>
                       {% for b in data %}
                         <tr>
-                          <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">{{ data[b]['date'][0] }}</td>
-                          <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">{{ data[b]['date'][1] }}:00-{{ data[b]['date'][1] + 2}}:00</td>
-                          <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">{{ data[b]['room'] }} Pod {{ data[b]['pod'] }}</td>
-                          <td class="table-primary">{{ data[b]['comment'] }}</td>
-                          <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">
-                            <a href="{{baseurl}}delete/{{ data[b]['room'] }}/{{ data[b]['date'][0] }}/{{ data[b]['date'][1] }}/{{ data[b]['pod'] }}">
-                              <i class="bi bi-file-earmark-x-fill" style="color:red"></i>
-                            </a>
+                          <td style="width:1% !important;white-space: nowrap !important;text-align: center;"><b>{{ data[b]['date'][0] }}</b> {{ data[b]['date'][1] }}:00-{{ data[b]['date'][1] + 2}}:00</td>
+                          <td style="width:1% !important;white-space: nowrap !important;text-align: center;">{{ data[b]['room'] }}, Pod {{ data[b]['pod'] }}</td>
+                          <td style="width:1% !important;white-space: nowrap !important;text-align: center;">
+                            <a href="{{ url_for('getcal', ics='ics')}}{{loop.index}}">Add</a>
+                          </td>
+                          <td style="width:1% !important;white-space: nowrap !important;text-align: center;">
+                            <a href="{{baseurl}}delete/{{ data[b]['room'] }}/{{ data[b]['date'][0] }}/{{ data[b]['date'][1] }}/{{ data[b]['pod'] }}" style="color:red">Del</a>
                           </td>
                         </tr>
                       {% endfor %}
