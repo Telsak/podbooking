@@ -77,7 +77,7 @@
                             <a href="{{ url_for('getcal', ics='ics')}}{{loop.index}}">Add</a>
                           </td>
                           <td style="width:1% !important;white-space: nowrap !important;text-align: center;">
-                            <a href="{{baseurl}}delete/{{ data[b]['room'] }}/{{ data[b]['date'][0] }}/{{ data[b]['date'][1] }}/{{ data[b]['pod'] }}" style="color:red">Del</a>
+                            <a href="{{ url_for('delete', room=data[b]['room'], caldate=data[b]['date'][0], hr=data[b]['date'][1], pod=data[b]['pod']) }}" style="color:red">Del</a>
                           </td>
                         </tr>
                       {% endfor %}
