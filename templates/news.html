@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block content %}
+  <br>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+      <div class="row justify-content-center">
+        <div class="alert alert-{{category}} alert-dismissible fade show col-sm-10 col-md-10 col-lg-8" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  
+
+  <div class="row justify-content-center flex-nowrap">
+    <div class="accordion col-sm-10 col-md-10 col-lg-8" id="accordionNews">
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb">
+            <li class="breadcrumb-item active" aria-current="page">english</li>
+          </ol>
+        </nav>
+        <h2 class="page-title">&nbsp;Podbooking updates</h1>
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingOne">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+              <b>2023-03-13 - Added calendar integration</b>
+            </button>
+          </h2>
+          <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionNews">
+            <div class="accordion-body">
+              When performing regular bookings, you will now be able to see a link to an calendar file in the confirmation message of the booking event.
+              Clicking this will give you a booking that you can import into your regular calendar on your device. (The file is in the iCalendar format)<br><br>
+              In addition, visiting your profile page will display a list of all your upcoming bookings along with links to calendar files for each booking.
+              You are also able to delete your bookings from this page. (You can reach your profile page by clicking the dropdown list under your name in the top right corner.)
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+{% endblock %}

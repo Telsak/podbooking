@@ -33,6 +33,9 @@
               <a class="nav-link" href="{{ url_for('login') }}"><span class="align-middle"><i class="bi bi-person-circle"></i>&nbsp;Login</span></a>
             </li>
           {% else %}
+            <li class="nav-item">
+              <a class="nav-link" href="{{ url_for('news') }}"><span class="align-middle">News</span></a>
+            </li>
             <li class="nav-item dropdown">
               <a class="nav-link dropdown-toggle" href="#" id="navbarAccountDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               <img src="https://mittkonto.hv.se/public/bilder/{{ current_user.profile }}" style="border-radius: 50%; width: 32px; height: 32px; margin: -4px 0; float: left; margin-right: 10px; object-fit: cover">&nbsp;{{ current_user.fullname }}

@@ -1186,6 +1186,10 @@ def help(lang='Null'):
     else:
         return render_template('help.html')
 
+@app.route('/news')
+def news():
+    return render_template('news.html')
+
 @app.route('/')
 @app.route('/<data>')
 def index(data='Null'):
