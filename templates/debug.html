@@ -12,28 +12,24 @@
 {% endwith %}
 
 <h1>Debug page</h1>
-{% if debugdata|length > 0 %}
-  
-  <table class="table table-striped table-bordered" style="border-collapse:separate;border-spacing:5px;width:inherit !important;">
-    <tr>
-      <th class="table-primary">Date</th>
-      <th class="table-primary">Time</th>
-      <th class="table-primary">Location</th>
-      <th class="table-primary">Comment</th>
-      <th class="table-primary">❔</th>
-    </tr>
-    {% for b in debugdata %}
-      <tr>
-        <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">{{ debugdata[b]['date'][0] }}</td>
-        <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">{{ debugdata[b]['date'][1] }}:00-{{ debugdata[b]['date'][1] + 2}}:00</td>
-        <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">{{ debugdata[b]['room'] }} Pod {{ debugdata[b]['pod'] }}</td>
-        <td class="table-primary">{{ debugdata[b]['comment'] }}</td>
-        <td class="table-primary" style="width:1% !important;white-space: nowrap !important;border-radius:10px">
-          <a href="{{baseurl}}delete/{{ debugdata[b]['room'] }}/{{ debugdata[b]['date'][0] }}/{{ debugdata[b]['date'][1] }}/{{ debugdata[b]['pod'] }}"><i class="bi bi-file-earmark-x-fill"></i></a></td>
-      </tr>
-    {% endfor %}
-  </table>
-{% endif %}
+
+<div class="container my-5">
+  <div class="row">
+    <div class="col-md-6 offset-md-3">
+      <h4 style="margin-left: 1.2rem;">Podbooking updates</h4>
+      <ul class="timeline-3">
+        <li><b>
+          <span>Added calendar integration</span>
+          <span class="float-end">13 March, 2023</span></b>
+          <p class="mt-2">When performing regular bookings, you will now be able to see a link to an calendar file in the confirmation message of the booking event.
+            Clicking this will give you a booking that you can import into your regular calendar on your device. (The file is in the iCalendar format)<br><br>
+            In addition, visiting your profile page will display a list of all your upcoming bookings along with links to calendar files for each booking.
+            You are also able to delete your bookings from this page. (You can reach your profile page by clicking the dropdown list under your name in the top right corner.)</p>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
 
 <div class="container mt-3">
     <p>Click on the button to toggle between showing and hiding content.</p>
