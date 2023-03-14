@@ -2,7 +2,7 @@ from re import X
 from flask_ldap3_login import LDAP3LoginManager
 from requests import head, ConnectionError
 from time import sleep
-from datemagic import unixtime, date_to_str, ics_date
+from datemagic import unixtime, date_to_str, ics_date, ics_zulu_to_se
 from jicson import fromWeb
 from requests import post
 
@@ -89,11 +89,13 @@ def pull_ics_data():
     timestamp = unixtime()
     try:
         result = fromWeb(url, 'Basic')
-        if 'VEVENT' in result['VCALENDAR'][0]:   
+        if 'VEVENT' in result['VCALENDAR'][0]:
             x = 0
             for event in result['VCALENDAR'][0]['VEVENT']:
                 x += 1
-                showsum = ics_date(event['DTSTART'], event['DTEND'])
+                dtstart = ics_zulu_to_se(event['DTSTART'])
+                dtend = ics_zulu_to_se(event['DTEND'])
+                showsum = ics_date(dtstart, dtend)
                 event['SHOWDATE'] = showsum
                 showsum = event['SUMMARY'].split('Kurs.grp: ')[1].split(' Sign:')[0]
                 sumspl = showsum.split()
@@ -104,7 +106,7 @@ def pull_ics_data():
                     if p1 == p2:
                         showsum = ' '.join(p1)
                 event['SHOWCOURSE'] = showsum
-                showsum = event['SUMMARY'].split('Moment: ')[1].split(' Program:')[0]        
+                showsum = event['SUMMARY'].split('Moment: ')[1].split(' Program:')[0]
                 event['SHOWSUMMARY'] = showsum
                 event['ACCNUM'] = str(x)
             return result, timestamp

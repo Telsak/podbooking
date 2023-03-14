@@ -2,6 +2,7 @@
 from time import localtime, mktime, time
 from datetime import datetime, date
 from calendar import HTMLCalendar
+import pytz
 
 def sec_to_date(sec, option=0):
     '''str_date returns in the format YY-M-D'''
@@ -43,23 +44,28 @@ def init_dates(today_d):
              'tomorrow': { 'string': morrow_s, 'date': morrow_d } 
            }
 
+def ics_zulu_to_se(date_str):
+    # parse the date string to a datetime object in UTC
+    dt_utc = datetime.strptime(date_str, '%Y%m%dT%H%M%SZ')
+    tz = pytz.timezone('Europe/Stockholm')
+    dt = dt_utc.replace(tzinfo=pytz.utc).astimezone(tz)
+    return dt.strftime('%Y%m%d %H%M')
+
 def ics_date(dtstart, dtend):
-    # +2 to compensate for ICS being in ZULU time
-    sd, _, st  = dtstart.partition("T")
+    sd, _, st  = dtstart.partition(" ")
     dtst = datetime(
             int(sd[:4]),
             int(sd[4:6]),
             int(sd[6:8]),
-            int(st[:2])+2,
-            int(st[2:4])
-            )
+            int(st[:2]),
+            int(st[2:4]))
     showsum = dtst.strftime('%y-%m-%d %H:%M')
-    ed, _, et = dtend.partition("T")
+    ed, _, et = dtend.partition(" ")
     dten = datetime(
             int(ed[:4]),
             int(ed[4:6]),
             int(ed[6:8]),
-            int(et[:2])+2,
+            int(et[:2]),
             int(et[2:4])
             )
     showsum += dten.strftime('-%H:%M')

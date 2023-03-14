@@ -122,7 +122,8 @@
                     </h2>
                     <div id={{ 'collapse' + event['ACCNUM'] }} class="accordion-collapse collapse" aria-labelledby={{ 'heading' + event['ACCNUM'] }} data-bs-parent="#accordionSchedule">
                         <div class="accordion-body">
-                            {{ event['SHOWSUMMARY'] }}
+                            {{ event['SHOWSUMMARY']|safe }} 
+                            <a href="https://schema.hv.se/setup/jsp/Schema.jsp?startDatum=20{{ date_path }}&intervallTyp=m&intervallAntal=3&sprak=SV&sokMedAND=true&forklaringar=true&resurser=l.{{show['room']['name']}}"> - (schema.hv.se)</a>
                         </div>
                     </div>
                 </div>   
