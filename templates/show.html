@@ -15,6 +15,7 @@
 
 {% set date_path = request.path.split('/')[3] %}
 {% set baseurl = url_for("help").replace("help", "") %}
+
 <div class="container-fluid">
     <div class="row justify-content-center flex-nowrap">
         <div class="col-6 col-md-auto">
@@ -56,6 +57,7 @@
         </p>
     </div>
 </div>
+
 <div class="table-responsive">
     <table class="table" style="border-collapse: collapse;">
     <tr valign="top">
@@ -84,6 +86,8 @@
                                     <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
                                 {% elif show['flag'] == 'ALLSLOTS' %}
                                     <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                                {% elif (pod == 6) and ( show['room']['name'] == 'B118') %}
+                                    <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
                                 {% else %}
                                     {{ show['query'][hour][pod]|safe }}
                                 {% endif %}
@@ -97,6 +101,8 @@
                             {% elif show['flag'] == 'SCHOOLDAY' and hour < 17 %}
                                 <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
                             {% elif show['flag'] == 'ALLSLOTS' %}
+                                <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                            {% elif (pod == 6) and ( show['room']['name'] == 'B118') %}
                                 <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
                             {% else %}
                                 {{ show['query'][hour][pod]|safe }}
