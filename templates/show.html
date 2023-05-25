@@ -52,7 +52,9 @@
             </font>
             <br><br>
             {% for room in get_rooms() %}
-                <a class="btn btn-secondary" href="{{baseurl}}show/{{ room.name }}/{{ date_path }}" role="button">{{ room.name }}</a>
+                {% if room.name != 'B123' %}
+                    <a class="btn btn-secondary" href="{{baseurl}}show/{{ room.name }}/{{ date_path }}" role="button">{{ room.name }}</a>
+                {% endif %}
             {% endfor %}
         </p>
     </div>
