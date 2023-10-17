@@ -52,7 +52,7 @@
             </font>
             <br><br>
             {% for room in get_rooms() %}
-                {% if room.name != 'B123' %}
+                {% if room.name not in roomdata %}
                     <a class="btn btn-secondary" href="{{baseurl}}show/{{ room.name }}/{{ date_path }}" role="button">{{ room.name }}</a>
                 {% endif %}
             {% endfor %}
@@ -64,11 +64,61 @@
     <table class="table" style="border-collapse: collapse;">
     <tr valign="top">
         <td>
-            <table class="table table-striped table-bordered" style="border-collapse:separate;border-spacing:5px;width:inherit !important;">
+            <!-- This is the table for mobile screenwidths only -->
+            <!-- Hide unnecessary text and focus on icon elements for clarity -->
+            <table class="table table-striped table-borderless d-md-none">
                 <tr>
                     <th class="table-primary">Time</th>
                     {% for pod in show['room']['pods'] %}
-                    <th class="table-primary">Pod {{ pod }}</th>
+                        <th class="table-primary">Pod {{ pod }}</th>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    {% for hour in show['clocks'] %}
+                        <td class="table-primary" style="width:1% !important;white-space: nowrap !important;">{{ hour }}-{{ hour+2 }}</td>
+                        {% for pod in show['query'][hour] %}
+                            {% if current_user.is_authenticated %}
+    
+                                {% if current_user.role.name in ['Admin', 'Teacher'] %}
+                                    {{ show['query'][hour][pod]|mobile_table|safe }}
+                                {% else %}
+                                    {% if show['flag'] == 'MORNING' and hour < 13 %}
+                                        <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                                    {% elif show['flag'] == 'AFTERNOON' and hour > 12 and hour < 17 %}
+                                        <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                                    {% elif show['flag'] == 'SCHOOLDAY' and hour < 17 %}
+                                        <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                                    {% elif show['flag'] == 'ALLSLOTS' %}
+                                        <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                                    {% else %}
+                                        {{ show['query'][hour][pod]|mobile_table|safe }}
+                                    {% endif %}
+                                {% endif %}
+    
+                            {% else %}
+                                {% if show['flag'] == 'MORNING' and hour < 13 %}
+                                    <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                                {% elif show['flag'] == 'AFTERNOON' and hour > 12 and hour < 17 %}
+                                    <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                                {% elif show['flag'] == 'SCHOOLDAY' and hour < 17 %}
+                                    <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                                {% elif show['flag'] == 'ALLSLOTS' %}
+                                    <td class="table-danger" style="text-align: center;"><font size=+1><i class="bi bi-shield-lock"></i></font></td>
+                                {% else %}
+                                    {{ show['query'][hour][pod]|mobile_table|safe }}
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </tr> 
+                    {% endfor %}
+            </table>
+            
+            <!-- This is the table for desktop screenwidths only -->
+            <table class="table table-striped table-bordered d-none d-md-table" style="border-collapse:separate;border-spacing:5px;width:inherit !important;">
+                <tr>
+                    <th class="table-primary">Time</th>
+                    {% for pod in show['room']['pods'] %}
+                        <th class="table-primary">Pod {{ pod }}</th>
                     {% endfor %}
                 </tr>
                 <tr>
@@ -111,8 +161,8 @@
                             {% endif %}
                         {% endif %}
                     {% endfor %}
-                </tr>
-                {% endfor %}     
+                </tr> 
+                {% endfor %}
             </table>
         </td>
     </tr>

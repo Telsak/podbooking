@@ -19,11 +19,13 @@ def sec_to_weekday(epoch):
 def date_to_sec(str_date):
     '''str_date should always be in the format YY-M-D
        returns the current yy-m-d in unix epoch seconds since 1970'''
-
-    ld = [int(n) for n in str_date.split('-')]
-    '''adds 2000 to fix year-trimming in date-format to avoid mktime() crash'''
-    date = datetime(2000 + ld[0], ld[1], ld[2])
-    sec = int(mktime(date.timetuple()))
+    #ld = [int(n) for n in str_date.split('-')]
+    #'''adds 2000 to fix year-trimming in date-format to avoid mktime() crash'''
+    #date = datetime(2000 + ld[0], ld[1], ld[2])
+    #sec = int(mktime(date.timetuple()))
+    date_format = "%y-%m-%d"
+    date = datetime.strptime(str_date, date_format)
+    sec = int(date.timestamp())
     return sec
 
 def date_start_epoch(epoch):

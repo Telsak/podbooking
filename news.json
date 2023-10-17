@@ -1,0 +1,19 @@
+[
+    {
+        "date": "13 March, 2023",
+        "title": "Added calendar integration",
+        "content": [
+            "When performing regular bookings, you will now be able to see a link to an calendar file in the confirmation message of the booking event. Clicking this will give you a booking that you can import into your regular calendar on your device. (The file is in the iCalendar format)", 
+            "In addition, visiting your profile page will display a list of all your upcoming bookings along with links to calendar files for each booking. You are also able to delete your bookings from this page. (You can reach your profile page by clicking the dropdown list under your name in the top right corner.)"
+        ]
+    },
+    {
+        "date": "19 September, 2023",
+        "title": "Slimmed booking page for mobile devices",
+        "content": [
+            "The booking view of the rooms and pods have been trimmed down when using devices with a screen width that matches the mobile device profile.", 
+            "All comments, usernames and excessively wide information has been hidden from the /show page. Instead, users will see icons that represent bookings, reservations and free slots for all the visible timeslots. This is a responsive view and can be forced away if the device is rotated in landscape mode."
+        ]
+    }    
+]
+  

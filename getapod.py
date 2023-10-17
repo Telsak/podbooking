@@ -1,9 +1,9 @@
-import os, gunicorn
+import os, gunicorn, json
 from base64 import b64decode
 from requests import post
 from flask import (
     Flask, render_template, abort, redirect, request, 
-    flash, url_for, session, Response
+    flash, url_for, session, Response, current_app
 )
 from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.contrib.sqla import ModelView
@@ -22,13 +22,17 @@ from flask_login import (
 from datemagic import (
     date_start_epoch, sec_to_date, date_to_sec, init_dates, 
     date_to_str, check_book_epoch, epoch_hr, show_calendar, 
-    unixtime, endtimes, sec_to_weekday
+    unixtime, endtimes, sec_to_weekday, datetime
 )
 from scrapeinfo import get_profile, pull_ics_data, scrape_user_info, test_ldap_auth
 from flask_migrate import Migrate
 from time import sleep
 
 from icalmagic import generate_ical
+
+from bs4 import BeautifulSoup as bs
+
+import re
 
 GRACE_MINUTES = 60
 BOOK_HOURS = [8,10,13,15,17,19,21]
@@ -60,17 +64,53 @@ migrate = Migrate(app, db, render_as_batch=True)
 login_manager.init_app(app)
 bcrypt.init_app(app)
 
-def log_webhook(x, url='Null', facility='', severity=4, msg='Null'):
-    if x == 'GETURL':
-        with open('wh.crd') as file: a64 = file.read()
-        return f"https://discord.com/api/webhooks/{b64decode(a64.encode('ascii')).decode('ascii')}"
-    elif x == 'POST':
-        if severity <= app.config['LOGSEVERITY'] or 'SIGNUP' in facility:
-            levels = ['EMERGENCY', 'ALERT', 'CRITICAL', 'ERROR', 'WARNING', 'NOTICE', 'INFORMATIONAL', 'DEBUG']
+def log_webhook(facility='', severity=4, msg='Null'):
+    if app.config['SETTINGS']['base']['logging']['ENABLE'] and 'discord.com/api/webhooks' in app.config['SETTINGS']['base']['logging']['WEBHOOK']:
+        url = app.config['SETTINGS']['base']['logging']['WEBHOOK']
+        levels = app.config['SETTINGS']['base']['logging']['LEVELS']
+        app_severity = app.config['SETTINGS']['base']['logging']['SEVERITY']
+        
+        if severity <= app_severity or 'SIGNUP' in facility:
             post(url, json={"username": f'getapod: {facility}-{levels[severity]}', 
                         "content": msg})
 
-app.config['WEBHOOK'] = log_webhook('GETURL')
+def read_config():
+    try:
+        with open('config.json', 'r') as file:
+            return json.load(file)
+    except:
+        return {
+            'base': {
+                'logging': {
+                    'SEVERITY': 4,
+                    'ENABLE': False,
+                    'WEBHOOK': 'No webhook specified',
+                    'LEVELS': [
+                        'EMERGENCY',
+                        'ALERT', 
+                        'CRITICAL', 
+                        'ERROR', 
+                        'WARNING', 
+                        'NOTICE', 
+                        'INFORMATIONAL', 
+                        'DEBUG'
+                    ]
+                },
+                'disabled': []
+            }
+        }
+
+def write_config(config_data):
+    try:
+        with open('config.json', 'w') as file:
+            json.dump(config_data, file, indent=2)
+            return True
+    except:
+        flash("Error. Unable to save configuration!", "warning")
+        return False
+
+#app.config['WEBHOOK'] = log_webhook('GETURL')
+app.config['SETTINGS'] = read_config()
 
 def get_rooms():
     return Rooms.query.all()
@@ -492,13 +532,11 @@ def set_booking(roomdata, epoch, pod, form):
             duration_data = [x.duration for x in Bookings.query.filter(Bookings.time>=user_time_start).filter(Bookings.name1==current_user.username).all()]
             if sum(duration_data) > 2:
                 flash(f'Not permitted to book pod at this time! You have too many booked slots!', 'warning')
-                log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
-                    msg=f'{current_user.username} : Not permitted to book pod at this time! You have too many booked slots!')
+                log_webhook(facility=fac, severity=4, msg=f'{current_user.username} : Not permitted to book pod at this time! You have too many booked slots!')
                 return False, f'{baseurl}show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
     if len(Bookings.query.filter(Bookings.time==epoch).filter(Bookings.room==roomdata.id).filter(Bookings.pod==ord(pod.upper())-64).all()) >= 1:
         flash('This timeslot is no longer available. Please pick another time or pod.', 'warning')
-        log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
-            msg=f'{current_user.username} : This timeslot is no longer available. Please pick another time or pod.')
+        log_webhook(facility=fac, severity=4, msg=f'{current_user.username} : This timeslot is no longer available. Please pick another time or pod.')
         return False, f'{baseurl}show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
     else:
         booking = Bookings(
@@ -554,8 +592,7 @@ def set_skillbooking(room, skill, epoch, pod, form):
             num_skillbookings = len(SkillBooking.query.filter(SkillBooking.skill_id==skill.id).filter(SkillBooking.student==form.get('booker')).all())
             if num_skillbookings > 0:
                 flash(f'Not permitted to book skill at this time! You already have a booked slot!', 'warning')
-                log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
-                    msg=f'{current_user.username} : Not permitted to book skill at this time! You already have a booked slot!')
+                log_webhook(facility=fac, severity=4, msg=f'{current_user.username} : Not permitted to book skill at this time! You already have a booked slot!')
                 return False, f'{baseurl}skills'
     if len(SkillBooking.query.filter(
             SkillBooking.skill_id==skill.id).filter(
@@ -563,8 +600,7 @@ def set_skillbooking(room, skill, epoch, pod, form):
             SkillBooking.room==room.upper()).filter(
             SkillBooking.timeslot==pod).all()) > 0:
         flash('This timeslot is no longer available. Please pick another time or seat.', 'warning')
-        log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
-            msg=f'{current_user.username} : This timeslot is no longer available. Please pick another time or seat.')
+        log_webhook(facility=fac, severity=4, msg=f'{current_user.username} : This timeslot is no longer available. Please pick another time or seat.')
         return False, f'{baseurl}showskill/{skill.id}/{room.upper()}/{sec_to_date(epoch)}'
     else:
         # teachers booking students trip this statement, avoids red-marked reservation slot
@@ -665,12 +701,10 @@ def show(room, caldate='Null'):
     if caldate == 'Null':
         return redirect(url_for("show", room=room.upper(), caldate=date_to_str()))
     else:
-        try:
-            date_check = caldate.split('-')[0]
-            _ = int(date_check)
-        except:
-            flash("Invalid date entered. (Not a number)", "danger")
-            return redirect(url_for('show', room=room.upper()))
+        # Validation to catch incorrect date entries
+        if not re.match(r"\d{2}-\d{2}-\d{2}$", caldate):
+            flash("Invalid date format. Expected YY-MM-DD.", "danger")
+            return redirect(url_for('show', room=room.upper()))            
         today_d = caldate
     dates = init_dates(today_d)
     show = {}
@@ -679,7 +713,8 @@ def show(room, caldate='Null'):
     show['dates'] = dates
     show['clocks'] = BOOK_HOURS
     show['query'], show['flag'] = get_bookings(roomdata, dates['today']['string'])
-    return render_template('show.html', show=show, cal=scheduledetails, SITE_PREFIX=url_for("index"))
+    disabled_rooms = current_app.config['SETTINGS']['base']['disabled']
+    return render_template('show.html', show=show, cal=scheduledetails, SITE_PREFIX=url_for("index"), roomdata=disabled_rooms)
 
 @app.route('/showskill/<id>')
 @app.route('/showskill/<id>/<caldate>')
@@ -775,14 +810,12 @@ def bookskill(id='Null', room='Null', caldate='Null', time='Null', pod='Null'):
                     db.session.add(booking)
                     try:
                         db.session.commit()
-                        log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=6, 
-                            msg=f'{current_user.username} : Skill successfully booked!')
+                        log_webhook(facility=fac, severity=6, msg=f'{current_user.username} : Skill successfully booked!')
                         flash(f'Skill successfully booked!', 'success')
                     except Exception as e:
                         db.session.rollback()
                         flash(f'Exception at rollback: {e}', "danger")
-                        log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
-                            msg=f'{current_user.username} : {e}')
+                        log_webhook(facility=fac, severity=4, msg=f'{current_user.username} : {e}')
 
                     lock_commit = False
                     
@@ -835,14 +868,12 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
             db.session.add(booking)
             try:
                 db.session.commit()
-                log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=6, 
-                    msg=f'{current_user.username} : Pod successfully booked!')
+                log_webhook(facility=fac, severity=6, msg=f'{current_user.username} : Pod successfully booked!')
                 #flash(f'Pod successfully booked! <a href="#">Link</a>', 'success')
             except Exception as e:
                 db.session.rollback()
                 flash(e, "danger")
-                log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
-                    msg=f'{current_user.username} : {e}')
+                log_webhook(facility=fac, severity=4, msg=f'{current_user.username} : {e}')
 
             lock_commit = False
             
@@ -868,6 +899,20 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
 @app.route('/getcal/<ics>')
 @login_required
 def getcal(ics):
+    """
+    Fetches the iCalendar data associated with a given key from the user's session and 
+    returns it as a downloadable file response.
+
+    The function retrieves iCalendar data stored in the session, then sends it back 
+    as a MIME type 'text/calendar' attachment, allowing users to download it as an 
+    iCalendar (.ics) file.
+
+    Parameters:
+    ics (str): The key used to retrieve the iCalendar data from the session.
+
+    Returns:
+    Response: A Flask response object with the iCalendar data as a downloadable .ics file.
+    """
     ical_data = session[ics]
     response = Response(ical_data, mimetype='text/calendar')
     response.headers.set('Content-Type', 'text/calendar')
@@ -906,12 +951,10 @@ def delete(room='Null', caldate='Null', hr='Null', pod='Null'):
             
             lock_commit = False            
             
-            log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=6, 
-                msg=f'{current_user.username} : Reservation slot deleted!')
+            log_webhook(facility=fac, severity=6, msg=f'{current_user.username} : Reservation slot deleted!')
             flash("Reservation slot deleted", "success")
         else:
-            log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
-                msg=f'{current_user.username} : Unauthorized deletion request!')
+            log_webhook(facility=fac, severity=4, msg=f'{current_user.username} : Unauthorized deletion request!')
             flash("Unauthorized deletion request!", "warning")
         return redirect(url_for("show", room=roomdata.name.upper(), caldate=caldate), code=302)
 
@@ -948,12 +991,10 @@ def sbdelete(id='Null', caldate='Null', room='Null', time='Null', pod='Null'):
             
             lock_commit = False            
             
-            log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=6, 
-                msg=f'{current_user.username} : Reservation slot deleted!')
+            log_webhook(facility=fac, severity=6, msg=f'{current_user.username} : Reservation slot deleted!')
             flash("Skill Reservation slot deleted", "success")
         else:
-            log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
-                msg=f'{current_user.username} : Unauthorized deletion request!')
+            log_webhook(facility=fac, severity=4, msg=f'{current_user.username} : Unauthorized deletion request!')
             flash("Unauthorized skill deletion request!", "warning")
         return redirect(url_for("showskill", id=id, room=room.upper(), caldate='20' + caldate), code=302)
 
@@ -987,6 +1028,29 @@ def login():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    """
+    Handles user signup by validating input from a login form and creating a 
+    new user entry in the database if the user does not already exist. 
+
+    Authentication is checked against an LDAP service using the function 
+    test_ldap_auth(). If the user is authenticated and does not exist in the 
+    system, their details are scraped using the function scrape_user_info() 
+    and a new user entry is created.
+
+    The function also handles thread-safe database commits using a global 
+    lock, `lock_commit`, to ensure data integrity.
+
+    Parameters:
+    None
+
+    Returns:
+    render_template: Flask template for the signup page, with form details.
+                     It may also redirect to the login page in certain scenarios.
+
+    Raises:
+    None explicitly, but underlying functions (like database commits or 
+    LDAP authentication) may raise exceptions.
+    """
     fac='SIGNUP'
     form = LoginForm()
     # validating form
@@ -1023,19 +1087,16 @@ def signup():
                 db.session.add(user)
                 db.session.commit()
 
-                log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=6, 
-                    msg=f'{name.lower()} : User successfully created!')
+                log_webhook(facility=fac, severity=6, msg=f'{name.lower()} : User successfully created!')
                 flash('User successfully created, go ahead and log in!', 'success')
 
                 lock_commit = False
                 return redirect(url_for('login'))
             else:
-                log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=4, 
-                    msg=f'{name} : Invalid user or password!')
+                log_webhook(facility=fac, severity=4, msg=f'{name} : Invalid user or password!')
                 flash('Invalid user or password!', 'danger')
         else:
-            log_webhook('POST', url=app.config['WEBHOOK'], facility=fac, severity=3, 
-                msg=f'{name} : User already exists!')
+            log_webhook(facility=fac, severity=3, msg=f'{name} : User already exists!')
             flash('User already exists! Try logging in instead.', 'danger')
             return redirect(url_for('login'))
         return render_template('signup.html', form=form)
@@ -1123,8 +1184,8 @@ def setskill():
                 db.session.add(instance)
                 db.session.commit()
 
-                #log_webhook('POST', url=app.config['WEBHOOK'], facility='SKILLINSTANCE', severity=6, 
-                #    msg=f'{current_user.username} : Skill added ({form.name}-{form.course}-{form.year}-{form.period})')
+                # log_webhook(facility='SKILLINSTANCE', severity=6, 
+                # msg=f'{current_user.username} : Skill added ({form.name}-{form.course}-{form.year}-{form.period})')
 
                 lock_commit = False
 
@@ -1188,11 +1249,33 @@ def help(lang='Null'):
 
 @app.route('/news')
 def news():
-    return render_template('news.html')
+    """
+    Loads and sorts news data from a 'news.json' file, then renders it on 
+    the 'news.html' template. News items are sorted by date in descending order.
+
+    Returns:
+    render_template: Flask template with the sorted news data.
+    """    
+    with open('news.json', 'r', encoding='utf-8') as f:
+        news = json.load(f)
+        news.sort(key=lambda x: datetime.strptime(x['date'], '%d %B, %Y'), reverse=True)
+    return render_template('news.html', news=news)
 
 @app.route('/')
 @app.route('/<data>')
 def index(data='Null'):
+    """
+    Handles route for the main page of a web application, providing redirection for legacy 
+    PHP lab room links, rendering English version of the homepage, and showing lab room 
+    association from user's session.
+
+    Parameters:
+    data (str, optional): Route data which can be 'php', 'en', or other. Defaults to 'Null'.
+
+    Returns:
+    render_template: Flask template response. Depending on the provided data, this could be 
+    a redirection, 'index_en.html', or 'index.html' with or without lab room information.
+    """
     if 'php' in data:
         labrooms = ['','B112', 'B114', 'B118', '', '', '', 'B125', 'B123']
         labroom_id = int(request.args.get('room'))
@@ -1211,12 +1294,56 @@ def index(data='Null'):
 @login_required
 def debug():
     exists = db.session.query(User.id).filter(User.username=='siol0003').scalar() is not None
+    from datetime import datetime, timedelta
+    from collections import Counter
+    now = datetime.now()
+    start_date = datetime(now.year, now.month, 1) - timedelta(days=30)
+    end_date = start_date + timedelta(days=31)
+    
+    bookings = Bookings.query.all()
+
+    booking_times = [datetime.fromtimestamp(booking.time).hour for booking in bookings]
+
+    # Count the number of bookings per hour
+    booking_counts = Counter(booking_times)
+
+    # Get the most booked hour
+    most_booked_hours = booking_counts.most_common(10)
+    print(most_booked_hours)
+
+    # Convert the Unix time to a readable format
+    debugdata = {hour: count for hour, count in most_booked_hours}
+    debugdata = app.config
+
     # way to reload custom app settings without forcing a restart or sending a HUP-kill signal
     # this will update the config for the worker serving content and we only use 1 worker right now
     # restarts will read config from the file as normal..
     #from flask import current_app
     #current_app.config['WEBHOOK'] = 'put the new data here'
-    return render_template('debug.html', debugdata=view_bookings('siol0003'))
+    return render_template('debug.html', debugdata=debugdata)
+
+@app.route('/settings', methods=['GET', 'POST'])
+@login_required
+def settings():
+    if request.method == 'GET':
+        if current_user.role.name in ['Admin', 'Teacher']:
+            app.config['SETTINGS'] = read_config()
+            return render_template('settings.html', config=app.config['SETTINGS'])
+        else:
+            flash("Invalid or unknown resource!", "error")
+            return redirect(url_for("index"))
+    elif request.method == 'POST':
+        if current_user.role.name in ['Admin', 'Teacher']:
+            current_app.config['SETTINGS']['base']['disabled'] = request.form.getlist('room_disabled')
+            current_app.config['SETTINGS']['base']['logging']['SEVERITY'] = int(request.form['severity_select'])
+            current_app.config['SETTINGS']['base']['logging']['ENABLE'] = request.form.get('enable') == 'on'
+            current_app.config['SETTINGS']['base']['logging']['WEBHOOK'] = request.form['webhook']
+            write_config(app.config['SETTINGS'])
+            flash("Settings have been successfully updated!", "success")
+            return render_template('settings.html', config=app.config['SETTINGS'])
+        else:
+            flash("Invalid or unknown resource!", "error")
+            return redirect(url_for("index"))
 
 @app.route('/user/<username>')
 @app.route('/user/<username>/<option>')
@@ -1237,6 +1364,47 @@ def user(username, option=''):
         else:
             flash("Invalid update request!", "error")
         return redirect(url_for('user', username=username, option='', data=view_bookings(user.username)).rstrip('/'))
+
+@app.template_filter('mobile_table')
+def mobile_table(html):
+    """
+    Transforms the provided HTML string to be more mobile-friendly. Modifies
+    an <a> tag, replacing its text with a Bootstrap icon and removing any 
+    siblings and subsequent content within the <td> tag. The modified HTML 
+    string is returned.
+
+    Parameters:
+    html (str): A string of HTML representing a table cell. It's expected to
+    contain an <a> tag, which may have siblings and subsequent content.
+
+    Returns:
+    str: The modified HTML string, where the <a> tag's text has been replaced
+    by a Bootstrap icon and any siblings and subsequent content are removed.
+    """
+    soup = bs(html, 'html.parser')
+    td_tag = soup.find('td')
+    del td_tag['style']
+    a_tag = soup.find('a')
+    if a_tag is not None:
+        # check if the <a> tag contains an <i> tag
+        if a_tag.find('i') is None:
+            # replace the username text with a small icon
+            a_tag.clear()
+            new_tag = soup.new_tag('i')
+            new_tag['class'] = 'bi bi-person-lines-fill'
+            a_tag.append(new_tag)
+
+            # remove labb-partner and eventual comment
+            for sibling in a_tag.find_next_siblings():
+                sibling.decompose()
+
+    output = str(soup)
+    a_tag_i = output.find('</a>')
+    if a_tag_i != -1:
+        a_endtag_i = a_tag_i + 4
+        output = output[:a_endtag_i] + '</td>'
+
+    return output
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0')

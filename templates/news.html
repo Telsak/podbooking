@@ -13,22 +13,28 @@
       {% endfor %}
     {% endif %}
   {% endwith %}
-  
 
   <div class="row justify-content-center flex-nowrap">
     <div class="container my-5">
       <div class="row">
-        <div class="col-md-6 offset-md-3">
+        <div class="col-xl-6 offset-xl-3 col-lg-6 offset-lg-3">
           <h4 style="margin-left: 1.2rem;">Podbooking updates</h4>
           <ul class="timeline-3">
-            <li><b>
-              <span>Added calendar integration</span>
-              <span class="float-end">13 March, 2023</span></b>
-              <p class="mt-2">When performing regular bookings, you will now be able to see a link to an calendar file in the confirmation message of the booking event.
-                Clicking this will give you a booking that you can import into your regular calendar on your device. (The file is in the iCalendar format)<br><br>
-                In addition, visiting your profile page will display a list of all your upcoming bookings along with links to calendar files for each booking.
-                You are also able to delete your bookings from this page. (You can reach your profile page by clicking the dropdown list under your name in the top right corner.)</p>
-            </li>
+            {% for item in news %}
+              <li><b>
+                <span>{{ item['date'] }}</span><br>
+                <span>{{ item['title'] }}</span>
+                </b>
+                <p class="mt-2">
+                  {% for paragraph in item['content'] %}
+                    {{ paragraph }}
+                    {% if not loop.last %}
+                      <br><br>
+                    {% endif %}
+                  {% endfor %}
+                </p>
+              </li>
+            {% endfor %}
           </ul>
         </div>
       </div>

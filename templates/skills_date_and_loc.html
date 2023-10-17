@@ -167,8 +167,10 @@
   new tempusDominus.TempusDominus(document.getElementById('skilldatum'), 
   {
     multipleDates: true,
+    multipleDatesSeparator: ',',
     localization: {
-      locale: 'sv-SE'
+      locale: 'sv-SE',
+      format: 'yyyy-MM-dd'
     },
     display: {
       icons: {
@@ -194,8 +196,11 @@
   // https://getdatepicker.com/6/ - Simon
   new tempusDominus.TempusDominus(document.getElementById('extradatum'), 
   {
+    multipleDates: true,
+    multipleDatesSeparator: ',',
     localization: {
-      locale: 'sv-SE'
+      locale: 'sv-SE',
+      format: 'yyyy-MM-dd'
     },
     display: {
       icons: {

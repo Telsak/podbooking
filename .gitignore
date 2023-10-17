@@ -193,4 +193,5 @@ cython_debug/
 data.sqlite
 bind.crd
 wh.crd
+config.json
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,python

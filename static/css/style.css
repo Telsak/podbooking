@@ -32,18 +32,23 @@
     margin: 50px auto;
 }
 
-.login-form h2, .signup-form h2, .booking-form h2, .skills-form h2 {
+.settings-form {
+  width: 700px;
+  margin: 50px auto;
+}
+
+.login-form h2, .signup-form h2, .booking-form h2, .skills-form h2, .settings-form  h2{
     margin: 0 0 15px;
 }
 
-.login-form form, .signup-form form, .booking-form form, .skills-form form {
+.login-form form, .signup-form form, .booking-form form, .skills-form form, .settings-form form{
     margin-bottom: 15px;
     background: #f7f7f7;
     box-shadow: 0px 2px 2px rgba(0, 0, 0, 0.3);
     padding: 30px;
 }
 
-.login-form .btn, .signup-form .btn, .booking-form .btn, .skills-form .btn {
+.login-form .btn, .signup-form .btn, .booking-form .btn, .skills-form .btn, .settings-form .btn {
     font-size: 15px;
     font-weight: bold;
 }
