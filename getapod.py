@@ -527,7 +527,7 @@ def set_booking(roomdata, epoch, pod, form):
             now_hr = epoch_hr('HR')
             user_time_start = epoch_hr('NOW')
             for hour in BOOK_HOURS:
-                if now_hr in range(hour, hour+3):
+                if now_hr in range(hour, hour+3) and now_hr != 12:
                     user_time_start = date_start_epoch(user_time_start) + (3600*hour)
             duration_data = [x.duration for x in Bookings.query.filter(Bookings.time>=user_time_start).filter(Bookings.name1==current_user.username).all()]
             if sum(duration_data) > 2:
