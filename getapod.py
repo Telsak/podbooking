@@ -847,7 +847,7 @@ def bookskill(id='Null', room='Null', caldate='Null', time='Null', pod='Null'):
             except Exception as e:
                 flash(f"Invalid booking parameters! {e}", "warning")
                 return redirect(url_for("skills"))
-            
+
 @app.route('/book')
 @app.route('/book/<room>')
 @app.route('/book/<room>/<caldate>')
@@ -869,7 +869,6 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
             try:
                 db.session.commit()
                 log_webhook(facility=fac, severity=6, msg=f'{current_user.username} : Pod successfully booked!')
-                #flash(f'Pod successfully booked! <a href="#">Link</a>', 'success')
             except Exception as e:
                 db.session.rollback()
                 flash(e, "danger")
@@ -940,7 +939,16 @@ def delete(room='Null', caldate='Null', hr='Null', pod='Null'):
         epoch = date_to_sec(caldate)
         roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
         delete_request = Bookings.query.filter(Bookings.time==(epoch+(int(hr)*3600))).filter(Bookings.room==roomdata.id).filter(Bookings.pod==ord(pod)-64)
-        if current_user.username == delete_request[0].name1 or current_user.role.name in ['Teacher', 'Admin']:
+        can_delete = False
+        if current_user.role.name in ['Teacher', 'Admin']:
+            can_delete = True
+        elif current_user.username == delete_request[0].name1:
+            if unixtime() < delete_request[0].time:
+                can_delete = True
+            else:
+                flash("Ah ah ah, You didn't say the magic word!", "warning")
+                return redirect(url_for("show", room=roomdata.name.upper(), caldate=caldate), code=302)        
+        if can_delete:
             global lock_commit
             while lock_commit == True:
                 sleep(0.025)
@@ -1004,6 +1012,8 @@ def login():
     # validating form
     if form.validate_on_submit():
         name = form.name.data.split('@')[0]
+        # help users logging in with uncooperative phones that capitalizes input
+        name = name.lower()
         password = form.password.data
         form.name.data = ''
         form.password.data = ''
