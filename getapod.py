@@ -702,7 +702,7 @@ def show(room, caldate='Null'):
         return redirect(url_for("show", room=room.upper(), caldate=date_to_str()))
     else:
         # Validation to catch incorrect date entries
-        if not re.match(r"\d{2}-\d{2}-\d{2}$", caldate):
+        if not re.match(r"\d{2}-\d{1,2}-\d{1,2}$", caldate):
             flash("Invalid date format. Expected YY-MM-DD.", "danger")
             return redirect(url_for('show', room=room.upper()))            
         today_d = caldate
