@@ -83,7 +83,7 @@ def pull_ics_data():
     querydate = f'20{date_to_str()}'
     intervall = '&intervallTyp=v&intervallAntal=2'
     extra = '&sokMedAND=false&sprak=SV&'
-    resurser = 'resurser=l.B112%2Cl.B114%2Cl.B118%2Cl.B123%2Cl.B125%2C'
+    resurser = 'resurser=l.B112%2Cl.B114%2Cl.B118%2Cl.B123%2Cl.B125%2Cl.D204A'
     url = f'{domain}{path}{querydate}{intervall}{extra}{resurser}'
     
     timestamp = unixtime()
