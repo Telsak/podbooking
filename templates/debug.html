@@ -17,7 +17,15 @@
 <table class="table d-md-none">
   <!-- Your table structure and content for mobile devices -->
   <tr>
-    <td>Mobile cell</td>
+    <td>
+      <ul>
+        {% for rank, (name, image, score) in debugdata.items() %}
+          <li>
+            <strong>#{{ rank }}: {{ name }} </strong>  - {{ score }} timmar
+          </li>
+        {% endfor %}
+    </ul>
+    </td>
   </tr>
 </table>
 
@@ -25,14 +33,19 @@
 <table class="table d-none d-md-table">
   <!-- Your table structure and content for non-mobile devices -->
   <tr>
-    <td>Desktop cell</td>
+    <td>
+      <ul>
+        {% for rank, (name, image, score) in debugdata.items() %}
+          <li>
+            <strong>#{{ rank }}: {{ name }} </strong>  - {{ score }} timmar
+          </li>
+        {% endfor %}
+    </ul>
+    </td>
   </tr>
 </table>
 
-<video width="480" controls autoplay loop playsinline>
-  <source src="https://telsak.se/nedry.mp4" type="video/mp4">
-Your browser does not support the video tag.
-</video> 
+
 
 <div class="container mt-3">
     <p>Click on the button to toggle between showing and hiding content.</p>

@@ -1303,34 +1303,44 @@ def index(data='Null'):
 @app.route('/debug')
 @login_required
 def debug():
-    exists = db.session.query(User.id).filter(User.username=='siol0003').scalar() is not None
-    from datetime import datetime, timedelta
-    from collections import Counter
-    now = datetime.now()
-    start_date = datetime(now.year, now.month, 1) - timedelta(days=30)
-    end_date = start_date + timedelta(days=31)
+    from collections import defaultdict
+    import datetime, time
+
+    today = datetime.date.today()
+    current_year = today.year
+    september_1st_this_year = datetime.date(current_year, 9, 1)
+
+    if today < september_1st_this_year:
+        # If today's date is before this year's August 1st, use last year's August 1st
+        september_1st = datetime.date(current_year - 1, 9, 1)
+    else:
+        # Use this year's August 1st
+        september_1st = september_1st_this_year
+
+    sept_1st = int(time.mktime(september_1st.timetuple()))
+    print(sept_1st)
     
-    bookings = Bookings.query.all()
+    user_bookings = defaultdict(int)
 
-    booking_times = [datetime.fromtimestamp(booking.time).hour for booking in bookings]
+    bookings = Bookings.query.with_entities(Bookings.name1, Bookings.name2, Bookings.time).filter(Bookings.time >= sept_1st).all()
 
-    # Count the number of bookings per hour
-    booking_counts = Counter(booking_times)
+    for name1, name2, time in bookings:
+        user_bookings[name1] += 1
+        if name2 and name2 != name1:
+            user_bookings[name2] += 1
 
-    # Get the most booked hour
-    most_booked_hours = booking_counts.most_common(10)
-    print(most_booked_hours)
+    sorted_users = sorted(user_bookings.items(), key=lambda x: x[1], reverse=True)
+    
+    top_users = [(user, count) for user, count in sorted_users][:10]
 
-    # Convert the Unix time to a readable format
-    debugdata = {hour: count for hour, count in most_booked_hours}
-    debugdata = app.config
+    highscore = {1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {}, 7: {}, 8: {}, 9: {}, 10: {}}
 
-    # way to reload custom app settings without forcing a restart or sending a HUP-kill signal
-    # this will update the config for the worker serving content and we only use 1 worker right now
-    # restarts will read config from the file as normal..
-    #from flask import current_app
-    #current_app.config['WEBHOOK'] = 'put the new data here'
-    return render_template('debug.html', debugdata=debugdata)
+    for i in range(10):
+        username, hours = top_users[i]
+        details = User.query.filter_by(username=username).first()
+        highscore[i+1] = (details.fullname, details.profile, int(hours)*2)
+        
+    return render_template('debug.html', debugdata=highscore)
 
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required
