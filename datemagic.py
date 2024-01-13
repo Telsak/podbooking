@@ -12,6 +12,19 @@ def sec_to_date(sec, option=0):
         return str_date.split()[0]
     elif option==1:
         return str_date
+    
+def year_start_unixtime():
+    today = date.today()
+    september_1st_this_year = date(today.year, 9, 1)
+
+    if today < september_1st_this_year:
+        # If today's date is before this year's September 1st, use last year's September 1st
+        september_1st = date(today.year - 1, 9, 1)
+    else:
+        # Use this year's August 1st
+        september_1st = september_1st_this_year
+
+    return int(mktime(september_1st.timetuple()))
 
 def sec_to_weekday(epoch):
     return datetime.fromtimestamp(epoch).strftime("%A")

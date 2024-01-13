@@ -4,7 +4,10 @@
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <a class="navbar-brand" href="{{url_for('help').replace('help', '')}}"><img src="{{url_for('static', filename='images/house.svg')}}" alt="" width="35" height="28" class="d-inline-block align-text-top">Getapod</a>
+      <div class="navbar-brand">
+        <a href="{{url_for('help').replace('help', '')}}" style="text-decoration: none; color: white"><img src="{{url_for('static', filename='images/house.svg')}}" alt="" width="35" height="28" class="d-inline-block align-text-top">Getapod</a>&nbsp;&nbsp;
+        <a href="{{url_for('highscore')}}" style="color: gold"><i class="bi bi-trophy-fill"></i></a>
+      </div>
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item">

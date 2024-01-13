@@ -22,12 +22,12 @@ from flask_login import (
 from datemagic import (
     date_start_epoch, sec_to_date, date_to_sec, init_dates, 
     date_to_str, check_book_epoch, epoch_hr, show_calendar, 
-    unixtime, endtimes, sec_to_weekday, datetime
+    unixtime, endtimes, sec_to_weekday, datetime, year_start_unixtime
 )
 from scrapeinfo import get_profile, pull_ics_data, scrape_user_info, test_ldap_auth
 from flask_migrate import Migrate
 from time import sleep
-
+from collections import defaultdict
 from icalmagic import generate_ical
 
 from bs4 import BeautifulSoup as bs
@@ -1300,47 +1300,43 @@ def index(data='Null'):
         except:
             return render_template('index.html', rr='Null')
 
+@app.route('/highscore')
+def highscore():
+    def year_top_ten(year_users, sept1):
+        year_bookings = Bookings.query.with_entities(Bookings.name1, Bookings.name2, Bookings.time).filter(Bookings.time >= sept1).all()
+
+        for name1, name2, _, in year_bookings:
+            year_users[name1.lower()] += 1
+            if name2 and name2.lower() != name1.lower():
+                year_users[name2.lower()] += 1
+
+        year_sorted_users = sorted(year_users.items(), key=lambda x: x[1], reverse=True)
+        year_top_users = [(user, count) for user, count in year_sorted_users][:10]
+        highscore = {i: {} for i in range(1,11)}
+        
+        for i in range(10):
+            username, hours = year_top_users[i]
+            details = User.query.filter_by(username=username).first()
+            highscore[i+1] = (username, details.fullname, details.profile, int(hours)*2)
+
+        return highscore
+    
+    year1_stats = {i: ('aaaa0000', 'unclaimed', '', 0) for i in range(1,11)}
+    year2_stats = {i: ('aaaa0000', 'unclaimed', '', 0) for i in range(1,11)}
+    
+    year1_sept1 = year_start_unixtime()
+    year2_sept1 = year1_sept1 - 31536000
+
+    year1_stats = year_top_ten(defaultdict(int), year1_sept1)
+    year2_stats = year_top_ten(defaultdict(int), year2_sept1)
+    
+    return render_template('highscore.html', year1=year1_stats, year2=year2_stats)
+
 @app.route('/debug')
 @login_required
 def debug():
-    from collections import defaultdict
-    import datetime, time
-
-    today = datetime.date.today()
-    current_year = today.year
-    september_1st_this_year = datetime.date(current_year, 9, 1)
-
-    if today < september_1st_this_year:
-        # If today's date is before this year's August 1st, use last year's August 1st
-        september_1st = datetime.date(current_year - 1, 9, 1)
-    else:
-        # Use this year's August 1st
-        september_1st = september_1st_this_year
-
-    sept_1st = int(time.mktime(september_1st.timetuple()))
-    print(sept_1st)
-    
-    user_bookings = defaultdict(int)
-
-    bookings = Bookings.query.with_entities(Bookings.name1, Bookings.name2, Bookings.time).filter(Bookings.time >= sept_1st).all()
-
-    for name1, name2, time in bookings:
-        user_bookings[name1] += 1
-        if name2 and name2 != name1:
-            user_bookings[name2] += 1
-
-    sorted_users = sorted(user_bookings.items(), key=lambda x: x[1], reverse=True)
-    
-    top_users = [(user, count) for user, count in sorted_users][:10]
-
-    highscore = {1: {}, 2: {}, 3: {}, 4: {}, 5: {}, 6: {}, 7: {}, 8: {}, 9: {}, 10: {}}
-
-    for i in range(10):
-        username, hours = top_users[i]
-        details = User.query.filter_by(username=username).first()
-        highscore[i+1] = (details.fullname, details.profile, int(hours)*2)
-        
-    return render_template('debug.html', debugdata=highscore)
+    stuff='trololol'
+    return render_template('debug.html', debugdata=stuff)
 
 @app.route('/settings', methods=['GET', 'POST'])
 @login_required

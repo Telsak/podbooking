@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block additional_head %}
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/stars.css') }}">
+{% endblock %}
+
+{% block content %}
+<style>
+  body {
+      background-color: black;
+      color: rgb(179, 179, 179);
+  }
+</style>
+
+<div class="high-scores" style="color: white; font-family: 'Press Start 2P', cursive; text-align: center; font-size: smaller;">
+  <table class="table border-0"" align="center">
+      <tr>
+        <img src="{{ url_for('static', filename='images/getapod_highscore.jpg')}}" style="max-width: 100%; max-height: 200px; display: block; margin: 0 auto;" alt="">
+      </tr>
+      <tr class="border-0"><h2><br>HALL OF FAME</h2></tr>
+      <tr class="border-0" style="color: white;">
+          <th class="border-0">THIS YEARS'S<br>GREATEST</th>
+          <th class="border-0"></th>
+          <th class="border-0">ALL-TIME<br>GREATEST</th>
+      </tr>
+      {% set base_hue = 0 %}
+      {% for rank, details in year1.items() %}
+        {% set hue = (rank - 1) * 36 %}
+          <tr style="color: hsl({{ hue }}, 100%, 50%);">
+            <td class="border-0">{{ rank }}. {{ details[0] }} {{ details[3] }}</td>
+            <td class="border-0"></td>
+            <td class="border-0">{{ rank }}. {{ year2[rank][0] }} {{ year2[rank][3] }}</td>
+          </tr>
+      {% endfor %}
+  </table>
+  <br><br><br>
+  <div class="credits">INSERT <a href="{{url_for('show', room='B112')}}">HOURS</a></div>
+</div>
+
+{% endblock %}

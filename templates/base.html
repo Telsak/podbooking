@@ -25,6 +25,7 @@
     <script src="https://cdn.jsdelivr.net/gh/Eonasdan/tempus-dominus@master/dist/js/tempus-dominus.js" crossorigin="anonymous"></script>
     <link href="https://cdn.jsdelivr.net/gh/Eonasdan/tempus-dominus@master/dist/css/tempus-dominus.css" rel="stylesheet" crossorigin="anonymous">
 
+    {% block additional_head %}{% endblock %}
   </head>
   <body class="d-flex flex-column min-vh-100">
     {% include 'navbar.html' %}

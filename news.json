@@ -14,6 +14,14 @@
             "The booking view of the rooms and pods have been trimmed down when using devices with a screen width that matches the mobile device profile.", 
             "All comments, usernames and excessively wide information has been hidden from the /show page. Instead, users will see icons that represent bookings, reservations and free slots for all the visible timeslots. This is a responsive view and can be forced away if the device is rotated in landscape mode."
         ]
+    },
+    {
+        "date": "13 January, 2024",
+        "title": "Highscore for booked pods",
+        "content": [
+            "A highscore screen is available showing the top 10 users for the current study year period as well as the last two years study period.", 
+            "Calculating the score is based on how many bookings you were signed up for and let stay booked until they expired. If you delete a booking slot, that will not be included in your score. To be eligible for scoring, you can either book the slot yourself, or make sure you the person booking the slot puts in your letters+numbers username as the labpartner."
+        ]
     }    
 ]
   
