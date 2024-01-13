@@ -129,7 +129,7 @@ def get_user_num_bookings(user):
 
 def get_user_hours(user):
     bh = len(Bookings.query.filter(Bookings.name1==user).all()) * 2
-    ph = len(Bookings.query.filter(Bookings.name2==user).all()) * 2
+    ph = len(Bookings.query.filter(Bookings.name2.lower()==user).all()) * 2
     return bh + ph
 
 app.jinja_env.globals.update(get_rooms=get_rooms)
