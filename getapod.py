@@ -1304,12 +1304,13 @@ def index(data='Null'):
 @app.route('/highscore')
 def highscore():
     def year_top_ten(year_users, sept1):
-        year_bookings = Bookings.query.with_entities(Bookings.name1, Bookings.name2, Bookings.time).filter(Bookings.time >= sept1).all()
+        year_bookings = Bookings.query.with_entities(Bookings.name1, Bookings.name2, Bookings.time, Bookings.flag).filter(Bookings.time >= sept1).all()
 
-        for name1, name2, _, in year_bookings:
-            year_users[name1.lower()] += 1
-            if name2 and name2.lower() != name1.lower():
-                year_users[name2.lower()] += 1
+        for name1, name2, _, flag in year_bookings:
+            if flag == 'AVAILABLE':
+                year_users[name1.lower()] += 1
+                if name2 and name2.lower() != name1.lower():
+                    year_users[name2.lower()] += 1
 
         year_sorted_users = sorted(year_users.items(), key=lambda x: x[1], reverse=True)
         year_top_users = [(user, count) for user, count in year_sorted_users][:10]
