@@ -26,7 +26,7 @@
           <h2>I våra Cisco salar finns utrustning för alla nivåer av studier, som CCNA, CCNP, CyberSecurity samt brandväggar i flera utföranden.  
             Ett krav för att slutföra din utbildning och få en bra start i branschen är att du behärskar den riktiga utrustningen och 
             det är precis den möjligheten du får i våra labbsalar.<br><br>
-            <b>Salarna B112, B113, B114, B118 och B125 är alla tillgängliga för studenter att boka.</b>
+            <b>Salarna B114, B125, D204A, D219B är alla tillgängliga för studenter att boka.</b>
             <br><br>
             Disciplin och hårt arbete i dessa salar har sett till att de studenter
             som tar sin examen går direkt ut till jobb!</h2>
@@ -50,7 +50,7 @@
               <b>Bryter du mot dessa regler upprepade gånger kan din access till den bokningsbara utrustningen komma att begränsas eller dras in helt.</b><br>
           </h2>
           {% if rr == 'Null' %}
-            <div><a href="{{url_for('show', room='B112')}}" class="btn-get-started scrollto">Jag förstår, ta mig till salarna!</a></div>
+            <div><a href="{{url_for('show', room='B114')}}" class="btn-get-started scrollto">Jag förstår, ta mig till salarna!</a></div>
           {% else %}
             <div><a href="{{url_for('show', room=rr)}}" class="btn-get-started scrollto">Jag förstår, ta mig till sal {{ rr }}!</a></div>
           {% endif %}
