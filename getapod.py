@@ -885,7 +885,7 @@ def book(room='Null', caldate='Null', hr='Null', pod='Null'):
             return redirect(booking)
     else:
         if 'Null' in locals().values():
-            return redirect(url_for("show", room="B112", caldate=date_to_str()), code=302)
+            return redirect(url_for("show", room="B114", caldate=date_to_str()), code=302)
         else:
             roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
             # if this is a valid book url...
@@ -927,7 +927,7 @@ def getcal(ics):
 def delete(room='Null', caldate='Null', hr='Null', pod='Null'):
     # verify delete url args
     if 'Null' in locals().values():
-        return redirect(url_for("show", room="B112", caldate=date_to_str()), code=302)
+        return redirect(url_for("show", room="B114", caldate=date_to_str()), code=302)
     else:
         try:
             _ = ord(pod)-64
@@ -935,7 +935,7 @@ def delete(room='Null', caldate='Null', hr='Null', pod='Null'):
             _ = caldate[:]
         except:
             flash("Invalid deletion data!", "danger")
-            return redirect(url_for("show", room="B112", code=302))
+            return redirect(url_for("show", room="B114", code=302))
         fac='DELETE'
         epoch = date_to_sec(caldate)
         roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
@@ -1297,6 +1297,8 @@ def index(data='Null'):
     else:
         try:
             labroom = session.pop('labroom')
+            if labroom == 'B112':
+                labroom = 'B114'
             return render_template('index.html', rr=labroom)
         except:
             return render_template('index.html', rr='Null')
