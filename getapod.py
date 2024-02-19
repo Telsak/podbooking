@@ -281,7 +281,8 @@ class User(UserMixin, db.Model):
         return '<User %r>' % self.username
 
 class UserModelView(ModelView):
-    form_columns = ('username', 'password', 'flag', 'last_login', 'role')
+    # fix for ldap errors breaking user signup - manual entries required
+    form_columns = ('username', 'fullname', 'password', 'flag', 'mail', 'last_login', 'role')
     column_exclude_list = ['password']
 
     # necessary to stop flask-admin from saving passwords in cleartext :(
@@ -290,7 +291,10 @@ class UserModelView(ModelView):
         if is_created:
             model.password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
             model.created = unixtime()
-            model.fullname, model.mail, model.profile = scrape_user_info(model.username, model.role.name)
+            # grab the profile automatically from the admin form when creating new user
+            model.profile = get_profile(form.username.data)
+            # line below is for when ldap is working properly
+            # model.fullname, model.mail, model.profile = scrape_user_info(model.username, model.role.name)
         else:
             old_password = form.password.object_data
             # If password has been changed, hash password
@@ -1335,6 +1339,15 @@ def highscore():
     year2_stats = year_top_ten(defaultdict(int), year2_sept1)
     
     return render_template('highscore.html', year1=year1_stats, year2=year2_stats)
+
+@app.route('/confirm', methods=['POST'])
+def confirm():
+    response = request.json
+    token = response["token"]
+
+    if token == "12345":
+        user_id = response["data"]["user_id"]
+        
 
 @app.route('/debug')
 @login_required
