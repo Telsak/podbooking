@@ -33,7 +33,6 @@ def scrape_user_info(cname, role):
         subd = ''
     
     info = ldap_manager.get_user_info_for_username(f'{cname}@{subd}hv.se')
-    print(info)
     display_name = info['displayName'].replace('(HV)','').rstrip("123456789 ")
     mail = info['mail']
     profile = get_profile(cname)
