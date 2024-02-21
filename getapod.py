@@ -1080,13 +1080,7 @@ def signup():
             if test_ldap_auth(name.lower(), password):
                 created = unixtime()
 
-                # support non-students signup (teachers)
-                if 'student' in form.name.data:
-                    user_role = 'Student'
-                else:
-                    user_role = ''
-
-                fullname, mail, profile = scrape_user_info(name, user_role)
+                fullname, mail, profile = scrape_user_info(name, 'Student')
 
                 user = User(
                     username=name.lower(),
