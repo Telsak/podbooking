@@ -284,7 +284,6 @@ class UserModelView(ModelView):
     # fix for ldap errors breaking user signup - manual entries required
     form_columns = ('username', 'fullname', 'password', 'flag', 'mail', 'last_login', 'role')
     column_exclude_list = ['password']
-
     # necessary to stop flask-admin from saving passwords in cleartext :(
     def on_model_change(self, form, model, is_created):
         # If creating a new user, hash password
@@ -1080,7 +1079,14 @@ def signup():
         if user is None:
             if test_ldap_auth(name.lower(), password):
                 created = unixtime()
-                fullname, mail, profile = scrape_user_info(name, 'Student')
+
+                # support non-students signup (teachers)
+                if 'student' in form.name.data:
+                    user_role = 'Student'
+                else:
+                    user_role = ''
+
+                fullname, mail, profile = scrape_user_info(name, user_role)
 
                 user = User(
                     username=name.lower(),
