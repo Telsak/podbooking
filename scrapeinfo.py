@@ -106,7 +106,6 @@ def pull_ics_data(rooms):
                 showsum = event['SUMMARY'].split('Moment: ')[1].split(' Program:')[0]
                 event['SHOWSUMMARY'] = showsum
                 event['ACCNUM'] = str(x)
-            print(result)
             return result, timestamp
         else:
             result = {}
