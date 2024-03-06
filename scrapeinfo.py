@@ -73,13 +73,14 @@ def get_profile(cname):
             return 'no_image_portrait.jpg'
         sleep(0.02)
 
-def pull_ics_data():
+def pull_ics_data(rooms):
     domain = 'http://schema.hv.se/'
     path = 'setup/jsp/SchemaICAL.ics?startDatum='
     querydate = f'20{date_to_str()}'
     intervall = '&intervallTyp=v&intervallAntal=2'
     extra = '&sokMedAND=false&sprak=SV&'
-    resurser = 'resurser=l.B112%2Cl.B114%2Cl.B118%2Cl.B123%2Cl.B125%2Cl.D204A'
+    resurser = f"resurser=l.{'%2Cl.'.join(rooms)}%2C"
+    # resurser = 'resurser=l.B112%2Cl.B114%2Cl.B118%2Cl.B123%2Cl.B125%2Cl.D204A'
     url = f'{domain}{path}{querydate}{intervall}{extra}{resurser}'
     
     timestamp = unixtime()
@@ -105,6 +106,7 @@ def pull_ics_data():
                 showsum = event['SUMMARY'].split('Moment: ')[1].split(' Program:')[0]
                 event['SHOWSUMMARY'] = showsum
                 event['ACCNUM'] = str(x)
+            print(result)
             return result, timestamp
         else:
             result = {}

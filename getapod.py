@@ -695,8 +695,9 @@ def show(room, caldate='Null'):
     global scheduledetails
     global scheduletimestamp
     if len(scheduledetails) == 0 or abs(unixtime()-scheduletimestamp) > 21600:
+        rooms = [room.name for room in get_rooms() if room.name not in current_app.config['SETTINGS']['base']['disabled']]
         tempdetails = {}
-        tempdetails, scheduletimestamp = pull_ics_data()
+        tempdetails, scheduletimestamp = pull_ics_data(rooms)
         if len(tempdetails) > 0:
             scheduledetails = tempdetails
     if room.upper() not in [x.name for x in Rooms.query.all()]:

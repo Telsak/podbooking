@@ -171,7 +171,7 @@
     {% if cal|length == 1 and 'VEVENT' in cal['VCALENDAR'][0] %}
         <div class="accordion" id="accordionSchedule">
         {% for event in cal['VCALENDAR'][0]['VEVENT'] %}
-            {% if show['room']['name'] in event['LOCATION'] %}
+            {% if show['room']['name'] | upper in event['LOCATION'] | upper %}
                 <div class="accordion-item">
                     <h2 class="accordion-header" id={{ 'heading' + event['ACCNUM'] }}>
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target={{ '#collapse' + event['ACCNUM'] }} aria-expanded="true" aria-controls={{ 'collapse' + event['ACCNUM'] }}>
