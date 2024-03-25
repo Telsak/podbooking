@@ -116,10 +116,12 @@ def date_to_str():
     return str(date.today())[2:]
 
 def endtimes(datestr, dur):
-    _ = datestr.split(':')
-    hr, m = int(_[0]), int(_[1])
+    hr, m = map(int, datestr.split(':'))
     hr += dur // 60
     m += dur % 60
+    if m >= 60:
+        m -= 60
+        hr += 1
     return f'{hr:02d}:{m:02d}'
 
 def show_calendar(urldate, room, SITE_PREFIX):
