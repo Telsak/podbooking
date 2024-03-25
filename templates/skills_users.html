@@ -32,7 +32,7 @@
                         <table class="table table-sm" style="border-spacing:0px;">
                         <tr style="padding: 0">
                             <th class="primary text-start" style="border-bottom: 2px solid #000">{{ time }} - {{ data['students'][time]['endtime'] }}</th>
-                            <th class="primary" style="border-bottom: 2px solid #000">Pod</th>
+                            <th class="primary" style="border-bottom: 2px solid #000">Betyg</th>
                         </tr style="padding: 0">
                         <!-- This is for each student in the booking list -->
                             {% for student in data['students'][time]['info']|sort(attribute='role.name', reverse = True) %}
