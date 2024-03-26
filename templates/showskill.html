@@ -63,9 +63,9 @@
             <font color="blue" size=+2>
                 {% for date in show['dict']['alldates'] %}
                     {% if date == date_path %}
-                        <a class="btn btn-primary" href="{{baseurl}}showskill/{{ show['dict']['skill'].id }}/{{ date }}" role="button">{{ date[2:] }}<br>{{ sec_to_weekday(date_to_sec(date[2:])) }}</a>
+                        <a class="btn btn-primary" href="{{baseurl}}showskill/{{ show['dict']['skill'].id }}/{{ date }}" role="button">{{ date }}<br>{{ sec_to_weekday(date_to_sec(date[2:])) }}</a>
                     {% else %}
-                        <a class="btn btn-secondary" href="{{baseurl}}showskill/{{ show['dict']['skill'].id }}/{{ date }}" role="button">{{ date[2:] }}<br>{{ sec_to_weekday(date_to_sec(date[2:])) }}</a>
+                        <a class="btn btn-secondary" href="{{baseurl}}showskill/{{ show['dict']['skill'].id }}/{{ date }}" role="button">{{ date }}<br>{{ sec_to_weekday(date_to_sec(date[2:])) }}</a>
                     {% endif %}                        
                 </li>    
                 {% endfor %}
