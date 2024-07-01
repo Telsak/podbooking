@@ -1397,7 +1397,7 @@ def user(username, option=''):
                 flash("There is no newer image on mittkonto.hv.se, profile not changed!", "warning")
         else:
             flash("Invalid update request!", "error")
-        return redirect(url_for('user', username=username, option='', data=view_bookings(user.username)).rstrip('/'))
+        return redirect(url_for('user', username=username).rstrip('/'))
 
 @app.template_filter('mobile_table')
 def mobile_table(html):
