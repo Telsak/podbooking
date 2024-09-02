@@ -1312,7 +1312,6 @@ def index(data='Null'):
 def highscore():
     def year_top_ten(year_users, sept1):
         year_bookings = Bookings.query.with_entities(Bookings.name1, Bookings.name2, Bookings.time, Bookings.flag).filter(Bookings.time >= sept1).all()
-
         for name1, name2, _, flag in year_bookings:
             if flag == 'AVAILABLE':
                 year_users[name1.lower()] += 1
@@ -1322,11 +1321,14 @@ def highscore():
         year_sorted_users = sorted(year_users.items(), key=lambda x: x[1], reverse=True)
         year_top_users = [(user, count) for user, count in year_sorted_users][:10]
         highscore = {i: {} for i in range(1,11)}
-        
+
         for i in range(10):
-            username, hours = year_top_users[i]
-            details = User.query.filter_by(username=username).first()
-            highscore[i+1] = (username, details.fullname, details.profile, int(hours)*2)
+            try:
+                username, hours = year_top_users[i]
+                details = User.query.filter_by(username=username).first()
+                highscore[i+1] = (username, details.fullname, details.profile, int(hours)*2)
+            except:
+                break
 
         return highscore
     
@@ -1337,6 +1339,11 @@ def highscore():
     year2_sept1 = year1_sept1 - 31536000
 
     year1_stats = year_top_ten(defaultdict(int), year1_sept1)
+    
+    for i in range(1,11):
+        if len(year1_stats[i]) < 3:
+            year1_stats[i] = ('aaaa0000', 'unclaimed', '', 0)
+
     year2_stats = year_top_ten(defaultdict(int), year2_sept1)
     
     return render_template('highscore.html', year1=year1_stats, year2=year2_stats)
