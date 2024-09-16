@@ -520,6 +520,7 @@ def set_booking(roomdata, epoch, pod, form):
     }
     roomflag = availability[current_user.role.name]
     fac='BOOK'
+    hr_mod = 0
     if current_user.role.name == "Student":
         # disallow booking if booking in the past (but give a grace period)
         baseurl = url_for("index")
@@ -538,6 +539,14 @@ def set_booking(roomdata, epoch, pod, form):
                 flash(f'Not permitted to book pod at this time! You have too many booked slots!', 'warning')
                 log_webhook(facility=fac, severity=4, msg=f'{current_user.username} : Not permitted to book pod at this time! You have too many booked slots!')
                 return False, f'{baseurl}show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
+    if epoch_hr(epoch) == 10:
+        hr_mod = 3
+    elif epoch_hr(epoch) == 13:
+        hr_mod = -3
+    if hr_mod != 0:
+        if (len(Bookings.query.filter(Bookings.time==epoch+(3600*hr_mod)).filter(Bookings.room==roomdata.id).filter(Bookings.pod==ord(pod.upper())-64).all())):
+            flash(f'You are not allowed to book a pod over the lunch period!', 'warning')
+            return False, f'{baseurl}show/{roomdata.name.upper()}/{sec_to_date(epoch)}'
     if len(Bookings.query.filter(Bookings.time==epoch).filter(Bookings.room==roomdata.id).filter(Bookings.pod==ord(pod.upper())-64).all()) >= 1:
         flash('This timeslot is no longer available. Please pick another time or pod.', 'warning')
         log_webhook(facility=fac, severity=4, msg=f'{current_user.username} : This timeslot is no longer available. Please pick another time or pod.')
