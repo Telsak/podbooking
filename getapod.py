@@ -544,7 +544,7 @@ def set_booking(roomdata, epoch, pod, form):
     elif epoch_hr(epoch) == 13:
         hr_mod = -3
     if hr_mod != 0:
-        verify_booking = Bookings.query.filter(Bookings.time==epoch+(3600*hr_mod)).filter(Bookings.room==roomdata.id).filter(Bookings.pod==ord(pod.upper())-64).all()
+        verify_booking = Bookings.query.filter(Bookings.time==epoch+(3600*hr_mod)).filter(Bookings.room==roomdata.id).filter(Bookings.pod==ord(pod.upper())-64).filter(Bookings.name1==current_user.username).all()
         if len(verify_booking) > 0 and verify_booking[0].time > user_time_start:
             flash(f'You are not allowed to book a pod over the lunch period!', 'warning')
             log_webhook(facility=fac, severity=4, msg=f'{current_user.username} : You are not allowed to book a pod over the lunch period!')
