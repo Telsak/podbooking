@@ -22,6 +22,14 @@
             "A highscore screen is available showing the top 10 users for the current study year period as well as the last two years study period.", 
             "Calculating the score is based on how many bookings you were signed up for and let stay booked until they expired. If you delete a booking slot, that will not be included in your score. To be eligible for scoring, you can either book the slot yourself, or make sure you the person booking the slot puts in your letters+numbers username as the labpartner."
         ]
-    }    
+    },
+    {
+        "date": "17 September, 2024",
+        "title": "Over-lunch bookings prevention",
+        "content": [
+            "To stop bookings that were breaking the rule that you should not book over lunch (10:00-12:00 AND 13:00-15:00) a stop has been hard-coded into the system to automatically deny any and all attempts to book these two timeslots in the same room & day & pod.",
+            "Note: This prevention is only enabled for bookings that exist in the future. It is still perfectly ok to lab in the morning, go to lunch and then book the same pod if it's available. You just cannot reserve it over lunch anymore."
+        ]
+    }
 ]
   
