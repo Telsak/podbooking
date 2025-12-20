@@ -1377,13 +1377,13 @@ def highscore():
 
 @app.route('/confirm', methods=['POST'])
 def confirm():
+    '''UNFINISHED WHY IS THIS HERE, GET YOUR SHIT TOGETHER MAN'''
     response = request.json
     token = response["token"]
 
     if token == "12345":
         user_id = response["data"]["user_id"]
         
-
 @app.route('/debug')
 @login_required
 def debug():
@@ -1429,6 +1429,15 @@ def user(username, option=''):
                 flash("Profile image has been updated from mittkonto.hv.se", "success")
             else:
                 flash("There is no newer image on mittkonto.hv.se, profile not changed!", "warning")
+        elif current_user.role.name == "Admin":
+            # allow admin to force a refresh of the user profile picture data
+            target_user = User.query.filter_by(username=username).first()
+            profile = get_profile(username)
+
+            target_user.profile = profile
+            db.session.commit()
+            flash("Profile image has been updated from mittkonto.hv.se", "success")
+
         else:
             flash("Invalid update request!", "error")
         return redirect(url_for('user', username=username).rstrip('/'))

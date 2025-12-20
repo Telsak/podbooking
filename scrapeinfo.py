@@ -52,26 +52,39 @@ def test_ldap_auth(cname, password):
         else:
             return False
 
-def get_profile(cname):
+def validate_picture(url):
+	# issues of new accounts getting blank profile pictures during creation scraping
+	# there is a secondary image, _square_n.jpg that usually works if _portrait_ is broken
+
+	r = head(url, timeout=2)
+	if r.status_code != 200:
+		return False
+	# return result of (is image bigger than 0?)
+	return int(r.headers.get("Content-Length", 0)) > 0
+
+def get_profile(name):
     n = 1
-    linkhit = False
-    while n > 0:
+    last_valid = None
+    base = 'https://mittkonto.hv.se/public/bilder'
+
+    while True:
         try:
-            loc = f'https://mittkonto.hv.se/public/bilder/{cname}_portrait_{n}.jpg'
-            r = head(loc)
-            if r.status_code == 200:
+            portrait = f'{base}/{name}_portrait_{n}.jpg'
+            square = f'{base}/{name}_square_{n}.jpg'
+
+            if validate_picture(portrait):
+                last_valid = f'{name}_portrait_{n}.jpg'
                 n += 1
-                linkhit = True
-            elif r.status_code == 404:
-                if linkhit:
-                    return f'{cname}_portrait_{n-1}.jpg'
-                else:
-                    return 'no_image_portrait.jpg'
+            elif validate_picture(square):
+                last_valid = f'{name}_square_{n}.jpg'
+                n += 1
             else:
-                return 'no_image_portrait.jpg'
+                return last_valid or 'no_image_portrait.jpg'
+
+            sleep(0.02)
+
         except ConnectionError:
-            return 'no_image_portrait.jpg'
-        sleep(0.02)
+            return last_valid or "no_image_portrait.jpg"
 
 def pull_ics_data(rooms):
     domain = 'http://schema.hv.se/'
