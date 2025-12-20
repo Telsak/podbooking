@@ -62,21 +62,21 @@ def validate_picture(url):
 	# return result of (is image bigger than 0?)
 	return int(r.headers.get("Content-Length", 0)) > 0
 
-def get_profile(name):
+def get_profile(cname):
     n = 1
     last_valid = None
     base = 'https://mittkonto.hv.se/public/bilder'
 
     while True:
         try:
-            portrait = f'{base}/{name}_portrait_{n}.jpg'
-            square = f'{base}/{name}_square_{n}.jpg'
+            portrait = f'{base}/{cname}_portrait_{n}.jpg'
+            square = f'{base}/{cname}_square_{n}.jpg'
 
             if validate_picture(portrait):
-                last_valid = f'{name}_portrait_{n}.jpg'
+                last_valid = f'{cname}_portrait_{n}.jpg'
                 n += 1
             elif validate_picture(square):
-                last_valid = f'{name}_square_{n}.jpg'
+                last_valid = f'{cname}_square_{n}.jpg'
                 n += 1
             else:
                 return last_valid or 'no_image_portrait.jpg'

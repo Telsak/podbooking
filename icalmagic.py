@@ -1,5 +1,5 @@
 from icalendar import Calendar, Event, vCalAddress, vText
-from datemagic import unixtime, datetime
+from datemagic import unixtime
 import pytz
 
 def generate_ical(booking_time, username, room, pod):
