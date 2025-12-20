@@ -29,7 +29,23 @@
                 </div>
             </form>
             <p class="float-start"><a href="{{ url_for('signup') }}">Create an Account</a></p>
-            <a href="{{ url_for('help') }}" class="float-end">Can't log in?</a>
+            <a href="{{ url_for('help') }}" class="float-end">Having trouble logging in?</a><br>
+            <hr><br><br><br>
+            
+            <div>
+                <a href="{{ url_for('resync') }}">Resync credentials from HV</a><br>
+                <font size=-1>
+                <div>
+                    Verifies your password against the HV directory and updates Getapod only.
+                </div>
+                </font>
+            </div>
         </div>
 
 {% endblock %}
+
+<font color="blue" size=+2>
+                <a class="btn btn-secondary" href="{{baseurl}}show/{{ show['room']['name'] }}/{{show['dates']['yesterday']['date']}}" role="button"><< Prev</a>
+                <a class="btn btn-secondary" href="{{baseurl}}show/{{ show['room']['name'] }}" role="button">Today</a>
+                <a class="btn btn-secondary" href="{{baseurl}}show/{{ show['room']['name'] }}/{{show['dates']['tomorrow']['date']}}" role="button">Next >></a>
+            </font>

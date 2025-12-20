@@ -1052,6 +1052,46 @@ def login():
 
     return render_template('login.html', form=form)
 
+@app.route('/resync', methods=['GET', 'POST'])
+def resync():
+    fac='RESYNC'
+    form = LoginForm()
+    # validating form
+    if form.validate_on_submit():
+        name = form.name.data.split('@')[0].lower()
+        password = form.password.data
+        form.name.data = ''
+        form.password.data = ''
+        try:
+            user = User.query.filter_by(username=name).first()
+            if user.username == name and test_ldap_auth(name.lower(), password):
+                user.password = bcrypt.generate_password_hash(password).decode('utf-8')
+
+                global lock_commit
+                while lock_commit == True:
+                    sleep(0.025)
+                lock_commit = True
+                
+                db.session.add(user)
+                db.session.commit()
+
+                log_webhook(facility=fac, severity=6, msg=f'{name.lower()} : User resynced password!')
+                flash('Password successfully resynced, go ahead and log in!', 'success')
+
+                lock_commit = False
+
+                return redirect(url_for('login'))
+            else:
+                flash('Invalid username or password!', 'danger')
+                
+        except Exception as e:
+            if 'has no attribute' in str(e):
+                flash("No such user!", "danger")
+            else:
+                flash(e, 'danger')
+    
+    return render_template('resync_password.html', form=form)
+
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     """
@@ -1066,16 +1106,9 @@ def signup():
     The function also handles thread-safe database commits using a global 
     lock, `lock_commit`, to ensure data integrity.
 
-    Parameters:
-    None
-
     Returns:
     render_template: Flask template for the signup page, with form details.
                      It may also redirect to the login page in certain scenarios.
-
-    Raises:
-    None explicitly, but underlying functions (like database commits or 
-    LDAP authentication) may raise exceptions.
     """
     fac='SIGNUP'
     form = LoginForm()
