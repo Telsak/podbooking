@@ -47,8 +47,22 @@
           </h2>
           <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionHelp">
             <div class="accordion-body">
-              If you have changed your main HV-password after registering on the booking system this change will not be reflected here. 
-              Please contact <a href="mailto:simon.olofsson@hv.se?Subject=GETAPOD Lost password"> webmaster</a> if you cannot remember your old HV password.
+              If you have changed your main HV-password after registering on the booking system this change will not be reflected here.<br>
+              You need to perform a manual resync of the password so Getapod will use your new HV-password. You can do that by visiting <a href="{{ url_for('resync')}}">this link</a>.<br><br>
+              If you are still having issues, contact <a href="mailto:simon.olofsson@hv.se?Subject=GETAPOD glömt lösenord">webmaster</a> in order to request a manual password change.
+            </div>
+          </div>
+        </div>
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="headingSix">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSix" aria-expanded="false" aria-controls="collapseSix">
+              <b>"I forgot my password, how do I recover it?"</b>
+            </button>
+          </h2>
+          <div id="collapseSix" class="accordion-collapse collapse" aria-labelledby="headingSix" data-bs-parent="#accordionHelp">
+            <div class="accordion-body">
+              There is no way to recover your old password, you need to perform a manual resync the password so Getapod will use your HV-password. You can do that by visiting <a href="{{ url_for('resync')}}">this link</a>.<br><br>
+              If you are still having issues, contact <a href="mailto:simon.olofsson@hv.se?Subject=GETAPOD glömt lösenord">webmaster</a> in order to request a manual password change.
             </div>
           </div>
         </div>
