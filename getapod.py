@@ -1473,6 +1473,10 @@ def user(username, option=''):
 
         else:
             flash("Invalid update request!", "error")
+        
+        if 'userdetails' in globals() and userdetails:
+            userdetails.pop(username, None)
+        
         return redirect(url_for('user', username=username).rstrip('/'))
 
 @app.template_filter('mobile_table')
