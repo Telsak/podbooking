@@ -24,7 +24,7 @@
                 {% if current_user.is_authenticated %}
                     {% if current_user.username == user.username or current_user.role.name in ['Admin', 'Teacher'] %}
                        
-                        <a class="btn btn-outline-dark custom-tooltip" data-toggle="tooltip" 
+                        <a class="btn btn-info custom-tooltip" data-toggle="tooltip" 
                             title="Refresh your profile picture from mittkonto.hv.se"
                             data-mdb-ripple-color="dark" style="z-index: 1; margin-top:16px;" 
                             href="{{ url_for('user', username=user.username, option='refresh') }}" 
