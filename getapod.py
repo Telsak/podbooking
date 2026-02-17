@@ -725,7 +725,8 @@ def show(room, caldate='Null'):
     dates = init_dates(today_d)
     show = {}
     roomdata = Rooms.query.filter(Rooms.name==room.upper()).all()[0]
-    show['room'] = {'name': roomdata.name.upper(), 'pods': [chr(x+65) for x in range(roomdata.pods)]}
+    pod_offset = 8 if roomdata.name.upper() == 'D119B' else 0
+    show['room'] = {'name': roomdata.name.upper(), 'pods': [chr(x+65+pod_offset) for x in range(roomdata.pods)]}
     show['dates'] = dates
     show['clocks'] = BOOK_HOURS
     show['query'], show['flag'] = get_bookings(roomdata, dates['today']['string'])
