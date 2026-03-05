@@ -29,17 +29,8 @@
                 </div>
             </form>
             <p class="float-start"><a href="{{ url_for('signup') }}">Create an Account</a></p>
-            <a href="{{ url_for('help') }}" class="float-end">Having trouble logging in?</a><br>
+            <a href="{{ url_for('resync') }}" class="float-end">Forgot your password?</a><br>
             <hr><br><br><br>
-            
-            <div>
-                <a href="{{ url_for('resync') }}">Resync credentials from HV</a><br>
-                <font size=-1>
-                <div>
-                    Verifies your password against the HV directory and updates Getapod only.
-                </div>
-                </font>
-            </div>
         </div>
 
 {% endblock %}
