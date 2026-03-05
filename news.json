@@ -30,6 +30,13 @@
             "To stop bookings that were breaking the rule that you should not book over lunch (10:00-12:00 AND 13:00-15:00) a stop has been hard-coded into the system to automatically deny any and all attempts to book these two timeslots in the same room & day & pod.",
             "Note: This prevention is only enabled for bookings that exist in the future. It is still perfectly ok to lab in the morning, go to lunch and then book the same pod if it's available. You just cannot reserve it over lunch anymore."
         ]
+    },
+    {
+        "date": "5 March, 2026",
+        "title": "Password resync added for account recovery",
+        "content": [
+            "A password resync function has been addded to help users recover access to their Getapod account. This is because once created, user accounts are login credential synced with HV systems initially, but subsequent password resets by the students on the HV main offic    e environment will not reflect their password on Getapod. By using the form at /resync, users can verify their login and sync the Getapod login with the HV login once more."
+        ]
     }
 ]
   
