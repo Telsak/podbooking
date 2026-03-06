@@ -1463,7 +1463,7 @@ def user(username, option=''):
                 flash("Profile image has been updated from mittkonto.hv.se", "success")
             else:
                 flash("There is no newer image on mittkonto.hv.se, profile not changed!", "warning")
-        elif current_user.role.name == "Admin":
+        elif current_user.role.name in ['Admin', 'Teacher']:
             # allow admin to force a refresh of the user profile picture data
             target_user = User.query.filter_by(username=username).first()
             profile = get_profile(username)
