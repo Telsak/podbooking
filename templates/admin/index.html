@@ -1,5 +1,40 @@
 {% extends 'admin/master.html' %}
 
 {% block body %}
-  <a href="{{ url_for('index') }}">Back home</a>
+  <div class="container-fluid">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="m-0">Student Bookings by Year</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Year</th>
+                                <th>Total Bookings</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for year, count in booking_data %}
+                            <tr>
+                                <td><strong>{{ year }}</strong></td>
+                                <td>{{ count }}</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="2" class="text-center text-muted">No booking data available</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <br>
+                    Total number of users: {{ user_count }}
+                </div>
+            </div>
+        </div>
+    </div>
+  </div>
+  <a href="{{ url_for('index') }}" class="btn btn-secondary btn-sm">Back home</a>
 {% endblock %}

@@ -281,6 +281,11 @@ class User(UserMixin, db.Model):
         return '<User %r>' % self.username
 
 class UserModelView(ModelView):
+    # search on users
+    column_searchable_list = ['username', 'fullname', 'mail']
+    column_filters = ['role.name', 'profile']
+    column_default_sort = ('created', True)
+
     # fix for ldap errors breaking user signup - manual entries required
     form_columns = ('username', 'fullname', 'password', 'flag', 'mail', 'last_login', 'role')
     column_exclude_list = ['password']
@@ -318,6 +323,8 @@ class RoomsModelView(ModelView):
             return redirect(url_for('login'))
 
 class BookingModelView(ModelView):
+    column_searchable_list = ['room', 'name1']
+    column_exclude_list = ['flag', 'confirmation', 'duration']
     def is_accessible(self):
         if current_user.is_active and current_user.is_authenticated:
             return current_user.role.name in ['Admin', 'Teacher'] 
@@ -348,6 +355,20 @@ class MyAdminIndexView(AdminIndexView):
     def index(self):
         if not current_user.is_authenticated and current_user.role.name in ["Admin", "Teacher"]:
             return redirect(url_for('login'))
+
+        booking_data = (
+            db.session.query(
+                func.strftime('%Y', func.datetime(Bookings.time, 'unixepoch')).label('year'),
+                func.count(Bookings.id).label('count')
+            )
+            .join(User, Bookings.name1 == User.username)
+            .join(Role, User.role_id == Role.id)
+            .filter(Role.name == 'Student').group_by('year').order_by('year').all()
+        )
+
+        self._template_args['user_count'] = User.query.count()
+        self._template_args['booking_data'] = booking_data
+
         return super(MyAdminIndexView, self).index()
 
 admin = Admin(app, name='Podbokning', template_mode='bootstrap4', index_view=MyAdminIndexView())
